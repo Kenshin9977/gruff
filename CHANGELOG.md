@@ -8,6 +8,11 @@ records the data snapshot it bundles.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-07
+
+The first release under the Gruff name: the rename, GSCode editor parity, 25 new rules and VM
+semantics measured in seven games' emulated VMs. gruff-data snapshot `1c62a68`.
+
 ### Added
 
 - **Language server: GSCode editor parity.** Folding ranges (declarations, blocks, comment runs,
@@ -360,6 +365,7 @@ First public release.
   modelled.
 - No thread and event (`T`) rules yet; the event index is there for them.
 
-[Unreleased]: https://github.com/Kenshin9977/gruff/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/Kenshin9977/gruff/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/Kenshin9977/gruff/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Kenshin9977/gruff/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Kenshin9977/gruff/releases/tag/v0.1.0

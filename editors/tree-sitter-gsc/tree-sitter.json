@@ -18,7 +18,7 @@
     }
   ],
   "metadata": {
-    "version": "0.2.0",
+    "version": "0.3.0",
     "license": "MIT",
     "description": "GSC (Call of Duty game script) grammar: the superset of every dialect from CoD1 to BO7",
     "links": {
