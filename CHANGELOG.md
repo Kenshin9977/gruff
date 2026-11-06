@@ -51,6 +51,23 @@ records the data snapshot it bundles.
   `// gruff-fmt: off` / `on` beside `// gsc-fmt: off` / `on`.
 
 ### Added
+- **25 rules catching up with gscode's checks** (Blakintosh/gscode, GPL-3.0; logic ported where
+  noted on each page). New categories `I` imports, `M` macros, `N` names and declarations, `U`
+  local variables. What the BO3 compiler refuses was measured with its linker
+  (`tools/linker/probes/lint_*.gsc`); the rules it refuses with no finding in the shipped
+  sources are stable: L005 `non-constant-case-label`, M001 `macro-arg-count`, M003
+  `duplicate-macro-parameter`, N005 `duplicate-function`, N007 `misplaced-vararg`, N008
+  `inheritance-cycle`, N009 `constructor-parameters`, V003 `read-only-assignment`, V005
+  `useless-expression`. In preview: I001 `duplicate-import` (safe fix), I002 `unused-import`
+  (safe fix; 1,312 reports on the shipped sources, none found used on cross-check), I003
+  `unresolved-import` (needs a library root), L002 `unreachable-code`, L003
+  `duplicate-case-label`, L004 `assignment-as-value`, M002 `macro-redefined`, N001
+  `unresolved-script-function`, N002 `namespace-not-imported` (unsafe fix adds the `#using`),
+  N003 `private-function-call`, N004 `script-arg-count`, N006 `duplicate-parameter`, U001
+  `unused-variable`, U002 `uninitialized-variable`, V002 `thread-call-value` (gated by the new
+  gruff-data feature `thread_call_value`: callee-result in CoD4 to BO4, silent in Cold War where
+  the value is a `finalization`), V004 `division-by-zero`.
+- `#insert`/`#inline` resolve to the header (`.gsh`) of a path before a script of the same name.
 
 - **Rules B004 `bare-call-other-namespace` and B005 `thread-builtin`** (stable, BO3 and later):
   a bare call or `&f` that only a function of another namespace defines (an unsafe fix writes

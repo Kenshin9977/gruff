@@ -1,0 +1,92 @@
+---
+source: crates/gsc_check/tests/parity.rs
+expression: fixed
+---
+#using scripts\zz\lib;
+#using scripts\zz\loader;
+
+#insert scripts\zz\defs.gsh;
+
+#define LIMIT 5
+#define PAIR( a, a ) ( a )
+
+#namespace main;
+
+function flow( x )
+{
+	switch ( x )
+	{
+		case 1:
+			return 1;
+			break;
+		case 1:
+			break;
+		case undefined:
+			break;
+		default:
+			break;
+		default:
+			break;
+	}
+	if ( x = 2 )
+	{
+		return;
+		x = 3;
+	}
+	return TWICE( 1, 2 );
+}
+
+function locals( a )
+{
+	dead = 1;
+	n = a + typo;
+	foreach ( k, v in a )
+	{
+		n += v;
+	}
+	self waittill( "event", payload );
+	m = TWICE( n );
+	return m + payload + LIMIT;
+}
+
+function values( a )
+{
+	const K = 1;
+	K = 2;
+	a.size = 0;
+	level = undefined;
+	x = a / 0;
+	a == x;
+	b = thread lib::slow();
+	c = thread lib::quick();
+	return b + c;
+}
+
+function calls()
+{
+	lib::pair( 1, 2, 3 );
+	lib::hidden();
+}
+
+function params( a, a )
+{
+}
+
+function late( ..., b )
+{
+}
+
+function late()
+{
+}
+
+class cyc_a : cyc_b
+{
+	constructor( p )
+	{
+	}
+}
+
+class cyc_b : cyc_a
+{
+}

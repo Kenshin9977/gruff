@@ -24,10 +24,35 @@ E0204 vector-arity                  Vector literal without exactly three compone
 E0299 parser-stuck                  The parser made no progress (a parser bug)
 E0301 decompiler-name               Decompiler name no tokenizer can read as one name
 F001  unknown-field                 Field read that nothing sets, one typo away from one that is set (preview, fix)
+I001  duplicate-import              The same `#using` or `#include` twice (preview, fix)
+I002  unused-import                 `#using` or `#include` whose file supplies nothing the script uses (preview, fix)
+I003  unresolved-import             `#using`, `#include` or `#insert` of a file the workspace does not have (preview)
 L001  infinite-loop-without-wait    Infinite loop whose body never waits (fix)
+L002  unreachable-code              Statements after a `return`, `break` or `continue` (preview)
+L003  duplicate-case-label          A `case` value or `default` a switch already has (preview)
+L004  assignment-as-value           An assignment used as a value, as in `if ( x = 1 )` (preview)
+L005  non-constant-case-label       A `case` label that is not a constant string or integer
+M001  macro-arg-count               Function-like macro called with the wrong number of arguments
+M002  macro-redefined               `#define` of a macro already defined (preview)
+M003  duplicate-macro-parameter     `#define` with a parameter name repeated
+N001  unresolved-script-function    `ns::f()`, `path::f()` or `::f()` naming no script function (preview)
+N002  namespace-not-imported        `ns::f()` with no `#using` of a file declaring `ns` (preview, fix)
+N003  private-function-call         Call to a `private` function of another namespace (preview)
+N004  script-arg-count              Script function called with more arguments than it declares (preview)
+N005  duplicate-function            Function defined twice in one file
+N006  duplicate-parameter           Parameter name repeated in one parameter list (preview)
+N007  misplaced-vararg              `...` that is not the last parameter
+N008  inheritance-cycle             Class that inherits from itself
+N009  constructor-parameters        Constructor or destructor with parameters
 S100  unused-suppression            Suppression comment that suppresses nothing (fix)
 T001  unknown-event                 `waittill` or `endon` on an event no script and not the engine notifies (preview)
 T002  misspelled-event              `waittill` or `endon` on an event nothing notifies, one typo away from one that is (preview)
 T003  waittill-arg-count            `waittill` binds (or its BO4+ result is read for) values no notify of the event sends (preview)
 T004  missing-endon                 Function threaded on a player that loops forever with no `endon` (preview)
+U001  unused-variable               Local variable assigned and never read (preview)
+U002  uninitialized-variable        Local variable read that nothing in its function assigns (preview)
 V001  hash-equality                 `==` on a hash, a script error in games that do not compare hashes by value (preview)
+V002  thread-call-value             The value of a `thread` call used, in games where it is the callee's result (preview)
+V003  read-only-assignment          Assignment to `.size`, an engine global or a `const`
+V004  division-by-zero              Division or modulo by a literal zero (preview)
+V005  useless-expression            Expression statement with no effect, as in `a == b;`

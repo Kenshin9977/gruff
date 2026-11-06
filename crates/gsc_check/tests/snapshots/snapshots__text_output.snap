@@ -17,16 +17,36 @@ basic/scripts/client.csc:6:14: B002 builtin function `getent` takes 3 arguments,
 6 |     ent = getent( "x", "targetname" );
   |                 ^^^^^^^^^^^^^^^^^^^^^
 
+basic/scripts/client.csc:8:2: U001 `o` is assigned but never read
+  |
+8 |     o = spawn( localclientnum, ( 0, 0, 0 ), "script_model" );
+  |     ^
+
+basic/scripts/demo.gsc:9:2: U001 `e` is assigned but never read
+  |
+9 |     e = spwan( "script_origin", ( 0, 0, 0 ) );
+  |     ^
+
 basic/scripts/demo.gsc:9:6: B001 unknown builtin function `spwan`; did you mean `spawn`?
   |
 9 |     e = spwan( "script_origin", ( 0, 0, 0 ) );
   |         ^^^^^
   = unsafe fix: Replace with `spawn`
 
+basic/scripts/demo.gsc:10:2: U001 `n` is assigned but never read
+   |
+10 |     n = randomint();
+   |     ^
+
 basic/scripts/demo.gsc:10:15: B002 builtin function `randomint` takes 1 argument, but 0 were given
    |
 10 |     n = randomint();
    |                  ^^
+
+basic/scripts/demo.gsc:11:2: U001 `ok` is assigned but never read
+   |
+11 |     ok = randomint( 10 );
+   |     ^^
 
 basic/scripts/demo.gsc:13:15: B002 builtin method `setmodel` takes 1 argument, but 0 were given
    |
@@ -52,6 +72,11 @@ basic/scripts/demo.gsc:23:2: B003 `line` is a dev-only builtin; wrap the call in
    |
 23 |     line( ( 0, 0, 0 ), ( 1, 1, 1 ) );
    |     ^^^^
+
+basic/scripts/demo.gsc:25:2: U001 `t` is assigned but never read
+   |
+25 |     t = gettime();
+   |     ^
 
 basic/scripts/demo.gsc:26:2: B001 unknown builtin function `totally_unknown_thing`
    |
@@ -93,6 +118,11 @@ basic/scripts/demo.gsc:115:10: S100 [*] suppression names unknown or unused code
     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^
     = fix: Remove the suppression comment
 
+basic/scripts/demo.gsc:116:2: U001 `n` is assigned but never read
+    |
+116 |     n = randomint(); // gsc: ignore[B002, L001]
+    |     ^
+
 basic/scripts/demo.gsc:116:19: S100 [*] unused suppression: `L001` suppresses nothing here
     |
 116 |     n = randomint(); // gsc: ignore[B002, L001]
@@ -105,8 +135,28 @@ basic/scripts/fields.gsc:6:12: F001 field `helath` is never set by the engine or
   |               ^^^^^^
   = unsafe fix: Replace with `health`
 
+basic/scripts/fields.gsc:12:3: U001 `x` is assigned but never read
+   |
+12 |         x = self.optional_flag;
+   |         ^
+
+basic/scripts/fields.gsc:14:2: U001 `y` is assigned but never read
+   |
+14 |     y = self.coutner;              // a typo of `counter`, set above
+   |     ^
+
 basic/scripts/fields.gsc:14:11: F001 field `coutner` is never set by the engine or any script here; did you mean `counter`?
    |
 14 |     y = self.coutner;              // a typo of `counter`, set above
    |              ^^^^^^^
    = unsafe fix: Replace with `counter`
+
+basic/scripts/fields.gsc:15:2: U001 `z` is assigned but never read
+   |
+15 |     z = self.offset_y + self.offset_x;
+   |     ^
+
+basic/scripts/fields.gsc:17:2: U001 `w` is assigned but never read
+   |
+17 |     w = self.unrelated_name_nobody_sets;
+   |     ^

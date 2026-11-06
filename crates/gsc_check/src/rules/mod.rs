@@ -2,9 +2,16 @@
 //! `gsc_syntax`; suppression diagnostics (`S100`) from [`crate::suppress`].
 
 mod builtin_calls;
+mod calls;
+mod decls;
 mod events;
+mod exprs;
 mod fields;
+mod flow;
+mod imports;
+mod locals;
 mod loops;
+mod macros;
 mod namespaces;
 mod values;
 
@@ -115,5 +122,34 @@ pub fn run(ctx: &mut Ctx) {
     }
     if ctx.on("V001") {
         values::check(ctx);
+    }
+    run_parity(ctx);
+}
+
+/// The rules that follow gscode's checks (I, M, N, U, L002-L005, V002-V005).
+fn run_parity(ctx: &mut Ctx) {
+    fn any(ctx: &Ctx, codes: &[&str]) -> bool {
+        codes.iter().any(|c| ctx.on(c))
+    }
+    if any(ctx, &["I001", "I002", "I003"]) {
+        imports::check(ctx);
+    }
+    if any(ctx, &["L002", "L003", "L004", "L005"]) {
+        flow::check(ctx);
+    }
+    if any(ctx, &["M001", "M002", "M003"]) {
+        macros::check(ctx);
+    }
+    if any(ctx, &["N001", "N002", "N003", "N004"]) {
+        calls::check(ctx);
+    }
+    if any(ctx, &["N005", "N006", "N007", "N008", "N009"]) {
+        decls::check(ctx);
+    }
+    if any(ctx, &["U001", "U002"]) {
+        locals::check(ctx);
+    }
+    if any(ctx, &["V002", "V003", "V004", "V005"]) {
+        exprs::check(ctx);
     }
 }

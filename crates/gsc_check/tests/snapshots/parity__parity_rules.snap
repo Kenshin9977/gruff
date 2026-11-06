@@ -1,0 +1,34 @@
+---
+source: crates/gsc_check/tests/parity.rs
+expression: "output::render(&results, Format::Concise)"
+---
+scripts/zz/main.gsc:2:8: I001 [*] `scripts\zz\lib` is already imported by an earlier `#using`
+scripts/zz/main.gsc:3:8: I002 [*] `scripts\zz\unused` is imported but nothing from it is used
+scripts/zz/main.gsc:8:9: M002 macro `LIMIT` is already defined (scripts/zz/defs.gsh); the preprocessor refuses a redefinition, even with the same body: `#undef` it first
+scripts/zz/main.gsc:9:18: M003 macro `PAIR` already has a parameter `a`: the arguments passed for this one are never substituted
+scripts/zz/main.gsc:20:8: L003 `case 1` is already a label of this switch; only the first one can match
+scripts/zz/main.gsc:22:8: L005 `case undefined` never matches and is not a constant: test `isdefined()` before the switch
+scripts/zz/main.gsc:26:3: L003 this switch already has a `default` label; only the first is ever reached
+scripts/zz/main.gsc:29:7: L004 this assigns to `x` inside the condition; `==` compares (an assignment is a statement in GSC, not a value)
+scripts/zz/main.gsc:32:3: L002 unreachable code: the `return` before it always leaves this block
+scripts/zz/main.gsc:34:14: M001 macro `TWICE` takes 1 argument but 2 were given
+scripts/zz/main.gsc:39:2: U001 `dead` is assigned but never read
+scripts/zz/main.gsc:40:10: U002 `typo` is read but nothing in this function assigns it (the BO3 compiler refuses it: "Uninitialized local variable")
+scripts/zz/main.gsc:52:8: U001 `k` is assigned but never read
+scripts/zz/main.gsc:53:2: V003 `K` is declared `const` and cannot be assigned
+scripts/zz/main.gsc:54:2: V003 `.size` is read-only: it counts an array's elements (or a string's characters) and cannot be assigned
+scripts/zz/main.gsc:55:2: V003 `level` is an engine global and cannot be assigned: write a field of it instead (`level.name = value`)
+scripts/zz/main.gsc:56:6: V004 division by zero: a script error when this runs
+scripts/zz/main.gsc:57:2: V005 this statement is a comparison whose value is discarded, so it does nothing (the BO3 compiler refuses it): a missing `=` or `()`?
+scripts/zz/main.gsc:58:6: V002 the value of a `thread` call is the function's return value only if it ends before its first wait, and this one may wait: the value is then undefined (call it without `thread` to use the result)
+scripts/zz/main.gsc:65:7: N004 `pair` declares 2 parameters but 3 arguments are passed; the extra ones are never read
+scripts/zz/main.gsc:66:7: N003 `hidden` is private to namespace `lib`: only files of that namespace can call it
+scripts/zz/main.gsc:69:21: N006 parameter `a` is declared twice: the first one can never be read (BO3's compiler refuses it)
+scripts/zz/main.gsc:73:21: N007 parameter `b` after `...`: `...` must be the last parameter
+scripts/zz/main.gsc:77:10: N005 function `late` is already defined in namespace `main` in this file (BO3's compiler refuses it: "Duplicated function name detected")
+scripts/zz/main.gsc:81:7: N008 class `cyc_a` inherits from itself (through cyc_b)
+scripts/zz/main.gsc:83:15: N009 a constructor takes no parameters (BO3's compiler refuses one)
+scripts/zz/main.gsc:88:7: N008 class `cyc_b` inherits from itself (through cyc_a)
+scripts/zz/other.gsc:5:7: N002 namespace `lib` is called, but no `#using` imports a file that declares it (`scripts\zz\lib` does)
+scripts/zz/other.gsc:6:7: N001 no script function `lib::missing`: the call names a script, so no builtin can match
+scripts/zz/other.gsc:7:6: U002 `vararg` is only bound in a function declaring `...`: add `...` to the parameter list

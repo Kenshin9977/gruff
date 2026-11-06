@@ -45,13 +45,13 @@ impl Update {
 }
 
 /// A definition as other files see it: a hash of `(kind, ns, name, params, flags, is a summary
-/// node)`, and the [`word_hash`] of its short name.
+/// node)` (and a macro's body), and the [`word_hash`] of its short name.
 type Entry = (u64, u64);
 
 /// What other files can see of a file.
 #[derive(Debug, PartialEq, Eq)]
 struct Interface {
-    /// File key, namespace, imports and classes.
+    /// File key, namespace, imports, classes and whether loading the file has an effect.
     structural: u64,
     /// Every definition, in order.
     entries: Vec<Entry>,
@@ -79,6 +79,18 @@ fn interface(ws: &Workspace, f: FileId, c: &CheckFacts) -> Interface {
     for d in facts.defs.iter().filter(|d| d.kind == DefKind::Class) {
         (&d.ns, &d.name, &d.params).hash(&mut h);
     }
+    // Whether loading the file does something on its own (I002 keeps an import of it): an
+    // engine-called function or a file-scope macro call.
+    let load_effect = facts.defs.iter().any(|d| {
+        d.flags
+            .split(',')
+            .any(|s| s == "autoexec" || s == "codecall" || s.starts_with("event_handler"))
+    }) || (data.has_tree()
+        && data
+            .syntax()
+            .children()
+            .any(|n| n.kind() == gsc_syntax::SyntaxKind::MACRO_CALL_ITEM));
+    load_effect.hash(&mut h);
     let nodes: HashSet<u32> = c
         .functions
         .iter()
@@ -95,6 +107,10 @@ fn interface(ws: &Workspace, f: FileId, c: &CheckFacts) -> Interface {
                 let mut h = Xxh3::new();
                 let node = nodes.contains(&(i as u32));
                 (kind_code(d.kind), &d.ns, &d.name, &d.params, &d.flags, node).hash(&mut h);
+                // A macro's body: the names it holds count as uses (I002, U001, U002).
+                if d.kind == DefKind::Define {
+                    d.doc.hash(&mut h);
+                }
                 (h.finish(), word_hash(d.short_name()))
             })
             .collect(),

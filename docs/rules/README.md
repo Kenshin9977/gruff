@@ -12,8 +12,12 @@ them all.
 | `B` | engine builtins |
 | `L` | loops and control flow |
 | `F` | entity fields |
+| `I` | imports (`#using`, `#include`, `#insert`) |
+| `M` | macros (`#define`) |
+| `N` | names and declarations: calls to script functions, parameters, classes |
 | `S` | suppression comments |
 | `T` | threads and events |
+| `U` | local variables |
 | `V` | values (VM semantics measured in the game's VM) |
 
 | Code | Name | Notes |
@@ -40,13 +44,38 @@ them all.
 | [E0299](E0299.md) | `parser-stuck` |  |
 | [E0301](E0301.md) | `decompiler-name` |  |
 | [F001](F001.md) | `unknown-field` | preview, unsafe fix |
+| [I001](I001.md) | `duplicate-import` | preview, safe fix |
+| [I002](I002.md) | `unused-import` | preview, safe fix |
+| [I003](I003.md) | `unresolved-import` | preview; needs a library root |
 | [L001](L001.md) | `infinite-loop-without-wait` | unsafe fix |
+| [L002](L002.md) | `unreachable-code` | preview |
+| [L003](L003.md) | `duplicate-case-label` | preview |
+| [L004](L004.md) | `assignment-as-value` | preview |
+| [L005](L005.md) | `non-constant-case-label` |  |
+| [M001](M001.md) | `macro-arg-count` |  |
+| [M002](M002.md) | `macro-redefined` | preview |
+| [M003](M003.md) | `duplicate-macro-parameter` |  |
+| [N001](N001.md) | `unresolved-script-function` | preview |
+| [N002](N002.md) | `namespace-not-imported` | preview, unsafe fix; `#namespace` games |
+| [N003](N003.md) | `private-function-call` | preview |
+| [N004](N004.md) | `script-arg-count` | preview |
+| [N005](N005.md) | `duplicate-function` |  |
+| [N006](N006.md) | `duplicate-parameter` | preview |
+| [N007](N007.md) | `misplaced-vararg` |  |
+| [N008](N008.md) | `inheritance-cycle` |  |
+| [N009](N009.md) | `constructor-parameters` |  |
 | [S100](S100.md) | `unused-suppression` | safe fix |
 | [T001](T001.md) | `unknown-event` | preview; needs a complete engine event catalogue |
 | [T002](T002.md) | `misspelled-event` | preview |
 | [T003](T003.md) | `waittill-arg-count` | preview |
 | [T004](T004.md) | `missing-endon` | preview |
+| [U001](U001.md) | `unused-variable` | preview |
+| [U002](U002.md) | `uninitialized-variable` | preview |
 | [V001](V001.md) | `hash-equality` | preview; BO3 (`hash_equality = "script-error"`) |
+| [V002](V002.md) | `thread-call-value` | preview; games with `thread_call_value = "callee-result"` |
+| [V003](V003.md) | `read-only-assignment` |  |
+| [V004](V004.md) | `division-by-zero` | preview |
+| [V005](V005.md) | `useless-expression` |  |
 
 ## Selection
 

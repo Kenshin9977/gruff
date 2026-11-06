@@ -76,6 +76,12 @@ fn profiles_carry_the_measured_semantics() {
     assert_eq!(t6.resolution, Resolution::Include);
     assert!(t6.hash_equality_error);
     assert_eq!(cfg("t7").bare_call, BareCall::NamespaceFirst);
+    // `x = thread f()`: f's result or undefined from CoD4 to BO4, a `finalization` in Cold War.
+    for game in ["iw3", "t4", "t5", "t6", "t7", "t8"] {
+        assert_eq!(cfg(game).thread_call_result, Some(true), "{game}");
+    }
+    assert_eq!(cfg("t9").thread_call_result, Some(false));
+    assert_eq!(cfg("iw5").thread_call_result, None);
     assert_eq!(cfg("iw5").bare_call, BareCall::BuiltinFirst);
     // Games whose VM has not been run stay unknown.
     let iw5 = cfg("iw5");

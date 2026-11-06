@@ -124,6 +124,24 @@ impl Workspace {
             .min_by_key(score)
     }
 
+    /// The file an import names: for `#insert` and `#inline`, the header (`.gsh`) of that path
+    /// before a script of the same name (`#insert x.gsh` next to `x.gsc`).
+    pub fn find_import(&self, from: FileId, imp: &crate::facts::Import) -> Option<FileId> {
+        if !imp.is_scope() {
+            let f = &self.file(from).meta;
+            let header = self
+                .files_with_key(crate::vfs::strip_script_ext(&imp.target))
+                .iter()
+                .copied()
+                .filter(|&i| self.file(i).meta.vm.is_none())
+                .min_by_key(|&i| (usize::from(self.file(i).meta.root != f.root), i));
+            if header.is_some() {
+                return header;
+            }
+        }
+        self.find_file(from, &imp.target)
+    }
+
     /// The resolution of a file, computed on first use and cached until the next change.
     pub fn resolution(&self, f: FileId) -> Arc<FileResolution> {
         self.cache[f.index()]
@@ -144,7 +162,7 @@ impl Workspace {
         let imports: Vec<Option<FileId>> = facts
             .imports
             .iter()
-            .map(|i| self.find_file(f, &i.target))
+            .map(|i| self.find_import(f, i))
             .collect();
         let scope = facts
             .imports
@@ -185,7 +203,7 @@ impl Workspace {
                     .map(|d| d.name.to_ascii_lowercase()),
             );
             for imp in facts.imports.iter().filter(|i| !i.is_scope()) {
-                if let Some(y) = self.find_file(x, &imp.target) {
+                if let Some(y) = self.find_import(x, imp) {
                     stack.push(y);
                 }
             }

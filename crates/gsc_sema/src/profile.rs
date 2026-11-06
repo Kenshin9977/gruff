@@ -78,12 +78,17 @@ pub struct Config {
     /// `hash_equality = "script-error"`: `==` on a hash is a script error (T7). False for
     /// `by-value`, for `n/a` (no hash literals: the check has nothing to look at) and unknown.
     pub hash_equality_error: bool,
+    /// `thread_call_value`: `Some(true)` when `x = thread f()` gives the caller f's return value
+    /// if f ends before its first wait, else undefined (`callee-result`: IW3, T4 to T8);
+    /// `Some(false)` when it is a thread value of its own (`finalization`: Cold War); `None`
+    /// unknown.
+    pub thread_call_result: Option<bool>,
 }
 
 impl Config {
     /// Read `name_resolution`, `import_directive`, `bare_call_resolution`,
     /// `case_insensitive_identifiers` and the VM features (`waittill_return_value`,
-    /// `*_multiple_events`, `notify_wakes_waiters`, `hash_equality`) from a profile. Unknown
+    /// `*_multiple_events`, `notify_wakes_waiters`, `hash_equality`, `thread_call_value`) from a profile. Unknown
     /// values fall back to the T7 model for names and stay unknown for the VM; `n/a` (does not
     /// apply) reads as off.
     pub fn from_dialect(d: &Dialect) -> Config {
@@ -119,6 +124,11 @@ impl Config {
                 _ => None,
             },
             hash_equality_error: d.text("hash_equality") == Some("script-error"),
+            thread_call_result: match d.text("thread_call_value") {
+                Some("callee-result") => Some(true),
+                Some("finalization") => Some(false),
+                _ => None,
+            },
         }
     }
 

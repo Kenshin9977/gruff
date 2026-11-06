@@ -1,0 +1,6 @@
+---
+source: crates/gsc_check/tests/parity.rs
+expression: "output::render(&results, Format::Concise)"
+---
+maps/_util.gsc:1:10: I002 [*] `maps\_common` is imported but nothing from it is used
+maps/level.gsc:4:10: I002 [*] `maps\_unused` is imported but nothing from it is used

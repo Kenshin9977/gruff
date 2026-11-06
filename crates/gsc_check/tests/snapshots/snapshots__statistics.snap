@@ -2,10 +2,11 @@
 source: crates/gsc_check/tests/snapshots.rs
 expression: "output::statistics(&results)"
 ---
-6	B001	unknown-builtin
-3	B002	builtin-arg-count
-3	L001	infinite-loop-without-wait
-3	S100	[*] unused-suppression
-2	E0201	expected-token
-2	F001	unknown-field
-1	B003	dev-only-builtin
+10	U001	unused-variable
+ 6	B001	unknown-builtin
+ 3	B002	builtin-arg-count
+ 3	L001	infinite-loop-without-wait
+ 3	S100	[*] unused-suppression
+ 2	E0201	expected-token
+ 2	F001	unknown-field
+ 1	B003	dev-only-builtin
