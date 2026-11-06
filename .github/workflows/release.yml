@@ -108,7 +108,7 @@ jobs:
       - name: Package the extension
         working-directory: gruff/editors/vscode
         env:
-          GSC_BIN: ../../target/${{ matrix.target }}/release/${{ contains(matrix.target, 'windows') && 'gruff.exe' || 'gruff's }}
+          GSC_BIN: ../../target/${{ matrix.target }}/release/${{ contains(matrix.target, 'windows') && 'gruff.exe' || 'gruff' }}
         run: |
           set -euo pipefail
           npm ci --ignore-scripts
