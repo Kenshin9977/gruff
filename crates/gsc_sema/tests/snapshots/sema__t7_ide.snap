@@ -55,7 +55,11 @@ hover:
 ```
 
 `= ( isdefined( x ) && x )`  
-defined in `scripts/shared/shared.gsh:1`
+defined in `scripts/shared/shared.gsh:1`  
+expands to:
+```gsc
+( isdefined( level.ready ) && level.ready )
+```
 references: scripts/zm/mymod.gsc:30:7, scripts/shared/shared.gsh:1:9
 
 ## same namespace, other file: mymod.gsc "helper_in_namespace"+0
@@ -168,6 +172,7 @@ engine field
 references: scripts/zm/mymod.gsc:52:13
 
 ## script field: util_shared.gsc "util_ready"+0
+definition: Field util_ready at scripts/shared/util_shared.gsc:19:8
 hover:
 ```gsc
 field util_ready

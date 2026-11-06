@@ -1,0 +1,14 @@
+# A made-up merge (`#include`) dialect for the gsc_lsp tests, not a game.
+schema_version = 1
+id = "mergetest"
+name = "merge test dialect"
+license = "CC0-1.0"
+
+[keywords]
+words = ["break", "case", "continue", "default", "else", "endon", "false", "for", "if", "isdefined", "notify", "return", "switch", "thread", "true", "undefined", "wait", "waittill", "waittillframeend", "waittillmatch", "while"]
+confidence = "assumed"
+source = ["test"]
+
+[features]
+import_directive = { value = "include", confidence = "assumed", source = ["test"] }
+name_resolution = { value = "merge", confidence = "assumed", source = ["test"] }

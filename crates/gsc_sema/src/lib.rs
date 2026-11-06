@@ -12,6 +12,7 @@ pub mod events;
 pub mod facts;
 pub mod hashing;
 pub mod ide;
+pub mod nav;
 pub mod par;
 pub mod profile;
 pub mod resolve;

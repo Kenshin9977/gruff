@@ -68,6 +68,20 @@ impl LineIndex {
         }
     }
 
+    /// The 0-based line of byte `offset`.
+    pub fn line_of(&self, offset: TextSize) -> u32 {
+        let offset = u32::from(offset).min(self.len);
+        match self.starts.binary_search(&offset) {
+            Ok(l) => l as u32,
+            Err(l) => l as u32 - 1,
+        }
+    }
+
+    /// The byte offset where 0-based `line` starts (the end of the text past the last line).
+    pub fn line_start(&self, line: u32) -> TextSize {
+        TextSize::from(self.starts.get(line as usize).copied().unwrap_or(self.len))
+    }
+
     pub fn range(&self, text: &str, r: TextRange, enc: Encoding) -> Range {
         Range {
             start: self.position(text, r.start(), enc),

@@ -44,6 +44,46 @@ impl Settings {
     }
 }
 
+/// Editor features the client may turn off (all on by default). They change no analysis, so
+/// changing them does not reload the workspace.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Features {
+    /// `inlayHints.parameterNames`: parameter names before the arguments of script calls.
+    pub param_hints: bool,
+    /// `inlayHints.inferredTypes`: the type of a local at its first assignment.
+    pub type_hints: bool,
+    /// `inlayHints.macroParameterNames`: parameter names before macro arguments.
+    pub macro_hints: bool,
+    /// `codeLens.references`: "N references" above declarations.
+    pub code_lens: bool,
+    /// `completion.autoImport`: functions of files not imported, adding the import.
+    pub auto_import: bool,
+    /// `completion.literals`: known event and notify names inside strings.
+    pub literals: bool,
+}
+
+impl Features {
+    /// Read from `initializationOptions` or a `didChangeConfiguration` payload (the `gruff`
+    /// section, the older `gsc` one, or an object holding it).
+    pub fn from_json(v: &serde_json::Value) -> Features {
+        let v = v.get("gruff").or_else(|| v.get("gsc")).unwrap_or(v);
+        let get = |a: &str, b: &str| {
+            v.get(a)
+                .and_then(|x| x.get(b))
+                .and_then(serde_json::Value::as_bool)
+                .unwrap_or(true)
+        };
+        Features {
+            param_hints: get("inlayHints", "parameterNames"),
+            type_hints: get("inlayHints", "inferredTypes"),
+            macro_hints: get("inlayHints", "macroParameterNames"),
+            code_lens: get("codeLens", "references"),
+            auto_import: get("completion", "autoImport"),
+            literals: get("completion", "literals"),
+        }
+    }
+}
+
 /// One builtin's parameter types, from the catalogue's `param_types`; where it names no type,
 /// the corpus measure (`corpus_param_types`) marked `~` (`~int`).
 #[derive(Clone, Debug, Default)]

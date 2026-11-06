@@ -113,6 +113,15 @@ pub fn signature_help(
     let mut sigs = Vec::new();
     let mut active_sig = 0;
     match (r.def, r.how) {
+        (Some(d), _) if ws.def(d).kind == gsc_sema::DefKind::Define => {
+            // A function-like macro: its parameters, and what this use expands to.
+            let def = ws.def(d);
+            let doc = ws.macro_expansion_at(file, name_range.start()).map(|x| {
+                let code = gsc_sema::nav::render_tokens(&x.tokens, 240);
+                format!("expands to:\n```gsc\n{code}\n```")
+            });
+            sigs.push(build(&def.name, &split_params(&def.params), doc));
+        }
         (Some(d), _) => {
             let def = ws.def(d);
             let doc = (!def.doc.is_empty() && def.kind.is_callable()).then(|| def.doc.clone());

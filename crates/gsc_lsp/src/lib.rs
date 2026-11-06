@@ -15,7 +15,10 @@
 mod analysis;
 pub mod convert;
 mod diagnostics;
+mod features;
 mod handlers;
+mod imports;
+mod inlay;
 pub mod project;
 mod semantic;
 mod server;

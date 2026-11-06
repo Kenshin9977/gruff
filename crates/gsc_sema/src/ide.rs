@@ -77,6 +77,12 @@ pub enum Symbol {
     /// An event name (lower case): every notify, waittill and endon site of it.
     Event(String),
     File(FileId),
+    /// A class member (`var x;`), named bare inside the class's methods and those of its
+    /// subclasses: the class that declares it and the name (identifier case).
+    Member {
+        class: String,
+        name: String,
+    },
 }
 
 /// A reference found by [`Workspace::references`].
@@ -180,13 +186,17 @@ pub struct OutgoingCall {
 }
 
 /// What the cursor is on.
-enum Hit {
+pub(crate) enum Hit {
     Ref(usize),
     Def(u32),
     Import(usize),
     Local(Symbol),
     Field(String, TextRange),
     Macro(DefId, TextRange),
+    /// A class named by `new C()` or a base list.
+    Class(DefId, TextRange),
+    /// A class member: declaring class, name, the range at the cursor.
+    Member(String, String, TextRange),
 }
 
 fn is_name_token(t: &SyntaxToken) -> bool {
@@ -197,7 +207,7 @@ fn is_name_token(t: &SyntaxToken) -> bool {
 }
 
 /// The name-like token at `offset`, preferring the one starting there.
-fn token_at(root: &SyntaxNode, offset: TextSize) -> Option<SyntaxToken> {
+pub(crate) fn token_at(root: &SyntaxNode, offset: TextSize) -> Option<SyntaxToken> {
     let at = root.token_at_offset(offset);
     let (l, r) = (at.clone().left_biased(), at.right_biased());
     r.clone()
@@ -206,7 +216,7 @@ fn token_at(root: &SyntaxNode, offset: TextSize) -> Option<SyntaxToken> {
         .or(r)
 }
 
-fn enclosing_function(node: &SyntaxNode) -> Option<SyntaxNode> {
+pub(crate) fn enclosing_function(node: &SyntaxNode) -> Option<SyntaxNode> {
     node.ancestors().find(|a| {
         matches!(
             a.kind(),
@@ -364,7 +374,7 @@ impl Workspace {
         }
     }
 
-    fn hit(&self, file: FileId, offset: TextSize) -> Option<Hit> {
+    pub(crate) fn hit(&self, file: FileId, offset: TextSize) -> Option<Hit> {
         let f = self.file(file);
         let facts = &f.facts;
         let root = f.syntax();
@@ -403,6 +413,9 @@ impl Workspace {
             if fe.field().is_some_and(|n| n.syntax() == &parent) {
                 return Some(Hit::Field(name, tr));
             }
+        }
+        if let Some(h) = self.class_hit(file, &parent, &name, tr) {
+            return Some(h);
         }
         if let Some(func) = enclosing_function(&parent) {
             let found = locals(&func, &cfg).into_iter().find(|(n, _, _)| *n == name);
@@ -446,7 +459,8 @@ impl Workspace {
             Hit::Import(i) => self.resolution(file).imports[i].map(Symbol::File),
             Hit::Local(s) => Some(s),
             Hit::Field(n, _) => Some(Symbol::Field(n)),
-            Hit::Macro(d, _) => Some(Symbol::Def(d)),
+            Hit::Macro(d, _) | Hit::Class(d, _) => Some(Symbol::Def(d)),
+            Hit::Member(class, name, _) => Some(Symbol::Member { class, name }),
         }
     }
 
@@ -484,6 +498,10 @@ impl Workspace {
                     container: None,
                 }]
             }
+            Some(Symbol::Member { class, name }) => {
+                self.member_decl(&class, &name).into_iter().collect()
+            }
+            Some(Symbol::Field(name)) => self.field_writes(&name, false),
             _ => Vec::new(),
         }
     }
@@ -492,11 +510,22 @@ impl Workspace {
     /// sorted by file and offset.
     pub fn references(&self, symbol: &Symbol, include_declaration: bool) -> Vec<FileRange> {
         let files: Vec<FileId> = self.files().collect();
+        self.references_in(symbol, include_declaration, &files)
+    }
+
+    /// [`Workspace::references`] in `files` only (the declaration wherever it is).
+    pub fn references_in(
+        &self,
+        symbol: &Symbol,
+        include_declaration: bool,
+        files: &[FileId],
+    ) -> Vec<FileRange> {
+        let in_files = |f: FileId| files.contains(&f);
         let mut out: Vec<FileRange> = match symbol {
             Symbol::Def(d) => {
                 let def = self.def(*d);
                 let macro_name = (def.kind == DefKind::Define).then(|| def.name.clone());
-                let mut v: Vec<FileRange> = par_map(&files, self.jobs(), |&f| {
+                let mut v: Vec<FileRange> = par_map(files, self.jobs(), |&f| {
                     let res = self.resolution(f);
                     let facts = &self.file(f).facts;
                     res.refs
@@ -515,7 +544,10 @@ impl Workspace {
                 .into_iter()
                 .flatten()
                 .collect();
-                if include_declaration {
+                if def.kind == DefKind::Class {
+                    v.extend(self.class_uses(&def.name, files));
+                }
+                if include_declaration && in_files(d.file) {
                     v.push(FileRange {
                         file: d.file,
                         range: def.name_range,
@@ -523,8 +555,17 @@ impl Workspace {
                 }
                 v
             }
-            Symbol::Event(name) => self.event_references(name),
-            Symbol::Builtin(name) => par_map(&files, self.jobs(), |&f| {
+            Symbol::Event(name) => {
+                let mut v = self.event_references(name);
+                if files.len() < self.len() {
+                    v.retain(|r| in_files(r.file));
+                }
+                v
+            }
+            Symbol::Member { class, name } => {
+                self.member_references(class, name, include_declaration, files)
+            }
+            Symbol::Builtin(name) => par_map(files, self.jobs(), |&f| {
                 let res = self.resolution(f);
                 let facts = &self.file(f).facts;
                 res.refs
@@ -550,6 +591,9 @@ impl Workspace {
                 decl,
                 ..
             } => {
+                if !in_files(*file) {
+                    return Vec::new();
+                }
                 let f = self.file(*file);
                 let cfg = self.profile_of(*file).config;
                 let root = f.syntax();
@@ -580,7 +624,7 @@ impl Workspace {
                 }
                 v
             }
-            Symbol::Field(name) => par_map(&files, self.jobs(), |&f| {
+            Symbol::Field(name) => par_map(files, self.jobs(), |&f| {
                 let data = self.file(f);
                 if !data.facts.fields.contains(name) {
                     return Vec::new();
@@ -600,7 +644,7 @@ impl Workspace {
             .into_iter()
             .flatten()
             .collect(),
-            Symbol::File(target) => par_map(&files, self.jobs(), |&f| {
+            Symbol::File(target) => par_map(files, self.jobs(), |&f| {
                 let res = self.resolution(f);
                 let facts = &self.file(f).facts;
                 res.imports
@@ -734,7 +778,7 @@ impl Workspace {
                 let x = &self.file(file).facts.refs[i];
                 let r = &self.resolution(file).refs[i];
                 match (r.def, r.how) {
-                    (Some(d), _) => Some(self.def_hover(d, x.range)),
+                    (Some(d), _) => Some(self.use_hover(file, d, x.range)),
                     (None, How::Builtin | How::BuiltinOtherVm) => {
                         self.builtin_hover(file, &r.callee, x.range).or(Some(Hover {
                             range: x.range,
@@ -800,8 +844,35 @@ impl Workspace {
                     }],
                 })
             }
-            Hit::Macro(d, range) => Some(self.def_hover(d, range)),
+            Hit::Macro(d, range) => Some(self.use_hover(file, d, range)),
+            Hit::Class(d, range) => Some(self.def_hover(d, range)),
+            Hit::Member(class, name, range) => {
+                let mut detail = vec![format!("member of class `{class}`")];
+                if let Some(n) = self.member_decl(&class, &name) {
+                    let f = self.file(n.file);
+                    let line = crate::facts::LineStarts::new(f.text()).line(n.focus_range.start());
+                    detail.push(format!("declared in `{}:{line}`", f.meta.rel));
+                }
+                Some(Hover {
+                    range,
+                    signature: format!("var {class}::{name}"),
+                    doc: None,
+                    detail,
+                })
+            }
         }
+    }
+
+    /// The hover of a definition at one of its uses: a macro also shows what it expands to here.
+    fn use_hover(&self, file: FileId, d: DefId, range: TextRange) -> Hover {
+        let mut h = self.def_hover(d, range);
+        if self.def(d).kind == DefKind::Define {
+            if let Some(x) = self.macro_expansion_at(file, range.start()) {
+                let code = crate::nav::render_tokens(&x.tokens, 240);
+                h.detail.push(format!("expands to:\n```gsc\n{code}\n```"));
+            }
+        }
+        h
     }
 
     /// The outline of a file: definitions in order, methods under their class.

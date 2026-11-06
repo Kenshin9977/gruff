@@ -1,0 +1,5 @@
+#namespace unused;
+
+function nothing()
+{
+}

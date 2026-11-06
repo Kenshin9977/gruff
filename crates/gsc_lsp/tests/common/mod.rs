@@ -10,6 +10,8 @@ use std::time::{Duration, Instant};
 
 use serde_json::{json, Value};
 
+pub mod client;
+
 /// The toolchain folder (the repository's parent): `corpus/` and `gruff-data/` (or the older
 /// `gruff-data/`) sit there.
 pub fn root() -> PathBuf {

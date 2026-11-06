@@ -146,6 +146,101 @@ fn t7_session() {
         hovers.push(s.call("textDocument/hover", at(&def_pos)).1);
     }
 
+    // The editor features of the GSCode parity work, on the same file.
+    let whole =
+        json!({ "start": { "line": 0, "character": 0 }, "end": { "line": end, "character": 0 } });
+    let auto_pos = find(&text, "isSplitScreen()", 3);
+    let lit_pos = find(&text, "waittill( \"", 11);
+    let mut extra: Vec<(&str, Vec<Duration>, usize)> = Vec::new();
+    let requests: Vec<(&str, &str, Value)> = vec![
+        ("folding ranges", "textDocument/foldingRange", doc.clone()),
+        ("document links", "textDocument/documentLink", doc.clone()),
+        ("code lens", "textDocument/codeLens", doc.clone()),
+        (
+            "inlay hints, whole file",
+            "textDocument/inlayHint",
+            json!({ "textDocument": { "uri": u }, "range": whole }),
+        ),
+        (
+            "highlight, function",
+            "textDocument/documentHighlight",
+            at(&def_pos),
+        ),
+        (
+            "highlight, field",
+            "textDocument/documentHighlight",
+            at(&field_pos),
+        ),
+        (
+            "definition, field (writes)",
+            "textDocument/definition",
+            at(&field_pos),
+        ),
+        (
+            "implementation, field",
+            "textDocument/implementation",
+            at(&field_pos),
+        ),
+        (
+            "type definition, field",
+            "textDocument/typeDefinition",
+            at(&field_pos),
+        ),
+        (
+            "completion, auto-import (3 chars)",
+            "textDocument/completion",
+            at(&auto_pos),
+        ),
+        (
+            "completion, in a string",
+            "textDocument/completion",
+            at(&lit_pos),
+        ),
+        (
+            "organize imports",
+            "textDocument/codeAction",
+            json!({ "textDocument": { "uri": u },
+                    "range": { "start": { "line": 0, "character": 0 }, "end": { "line": 0, "character": 0 } },
+                    "context": { "diagnostics": [], "only": ["source.organizeImports"] } }),
+        ),
+        (
+            "selection range",
+            "textDocument/selectionRange",
+            json!({ "textDocument": { "uri": u }, "positions": [def_pos.clone()] }),
+        ),
+    ];
+    for (label, method, p) in requests {
+        let mut v = Vec::new();
+        let mut n = 0;
+        for _ in 0..5 {
+            let (r, t) = s.call(method, p.clone());
+            n = r
+                .get("items")
+                .unwrap_or(&r)
+                .as_array()
+                .map_or(usize::from(!r.is_null()), Vec::len);
+            v.push(t);
+        }
+        extra.push((label, v, n));
+    }
+    // A code lens right after an edit.
+    let mut lens_after = Vec::new();
+    for i in 0..5 {
+        version += 1;
+        s.notify(
+            "textDocument/didChange",
+            json!({
+                "textDocument": { "uri": u, "version": version },
+                "contentChanges": [{
+                    "range": { "start": { "line": end, "character": 0 },
+                               "end": { "line": end, "character": 0 } },
+                    "text": format!("// lens {i}\n"),
+                }],
+            }),
+        );
+        lens_after.push(s.call("textDocument/codeLens", doc.clone()).1);
+    }
+
     s.shutdown();
 
     let ms = |d: Duration| d.as_secs_f64() * 1000.0;
@@ -192,4 +287,8 @@ fn t7_session() {
     println!("after an edit, completion:       {}", stats(edit_comp));
     println!("after an edit, definition:       {}", stats(edit_def));
     println!("after an edit, references:       {}", stats(edit_refs));
+    for (label, v, n) in extra {
+        println!("{label} ({n}): {}", stats(v));
+    }
+    println!("after an edit, code lens:        {}", stats(lens_after));
 }

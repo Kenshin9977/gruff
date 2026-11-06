@@ -2,7 +2,7 @@
 //! workspace; none changes it (edits come back to the client as `WorkspaceEdit`s).
 
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
 use gsc_sema::{Callee, DefKind, FileId, NavTarget, Symbol, SymbolKind as Sk};
@@ -26,6 +26,7 @@ pub struct Ctx<'a> {
     pub project: &'a Project,
     pub enc: Encoding,
     pub lint: &'a Shared,
+    pub features: crate::project::Features,
     /// Line indexes built during this request.
     pub lines: RefCell<HashMap<FileId, Rc<LineIndex>>>,
 }
@@ -65,7 +66,7 @@ impl Ctx<'_> {
         self.a.file_id(&uri_to_path(uri)?)
     }
 
-    fn lines(&self, f: FileId) -> Rc<LineIndex> {
+    pub(crate) fn lines(&self, f: FileId) -> Rc<LineIndex> {
         self.lines
             .borrow_mut()
             .entry(f)
@@ -73,28 +74,28 @@ impl Ctx<'_> {
             .clone()
     }
 
-    fn offset(&self, f: FileId, pos: Position) -> TextSize {
+    pub(crate) fn offset(&self, f: FileId, pos: Position) -> TextSize {
         self.lines(f)
             .offset(self.a.ws.file(f).text(), pos, self.enc)
     }
 
-    fn at(&self, p: &TextDocumentPositionParams) -> Option<(FileId, TextSize)> {
+    pub(crate) fn at(&self, p: &TextDocumentPositionParams) -> Option<(FileId, TextSize)> {
         let f = self.file(&p.text_document.uri)?;
         Some((f, self.offset(f, p.position)))
     }
 
-    fn range(&self, f: FileId, r: TextRange) -> Range {
+    pub(crate) fn range(&self, f: FileId, r: TextRange) -> Range {
         self.lines(f).range(self.a.ws.file(f).text(), r, self.enc)
     }
 
-    fn location(&self, f: FileId, r: TextRange) -> Location {
+    pub(crate) fn location(&self, f: FileId, r: TextRange) -> Location {
         Location {
             uri: self.a.uri(f),
             range: self.range(f, r),
         }
     }
 
-    fn nav_location(&self, n: &NavTarget) -> Location {
+    pub(crate) fn nav_location(&self, n: &NavTarget) -> Location {
         self.location(n.file, n.focus_range)
     }
 
@@ -194,8 +195,13 @@ impl Ctx<'_> {
                 }
             }
         }
+        if let Some(r) = self.literal_completion(f, off) {
+            return r;
+        }
         let items = self.a.ws.completions(f, off);
-        let out: Vec<CompletionItem> = items
+        let cfg = self.a.ws.profile_of(f).config;
+        let taken: HashSet<String> = items.iter().map(|c| cfg.ident(&c.label)).collect();
+        let mut out: Vec<CompletionItem> = items
             .into_iter()
             .enumerate()
             .map(|(i, c)| CompletionItem {
@@ -207,10 +213,80 @@ impl Ctx<'_> {
                 ..Default::default()
             })
             .collect();
+        // Functions of files not imported yet, once three characters are typed (the names in
+        // scope come first).
+        let mut is_incomplete = false;
+        if self.features.auto_import {
+            let end = usize::from(off).min(text.len());
+            let b = text.as_bytes();
+            let mut start = end;
+            while start > 0 && (b[start - 1].is_ascii_alphanumeric() || b[start - 1] == b'_') {
+                start -= 1;
+            }
+            let before = text[..start].trim_end_matches([' ', '\t']);
+            let general =
+                !(before.ends_with('.') || before.ends_with("::") || before.ends_with("->"));
+            if general {
+                let prefix = &text[start..end];
+                if prefix.len() >= 3 {
+                    let extra = self.auto_import_items(f, prefix, &taken);
+                    is_incomplete = extra.len() >= 100;
+                    out.extend(extra);
+                } else {
+                    is_incomplete = true;
+                }
+            }
+        }
         Some(CompletionResponse::List(CompletionList {
-            is_incomplete: false,
+            is_incomplete,
             items: out,
         }))
+    }
+
+    /// Inside a string: the names the scripts and the engine use as strings (events above
+    /// all), or nothing. `None` when the cursor is not in a string.
+    fn literal_completion(&self, f: FileId, off: TextSize) -> Option<Option<CompletionResponse>> {
+        let data = self.a.ws.file(f);
+        let root = data.syntax();
+        let tok = root.token_at_offset(off).left_biased()?;
+        if !matches!(
+            tok.kind(),
+            gsc_syntax::SyntaxKind::STRING | gsc_syntax::SyntaxKind::HASH_STRING
+        ) {
+            return None;
+        }
+        let tr = tok.text_range();
+        let t = tok.text();
+        let open = t.find('"')? as u32;
+        let content_start = tr.start() + TextSize::from(open + 1);
+        let closed = t.len() as u32 > open + 1 && t.ends_with('"');
+        let inside = off >= content_start && (off < tr.end() || !closed);
+        if !inside {
+            return None;
+        }
+        if !self.features.literals {
+            return Some(None);
+        }
+        let typed = data.text()[usize::from(content_start)..usize::from(off)].to_ascii_lowercase();
+        let range = self.range(f, TextRange::new(content_start, off));
+        let items: Vec<CompletionItem> = self
+            .a
+            .ws
+            .known_strings(f)
+            .into_iter()
+            .filter(|s| s.starts_with(&typed) && *s != typed)
+            .take(500)
+            .map(|s| CompletionItem {
+                label: s.clone(),
+                kind: Some(CompletionItemKind::VALUE),
+                text_edit: Some(CompletionTextEdit::Edit(TextEdit { range, new_text: s })),
+                ..Default::default()
+            })
+            .collect();
+        Some(Some(CompletionResponse::List(CompletionList {
+            is_incomplete: items.len() >= 500,
+            items,
+        })))
     }
 
     pub fn signature_help(&self, p: SignatureHelpParams) -> Option<SignatureHelp> {
@@ -373,7 +449,7 @@ impl Ctx<'_> {
     }
 
     /// The last lint results of `f`, if they were computed on its current text.
-    fn fresh_diags(&self, f: FileId) -> Vec<gsc_check::Diagnostic> {
+    pub(crate) fn fresh_diags(&self, f: FileId) -> Vec<gsc_check::Diagnostic> {
         let text = self.a.ws.file(f).text();
         let results = self.lint.results.lock().expect("results lock");
         match results.get(&f) {
@@ -447,11 +523,13 @@ impl Ctx<'_> {
                 }));
             }
         }
+        out.extend(self.import_actions(f, uri, want, &wants));
         Some(out)
     }
 
     /// What may be renamed at a position: script functions and methods outside library roots,
-    /// parameters and locals. Builtins, fields, macros and files are refused.
+    /// script fields and class members, parameters and locals. Builtins, engine fields, macros
+    /// and files are refused (a use in a library root refuses any rename).
     fn rename_target(&self, f: FileId, off: TextSize) -> Result<(Symbol, TextRange)> {
         let ws = &self.a.ws;
         let sym = ws
@@ -464,9 +542,22 @@ impl Ctx<'_> {
             .map(|r| r.range);
         match &sym {
             Symbol::Builtin(n) => Err(Refused(format!("`{n}` is an engine builtin"))),
-            Symbol::Field(_) => Err(Refused(
-                "fields are not renamed: any object may carry them".to_owned(),
-            )),
+            Symbol::Field(name) => {
+                let engine = ws
+                    .profile_of(f)
+                    .fields
+                    .as_ref()
+                    .is_some_and(|c| c.contains(name));
+                if engine {
+                    return Err(Refused(format!("`{name}` is an engine field")));
+                }
+                let range = here.ok_or_else(|| Refused("nothing to rename here".to_owned()))?;
+                Ok((sym, range))
+            }
+            Symbol::Member { .. } => {
+                let range = here.ok_or_else(|| Refused("nothing to rename here".to_owned()))?;
+                Ok((sym, range))
+            }
             Symbol::File(_) => Err(Refused("files are renamed on disk".to_owned())),
             Symbol::Event(_) => Err(Refused("event names are not renamed".to_owned())),
             Symbol::Def(d) => {

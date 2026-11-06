@@ -21,7 +21,7 @@ use crate::analysis::Analysis;
 use crate::convert::{path_key, uri_to_path, Encoding, LineIndex};
 use crate::diagnostics::{Job, Worker};
 use crate::handlers::{Ctx, Refused};
-use crate::project::{Project, Settings};
+use crate::project::{Features, Project, Settings};
 
 /// How long the lint worker waits after the last change before checking.
 pub const DEBOUNCE: Duration = Duration::from_millis(75);
@@ -57,6 +57,7 @@ struct Server {
     enc: Encoding,
     folders: Vec<PathBuf>,
     settings: Settings,
+    features: Features,
     docs: HashMap<Uri, Doc>,
     world: Option<World>,
     load_generation: u64,
@@ -81,8 +82,8 @@ fn negotiate(caps: &ClientCapabilities) -> Encoding {
     }
 }
 
-fn capabilities(enc: Encoding) -> ServerCapabilities {
-    ServerCapabilities {
+fn capabilities(enc: Encoding) -> Value {
+    let caps = ServerCapabilities {
         position_encoding: Some(match enc {
             Encoding::Utf8 => PositionEncodingKind::UTF8,
             Encoding::Utf16 => PositionEncodingKind::UTF16,
@@ -113,6 +114,7 @@ fn capabilities(enc: Encoding) -> ServerCapabilities {
         code_action_provider: Some(CodeActionProviderCapability::Options(CodeActionOptions {
             code_action_kinds: Some(vec![
                 CodeActionKind::QUICKFIX,
+                CodeActionKind::SOURCE_ORGANIZE_IMPORTS,
                 CodeActionKind::new("source.fixAll.gsc"),
             ]),
             ..Default::default()
@@ -132,8 +134,25 @@ fn capabilities(enc: Encoding) -> ServerCapabilities {
                 work_done_progress_options: Default::default(),
             },
         )),
+        folding_range_provider: Some(FoldingRangeProviderCapability::Simple(true)),
+        selection_range_provider: Some(SelectionRangeProviderCapability::Simple(true)),
+        document_highlight_provider: Some(OneOf::Left(true)),
+        document_link_provider: Some(DocumentLinkOptions {
+            resolve_provider: Some(false),
+            work_done_progress_options: Default::default(),
+        }),
+        code_lens_provider: Some(CodeLensOptions {
+            resolve_provider: Some(false),
+        }),
+        inlay_hint_provider: Some(OneOf::Left(true)),
+        implementation_provider: Some(ImplementationProviderCapability::Simple(true)),
+        type_definition_provider: Some(TypeDefinitionProviderCapability::Simple(true)),
         ..Default::default()
-    }
+    };
+    let mut v = serde_json::to_value(caps).unwrap_or_default();
+    // Not in lsp-types' ServerCapabilities yet.
+    v["typeHierarchyProvider"] = Value::Bool(true);
+    v
 }
 
 /// Run the server on an initialized-to-be connection until `exit`.
@@ -182,6 +201,7 @@ pub fn run(conn: Connection) -> Result<(), String> {
         enc,
         folders,
         settings: Settings::from_json(&opts),
+        features: Features::from_json(&opts),
         docs: HashMap::new(),
         world: None,
         load_generation: 0,
@@ -561,6 +581,7 @@ impl Server {
                 let Ok(p) = serde_json::from_value::<DidChangeConfigurationParams>(n.params) else {
                     return;
                 };
+                self.features = Features::from_json(&p.settings);
                 let s = Settings::from_json(&p.settings);
                 if s != self.settings {
                     self.settings = s;
@@ -630,6 +651,7 @@ impl Server {
             project: &w.project,
             enc: self.enc,
             lint: &self.lint.shared,
+            features: self.features,
             lines: Default::default(),
         };
         let refused =
@@ -670,6 +692,17 @@ impl Server {
             "textDocument/prepareRename" => with_result!(|p| ctx.prepare_rename(p)),
             "textDocument/rename" => with_result!(|p| ctx.rename(p)),
             "textDocument/semanticTokens/full" => with!(|p| ctx.semantic_tokens(p)),
+            "textDocument/foldingRange" => with!(|p| ctx.folding_ranges(p)),
+            "textDocument/selectionRange" => with!(|p| ctx.selection_ranges(p)),
+            "textDocument/documentHighlight" => with!(|p| ctx.document_highlight(p)),
+            "textDocument/documentLink" => with!(|p| ctx.document_links(p)),
+            "textDocument/codeLens" => with!(|p| ctx.code_lens(p)),
+            "textDocument/inlayHint" => with!(|p| ctx.inlay_hints(p)),
+            "textDocument/implementation" => with!(|p| ctx.implementation(p)),
+            "textDocument/typeDefinition" => with!(|p| ctx.type_definition(p)),
+            "textDocument/prepareTypeHierarchy" => with!(|p| ctx.prepare_type_hierarchy(p)),
+            "typeHierarchy/supertypes" => with!(|p| ctx.supertypes(p)),
+            "typeHierarchy/subtypes" => with!(|p| ctx.subtypes(p)),
             "gsc/status" => ok(id, ctx.status()),
             _ => Response::new_err(
                 id,
