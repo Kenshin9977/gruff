@@ -1,0 +1,41 @@
+---
+source: crates/gsc_index/tests/index.rs
+expression: "render(\"iw\", &iw(), Some(catalogue()), 1)"
+---
+===== CALLS.tsv
+caller	callee	resolution	kind	receiver	at	via_macro
+maps/mp/gametypes/arena::main	maps/mp/gametypes/arena::on_player_connect	local	pointer	-	maps/mp/gametypes/arena.gsc:8	-
+maps/mp/gametypes/arena::main	maps/mp/gametypes/arena::watch_rounds	local	thread	-	maps/mp/gametypes/arena.gsc:9	-
+maps/mp/gametypes/arena::main	maps/mp/_helpers::get_max	include	call	-	maps/mp/gametypes/arena.gsc:10	-
+maps/mp/gametypes/arena::main	maps/mp/_helpers::safe_wait	qualified	call	-	maps/mp/gametypes/arena.gsc:11	-
+maps/mp/gametypes/arena::main	playfx	builtin_othervm	call	-	maps/mp/gametypes/arena.gsc:12	-
+maps/mp/gametypes/arena::watch_rounds	[[level.callbackplayerconnect]]	dynamic	call	-	maps/mp/gametypes/arena.gsc:28	-
+===== EVENTS.tsv
+event	op	receiver	receiver_text	args	function	at	expr	via_macro
+disconnect	endon	self	self	0	maps/mp/gametypes/arena::on_player_connect	maps/mp/gametypes/arena.gsc:17	-	-
+spawned_player	waittill	self	self	0	maps/mp/gametypes/arena::on_player_connect	maps/mp/gametypes/arena.gsc:20	-	-
+arena_ready	notify	self	self	0	maps/mp/gametypes/arena::on_player_connect	maps/mp/gametypes/arena.gsc:21	-	-
+round_*_over	waittill	level	level	0	maps/mp/gametypes/arena::watch_rounds	maps/mp/gametypes/arena.gsc:27	"round_" + level.round + "_over"	-
+===== EVENTS_SUMMARY.tsv
+event	emit	wait	endon	files	receivers	flags
+arena_ready	1	0	0	1	self:1	no_script_listener
+disconnect	0	0	1	1	self:1	no_script_emitter
+round_*_over	0	1	0	1	level:1	no_script_emitter,pattern
+spawned_player	0	1	0	1	self:1	no_script_emitter
+===== FIELDS.tsv
+object	field	op	function	at	via_macro
+level	callbackplayerconnect	write	maps/mp/gametypes/arena::main	maps/mp/gametypes/arena.gsc:8	-
+level	_effect	read	maps/mp/gametypes/arena::main	maps/mp/gametypes/arena.gsc:12	-
+level	round	read	maps/mp/gametypes/arena::watch_rounds	maps/mp/gametypes/arena.gsc:27	-
+level	callbackplayerconnect	read	maps/mp/gametypes/arena::watch_rounds	maps/mp/gametypes/arena.gsc:28	-
+===== INCLUDES.tsv
+file	directive	target	resolved	at
+maps/mp/gametypes/arena.gsc	include	maps/mp/_helpers	maps/mp/_helpers.gsc	maps/mp/gametypes/arena.gsc:2
+===== SYMBOLS.tsv
+kind	namespace	name	at	params	flags	doc
+function	maps/mp/_helpers	safe_wait	maps/mp/_helpers.gsc:3	-	-	-
+function	maps/mp/_helpers	get_max	maps/mp/_helpers.gsc:8	a, b	-	-
+const	maps/mp/gametypes/arena	ROUND_LIMIT	maps/mp/gametypes/arena.gsc:4	-	-	= 3
+function	maps/mp/gametypes/arena	main	maps/mp/gametypes/arena.gsc:6	-	-	-
+function	maps/mp/gametypes/arena	on_player_connect	maps/mp/gametypes/arena.gsc:15	-	-	-
+function	maps/mp/gametypes/arena	watch_rounds	maps/mp/gametypes/arena.gsc:25	-	-	-

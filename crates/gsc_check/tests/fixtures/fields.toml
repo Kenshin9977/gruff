@@ -1,0 +1,20 @@
+# A tiny engine field catalogue for the tests (not game data).
+schema_version = 1
+game = "test"
+license = "CC0-1.0"
+source = "written for the gsc_check tests"
+hash_family = "t7.canon"
+
+[[field]]
+name = "health"
+kind = "entity"
+vm = ["gsc"]
+offset = "0x0"
+evidence = "test"
+
+[[field]]
+name = "origin"
+kind = "entity"
+vm = ["gsc", "csc"]
+offset = "0x1"
+evidence = "test"

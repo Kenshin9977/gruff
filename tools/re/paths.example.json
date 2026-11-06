@@ -1,0 +1,49 @@
+{
+ "_comment": "Template: copy to paths.local.json (gitignored) beside this file and set your own paths, or set GSC_RE_<KEY> (GSC_RE_EXE_T7, GSC_RE_BO3_HASH_CSV...; a list key takes paths separated by the OS path separator). Drop what you do not have: a tool stops naming the key it needs. corpus and gsc_data default to the folders beside gruff.",
+ "corpus": "C:/path/to/gsc-toolchain/corpus",
+ "gsc_data": "C:/path/to/gsc-toolchain/gruff-data",
+ "exe": {
+  "iw1": "C:/path/to/gamex86.dll",
+  "iw3": "C:/path/to/iw3mp.exe",
+  "iw4": "C:/path/to/iw4mp.exe",
+  "iw5": "C:/path/to/iw5mp.exe",
+  "iw5_sp": "C:/path/to/iw5sp.exe",
+  "iw6": "C:/path/to/iw6sp64_dump2.exe",
+  "s1": "C:/path/to/s1_mp64_ship_dump.exe",
+  "s1_sp": "C:/path/to/s1_sp64_ship_dump.exe",
+  "h1": "C:/path/to/h1_mp64_ship_dump.exe",
+  "h1_sp": "C:/path/to/h1_sp64_ship_dump.exe",
+  "iw7": "C:/path/to/iw7_ship_dump.exe",
+  "s2": "C:/path/to/s2_mp64_flat.exe",
+  "s2_sp": "C:/path/to/s2_sp64_ship_dump.exe",
+  "iw8": "C:/path/to/iw8_flat.exe",
+  "jup": "C:/path/to/mwiii_flat.exe",
+  "jup_sp": "C:/path/to/mwiii_sp_flat.exe",
+  "t4": "C:/path/to/codwaw_flat.exe",
+  "t5": "C:/path/to/blackops_flat.exe",
+  "t5mp": "C:/path/to/BlackOpsMP.exe",
+  "t6": "C:/path/to/t6_dump_flat.exe",
+  "t6zm": "C:/path/to/t6zm.exe.unpacked.exe",
+  "t6sp": "C:/path/to/t6sp.exe.unpacked.exe",
+  "t7": "C:/path/to/bo3_flat.exe",
+  "t8": "C:/path/to/BlackOps4_dump.exe",
+  "t9": "C:/path/to/BlackOpsColdWar_dump.exe",
+  "t10": "C:/path/to/bo6_flat.exe",
+  "t10sp": "C:/path/to/bo6sp_flat.exe",
+  "t11": "C:/path/to/bo7_flat.exe"
+ },
+ "bo3_root": "C:/path/to/steamapps/common/Call of Duty Black Ops III",
+ "bo3_hash_csv": "C:/path/to/bo3_names_and_labels.csv",
+ "gsctool_src": "C:/path/to/gsc-tool/src/gsc/engine",
+ "acts": "C:/path/to/acts/bin/acts.exe",
+ "bo7_corpus": "C:/path/to/bo7-gsc-archive-work/decrypted-v2",
+ "bo7_archive_names": "C:/path/to/bo7-gsc-archive/names",
+ "graywolf_package_index": "C:/path/to/GrayWolf/x64/Dev/package_index",
+ "cod_hash_recovery": "C:/path/to/cod-hash-recovery",
+ "bo4_glossary": [
+  "C:/path/to/bo4-glossary/glossary.jsonl"
+ ],
+ "hash_lists": [
+  "C:/path/to/hash-list-folder"
+ ]
+}

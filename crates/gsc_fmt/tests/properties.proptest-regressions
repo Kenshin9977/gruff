@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 5b2bf6ef68538d8dd4581b355e92fdfb16a9116ad1bef7b76d2b2adaf2d456e6 # shrinks to toks = ["#using", "scripts\\shared\\util", ";", "\n", "function", "a0", "(", ")", "{", "{", "for", "(", "x1", "=", "0", ";", "x1", "<", "a", ";", "x1", "++", ")", "if", "(", "a", ")", "// a  comment ,( x )  ", "\n", "}", "}"], gaps = [""], opts = Options { indent: Tabs, paren_spacing: Padded }

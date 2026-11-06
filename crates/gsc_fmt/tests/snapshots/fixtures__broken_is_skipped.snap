@@ -1,0 +1,5 @@
+---
+source: crates/gsc_fmt/tests/fixtures.rs
+expression: err.to_string()
+---
+2 syntax error(s), first: E0201 expected `,` or `)`, found `{`

@@ -1,0 +1,27 @@
+class cWidget : cBase
+{
+var m_size;
+    var m_name;
+
+	constructor()
+	{
+	m_size=0;
+	}
+
+	destructor()
+	{
+	}
+
+	function grow(n)
+	{
+		m_size+=n;
+		return m_size;
+	}
+}
+
+function make()
+{
+	w = new cWidget();
+	[[ w ]]->grow( 1 );
+	return w;
+}

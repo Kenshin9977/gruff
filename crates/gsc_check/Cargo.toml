@@ -1,0 +1,22 @@
+[package]
+name = "gsc_check"
+description = "Ruff-like lint rules over the GSC syntax tree."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+gsc_syntax.workspace = true
+gsc_sema.workspace = true
+toml = "0.8"
+xxhash-rust.workspace = true
+
+[dev-dependencies]
+insta = "1.40"
+
+[lints]
+workspace = true

@@ -1,0 +1,2 @@
+# Fixture offsets in the snapshots assume LF line endings.
+*.gsc text eol=lf

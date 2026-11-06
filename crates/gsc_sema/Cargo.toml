@@ -1,0 +1,21 @@
+[package]
+name = "gsc_sema"
+description = "The GSC semantic core: workspace, file set, per-file facts, cross-file name resolution and IDE queries."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+gsc_syntax.workspace = true
+gsc_hash.workspace = true
+toml.workspace = true
+
+[dev-dependencies]
+insta.workspace = true
+
+[lints]
+workspace = true

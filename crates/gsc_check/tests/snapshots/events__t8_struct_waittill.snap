@@ -1,0 +1,6 @@
+---
+source: crates/gsc_check/tests/events.rs
+expression: run(&t8_workspace())
+---
+loot.gsc:16:13: T003 no notify of "picked_up" sends `player`: `s.player` is always undefined (`waittill` returns the notify's payload struct)
+loot.gsc:22:15: T003 no notify of "round_over" or "match_over" sends `loser`: `r.loser` is always undefined (`waittill` returns the notify's payload struct)

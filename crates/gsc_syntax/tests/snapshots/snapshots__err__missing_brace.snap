@@ -1,0 +1,68 @@
+---
+source: crates/gsc_syntax/tests/snapshots.rs
+expression: "render(&text, &p, &check_dialect(&p.syntax(), dialect))"
+---
+7:1: E0201 expected `}`, found `function`
+
+SOURCE_FILE@0..75
+  FUNCTION_DEF@0..43
+    FUNCTION_KW@0..8 "function"
+    WHITESPACE@8..9 " "
+    NAME@9..14
+      IDENT@9..14 "first"
+    PARAM_LIST@14..16
+      L_PAREN@14..15 "("
+      R_PAREN@15..16 ")"
+    WHITESPACE@16..17 "\n"
+    BLOCK@17..43
+      L_CURLY@17..18 "{"
+      WHITESPACE@18..20 "\n\t"
+      IF_STMT@20..43
+        IF_KW@20..22 "if"
+        WHITESPACE@22..23 " "
+        L_PAREN@23..24 "("
+        WHITESPACE@24..25 " "
+        LITERAL@25..29
+          TRUE_KW@25..29 "true"
+        WHITESPACE@29..30 " "
+        R_PAREN@30..31 ")"
+        WHITESPACE@31..33 "\n\t"
+        BLOCK@33..43
+          L_CURLY@33..34 "{"
+          WHITESPACE@34..37 "\n\t\t"
+          EXPR_STMT@37..43
+            ASSIGN_EXPR@37..42
+              NAME_REF@37..38
+                IDENT@37..38 "x"
+              WHITESPACE@38..39 " "
+              EQ@39..40 "="
+              WHITESPACE@40..41 " "
+              LITERAL@41..42
+                INT_NUMBER@41..42 "1"
+            SEMICOLON@42..43 ";"
+  WHITESPACE@43..45 "\n\n"
+  FUNCTION_DEF@45..74
+    FUNCTION_KW@45..53 "function"
+    WHITESPACE@53..54 " "
+    NAME@54..60
+      IDENT@54..60 "second"
+    PARAM_LIST@60..62
+      L_PAREN@60..61 "("
+      R_PAREN@61..62 ")"
+    WHITESPACE@62..63 "\n"
+    BLOCK@63..74
+      L_CURLY@63..64 "{"
+      WHITESPACE@64..66 "\n\t"
+      EXPR_STMT@66..72
+        ASSIGN_EXPR@66..71
+          NAME_REF@66..67
+            IDENT@66..67 "y"
+          WHITESPACE@67..68 " "
+          EQ@68..69 "="
+          WHITESPACE@69..70 " "
+          LITERAL@70..71
+            INT_NUMBER@70..71 "2"
+        SEMICOLON@71..72 ";"
+      WHITESPACE@72..73 "\n"
+      R_CURLY@73..74 "}"
+  WHITESPACE@74..75 "\n"

@@ -1,0 +1,7 @@
+---
+source: crates/gsc_check/tests/snapshots.rs
+expression: "output::render(&results, Format::Concise)"
+---
+maps/main.gsc:5:9: B005 `randomint` is a builtin, and a threaded call never reaches a builtin: the game's compiler refuses `thread randomint()` (unknown function); call it without `thread`, or thread a script function that calls it
+maps/main.gsc:8:8: B005 `randomint` is a builtin, and a function reference never reaches a builtin: the game's compiler refuses `::randomint` (unknown function); refer to a script function that calls it
+maps/main.gsc:10:12: B002 builtin function `getent` takes 2 arguments, but 1 was given

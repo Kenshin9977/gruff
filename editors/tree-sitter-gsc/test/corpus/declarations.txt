@@ -1,0 +1,278 @@
+================================================================================
+Directives
+================================================================================
+
+#using scripts\shared\util_shared;
+#using scripts/shared/other;
+#include maps\mp\_utility;
+#insert scripts\shared\shared.gsh;
+#inline scripts\demo\demo;
+#namespace demo;
+#precache( "model", "box" );
+#using_animtree( "generic" );
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (using_directive
+    (path))
+  (using_directive
+    (path))
+  (include_directive
+    (path))
+  (insert_directive
+    (path))
+  (inline_directive
+    (path))
+  (namespace_directive
+    (identifier))
+  (precache_directive
+    (argument_list
+      (string)
+      (string)))
+  (using_animtree_directive
+    (argument_list
+      (string))))
+
+================================================================================
+Functions and modifiers
+================================================================================
+
+function autoexec private init( a, &b, *c, d = 1, ... )
+{
+}
+
+main()
+{
+}
+
+function event_handler[ grenade_fire ] on_fire( eventstruct )
+{
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_definition
+    (modifier)
+    (modifier)
+    (identifier)
+    (parameter_list
+      (parameter
+        (identifier))
+      (parameter
+        (identifier))
+      (parameter
+        (identifier))
+      (parameter
+        (identifier)
+        (integer))
+      (vararg_parameter))
+    (block))
+  (function_definition
+    (identifier)
+    (parameter_list)
+    (block))
+  (function_definition
+    (event_handler
+      (identifier))
+    (identifier)
+    (parameter_list
+      (parameter
+        (identifier)))
+    (block)))
+
+================================================================================
+Classes
+================================================================================
+
+class demo_child : demo_base
+{
+	var m_count = 0;
+
+	constructor()
+	{
+	}
+
+	destructor()
+	{
+	}
+
+	function bump()
+	{
+		m_count++;
+	}
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (class_definition
+    (identifier)
+    (class_bases
+      (identifier))
+    (class_body
+      (class_variable
+        (identifier)
+        (integer))
+      (constructor_definition
+        (parameter_list)
+        (block))
+      (destructor_definition
+        (parameter_list)
+        (block))
+      (function_definition
+        (identifier)
+        (parameter_list)
+        (block
+          (expression_statement
+            (update_expression
+              (identifier))))))))
+
+================================================================================
+File constants and file-scope macros
+================================================================================
+
+MAX_COUNT = 8;
+REGISTER_SYSTEM( "demo", &init, undefined )
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (file_constant
+    (identifier)
+    (integer))
+  (macro_call_item
+    (identifier)
+    (argument_list
+      (string)
+      (function_reference
+        (identifier))
+      (undefined))))
+
+================================================================================
+Defines
+================================================================================
+
+#define MAX 8
+#define DEBUG_ON false
+#define SQUARE(x) ((x) * (x))
+#define LONG(a, b) \
+	(a + \
+	 b)
+#undef MAX
+
+f()
+{
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (preproc_define
+    (identifier)
+    (preproc_arg))
+  (preproc_define
+    (identifier)
+    (preproc_arg))
+  (preproc_define
+    (identifier)
+    (preproc_params
+      (identifier))
+    (preproc_arg))
+  (preproc_define
+    (identifier)
+    (preproc_params
+      (identifier)
+      (identifier))
+    (preproc_arg))
+  (preproc_undef
+    (identifier))
+  (function_definition
+    (identifier)
+    (parameter_list)
+    (block)))
+
+================================================================================
+Conditionals keep the first branch
+================================================================================
+
+#if XFILE_VERSION >= 544
+f()
+{
+#else
+g()
+{
+#endif
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (preproc_condition)
+  (function_definition
+    (identifier)
+    (parameter_list)
+    (block
+      (preproc_disabled)
+      (preproc_condition))))
+
+================================================================================
+File-scope dev block
+================================================================================
+
+/#
+debug_only()
+{
+}
+#/
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (dev_block_item
+    (function_definition
+      (identifier)
+      (parameter_list)
+      (block))))
+
+================================================================================
+Decompiler names
+================================================================================
+
+function function_1a2b( var_c3d4 )
+{
+	self namespace_5e6f::!_odd();
+	self maps/creek/fx_name( 1 );
+	thread scripts/mp/x.gsc::f();
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_definition
+    (identifier)
+    (parameter_list
+      (parameter
+        (identifier)))
+    (block
+      (expression_statement
+        (call_expression
+          (identifier)
+          (qualified_identifier
+            (identifier)
+            (identifier))
+          (argument_list)))
+      (expression_statement
+        (call_expression
+          (identifier)
+          (path)
+          (argument_list
+            (integer))))
+      (expression_statement
+        (call_expression
+          (call_modifier)
+          (qualified_identifier
+            (path)
+            (identifier))
+          (argument_list))))))

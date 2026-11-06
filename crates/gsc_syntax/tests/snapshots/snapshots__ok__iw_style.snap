@@ -1,0 +1,181 @@
+---
+source: crates/gsc_syntax/tests/snapshots.rs
+expression: "render(&text, &p, &check_dialect(&p.syntax(), dialect))"
+---
+SOURCE_FILE@0..280
+  INCLUDE_DIRECTIVE@0..27
+    INCLUDE_KW@0..8 "#include"
+    WHITESPACE@8..9 " "
+    PATH@9..26 "demo\\_shared_util"
+    SEMICOLON@26..27 ";"
+  WHITESPACE@27..28 "\n"
+  USING_ANIMTREE_DIRECTIVE@28..59
+    USING_ANIMTREE_KW@28..43 "#using_animtree"
+    ARG_LIST@43..58
+      L_PAREN@43..44 "("
+      WHITESPACE@44..45 " "
+      LITERAL@45..56
+        STRING@45..56 "\"demo_tree\""
+      WHITESPACE@56..57 " "
+      R_PAREN@57..58 ")"
+    SEMICOLON@58..59 ";"
+  WHITESPACE@59..61 "\n\n"
+  FILE_CONSTANT@61..78
+    NAME@61..71
+      IDENT@61..71 "DEMO_SPEED"
+    WHITESPACE@71..72 " "
+    EQ@72..73 "="
+    WHITESPACE@73..74 " "
+    LITERAL@74..77
+      INT_NUMBER@74..77 "120"
+    SEMICOLON@77..78 ";"
+  WHITESPACE@78..80 "\n\n"
+  FUNCTION_DEF@80..242
+    NAME@80..84
+      IDENT@80..84 "main"
+    PARAM_LIST@84..86
+      L_PAREN@84..85 "("
+      R_PAREN@85..86 ")"
+    WHITESPACE@86..87 "\n"
+    BLOCK@87..242
+      L_CURLY@87..88 "{"
+      WHITESPACE@88..90 "\n\t"
+      EXPR_STMT@90..117
+        CALL_EXPR@90..116
+          QUALIFIED_REF@90..114
+            QUALIFIER@90..107
+              PATH@90..107 "maps\\demo\\_helper"
+            COLON2@107..109 "::"
+            NAME_REF@109..114
+              IDENT@109..114 "start"
+          ARG_LIST@114..116
+            L_PAREN@114..115 "("
+            R_PAREN@115..116 ")"
+        SEMICOLON@116..117 ";"
+      WHITESPACE@117..119 "\n\t"
+      EXPR_STMT@119..144
+        CALL_EXPR@119..143
+          NAME_REF@119..123
+            SELF_KW@119..123 "self"
+          WHITESPACE@123..124 " "
+          CHILDTHREAD_KW@124..135 "childthread"
+          WHITESPACE@135..136 " "
+          NAME_REF@136..141
+            IDENT@136..141 "watch"
+          ARG_LIST@141..143
+            L_PAREN@141..142 "("
+            R_PAREN@142..143 ")"
+        SEMICOLON@143..144 ";"
+      WHITESPACE@144..146 "\n\t"
+      EXPR_STMT@146..166
+        ASSIGN_EXPR@146..165
+          FIELD_EXPR@146..155
+            NAME_REF@146..151
+              LEVEL_KW@146..151 "level"
+            DOT@151..152 "."
+            NAME_REF@152..155
+              IDENT@152..155 "ptr"
+          WHITESPACE@155..156 " "
+          EQ@156..157 "="
+          WHITESPACE@157..158 " "
+          QUALIFIED_REF@158..165
+            COLON2@158..160 "::"
+            NAME_REF@160..165
+              IDENT@160..165 "watch"
+        SEMICOLON@165..166 ";"
+      WHITESPACE@166..168 "\n\t"
+      EXPR_STMT@168..186
+        POINTER_CALL_EXPR@168..185
+          L_BRACK@168..169 "["
+          L_BRACK@169..170 "["
+          WHITESPACE@170..171 " "
+          FIELD_EXPR@171..180
+            NAME_REF@171..176
+              LEVEL_KW@171..176 "level"
+            DOT@176..177 "."
+            NAME_REF@177..180
+              IDENT@177..180 "ptr"
+          WHITESPACE@180..181 " "
+          R_BRACK@181..182 "]"
+          R_BRACK@182..183 "]"
+          ARG_LIST@183..185
+            L_PAREN@183..184 "("
+            R_PAREN@184..185 ")"
+        SEMICOLON@185..186 ";"
+      WHITESPACE@186..188 "\n\t"
+      EXPR_STMT@188..240
+        ASSIGN_EXPR@188..239
+          NAME_REF@188..193
+            IDENT@188..193 "ratio"
+          WHITESPACE@193..194 " "
+          EQ@194..195 "="
+          WHITESPACE@195..196 " "
+          BIN_EXPR@196..239
+            CAST_EXPR@196..212
+              L_PAREN@196..197 "("
+              NAME_REF@197..202
+                IDENT@197..202 "float"
+              R_PAREN@202..203 ")"
+              FIELD_EXPR@203..212
+                NAME_REF@203..207
+                  SELF_KW@203..207 "self"
+                DOT@207..208 "."
+                NAME_REF@208..212
+                  IDENT@208..212 "hits"
+            WHITESPACE@212..213 " "
+            SLASH@213..214 "/"
+            WHITESPACE@214..215 " "
+            CAST_EXPR@215..239
+              L_PAREN@215..216 "("
+              NAME_REF@216..219
+                IDENT@216..219 "int"
+              R_PAREN@219..220 ")"
+              PAREN_EXPR@220..239
+                L_PAREN@220..221 "("
+                WHITESPACE@221..222 " "
+                BIN_EXPR@222..237
+                  FIELD_EXPR@222..233
+                    NAME_REF@222..227
+                      LEVEL_KW@222..227 "level"
+                    DOT@227..228 "."
+                    NAME_REF@228..233
+                      IDENT@228..233 "total"
+                  WHITESPACE@233..234 " "
+                  PLUS@234..235 "+"
+                  WHITESPACE@235..236 " "
+                  LITERAL@236..237
+                    INT_NUMBER@236..237 "1"
+                WHITESPACE@237..238 " "
+                R_PAREN@238..239 ")"
+        SEMICOLON@239..240 ";"
+      WHITESPACE@240..241 "\n"
+      R_CURLY@241..242 "}"
+  WHITESPACE@242..244 "\n\n"
+  FUNCTION_DEF@244..279
+    NAME@244..249
+      IDENT@244..249 "watch"
+    PARAM_LIST@249..251
+      L_PAREN@249..250 "("
+      R_PAREN@250..251 ")"
+    WHITESPACE@251..252 "\n"
+    BLOCK@252..279
+      L_CURLY@252..253 "{"
+      WHITESPACE@253..255 "\n\t"
+      EXPR_STMT@255..277
+        CALL_EXPR@255..276
+          NAME_REF@255..259
+            SELF_KW@255..259 "self"
+          WHITESPACE@259..260 " "
+          NAME_REF@260..265
+            ENDON_KW@260..265 "endon"
+          ARG_LIST@265..276
+            L_PAREN@265..266 "("
+            WHITESPACE@266..267 " "
+            LITERAL@267..274
+              STRING@267..274 "\"death\""
+            WHITESPACE@274..275 " "
+            R_PAREN@275..276 ")"
+        SEMICOLON@276..277 ";"
+      WHITESPACE@277..278 "\n"
+      R_CURLY@278..279 "}"
+  WHITESPACE@279..280 "\n"

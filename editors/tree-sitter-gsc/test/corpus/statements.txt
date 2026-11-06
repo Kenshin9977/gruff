@@ -1,0 +1,269 @@
+================================================================================
+Control flow
+================================================================================
+
+f( n )
+{
+	if ( n == 0 )
+		return;
+	else if ( n == 1 )
+		wait 0.05;
+	else
+		waittillframeend;
+
+	while ( n > 0 )
+		n--;
+
+	do
+	{
+		n++;
+	}
+	while ( n < 3 );
+
+	for ( i = 0; i < 3; i++ )
+		continue;
+
+	for ( ;; )
+		break;
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_definition
+    (identifier)
+    (parameter_list
+      (parameter
+        (identifier)))
+    (block
+      (if_statement
+        (condition
+          (binary_expression
+            (identifier)
+            (integer)))
+        (return_statement)
+        (else_clause
+          (if_statement
+            (condition
+              (binary_expression
+                (identifier)
+                (integer)))
+            (wait_statement
+              (float))
+            (else_clause
+              (waittillframeend_statement)))))
+      (while_statement
+        (condition
+          (binary_expression
+            (identifier)
+            (integer)))
+        (expression_statement
+          (update_expression
+            (identifier))))
+      (do_statement
+        (block
+          (expression_statement
+            (update_expression
+              (identifier))))
+        (condition
+          (binary_expression
+            (identifier)
+            (integer))))
+      (for_statement
+        (assignment_expression
+          (identifier)
+          (integer))
+        (binary_expression
+          (identifier)
+          (integer))
+        (update_expression
+          (identifier))
+        (continue_statement))
+      (for_statement
+        (break_statement)))))
+
+================================================================================
+Foreach and switch
+================================================================================
+
+f()
+{
+	foreach ( key, value in level.things )
+		value notify( "go" );
+
+	switch ( n )
+	{
+		case 0:
+		case "one":
+			n = 1;
+			break;
+		default:
+			n = 2;
+	}
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_definition
+    (identifier)
+    (parameter_list)
+    (block
+      (foreach_statement
+        (identifier)
+        (identifier)
+        (field_expression
+          (identifier)
+          (identifier))
+        (expression_statement
+          (call_expression
+            (identifier)
+            (identifier)
+            (argument_list
+              (string)))))
+      (switch_statement
+        (condition
+          (identifier))
+        (switch_body
+          (case_clause
+            (integer))
+          (case_clause
+            (string)
+            (expression_statement
+              (assignment_expression
+                (identifier)
+                (integer)))
+            (break_statement))
+          (default_clause
+            (expression_statement
+              (assignment_expression
+                (identifier)
+                (integer)))))))))
+
+================================================================================
+Wait, const, dev blocks, profiler
+================================================================================
+
+f()
+{
+	waitrealtime 1;
+	const LIMIT = 4;
+	/#
+	println( "dev only" );
+	#/
+	prof_begin( "x" );
+	prof_end( "x" );
+	breakpoint;
+	;
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_definition
+    (identifier)
+    (parameter_list)
+    (block
+      (waitrealtime_statement
+        (integer))
+      (const_statement
+        (identifier)
+        (integer))
+      (dev_block
+        (expression_statement
+          (call_expression
+            (identifier)
+            (argument_list
+              (string)))))
+      (profiler_statement
+        (argument_list
+          (string)))
+      (profiler_statement
+        (argument_list
+          (string)))
+      (breakpoint_statement)
+      (empty_statement))))
+
+================================================================================
+Macro statements
+================================================================================
+
+f()
+{
+	WAIT_SERVER_FRAME
+	DEFAULT( n, 0 )
+	n = 1;
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_definition
+    (identifier)
+    (parameter_list)
+    (block
+      (macro_statement
+        (identifier))
+      (macro_statement
+        (identifier)
+        (argument_list
+          (identifier)
+          (integer)))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (integer))))))
+
+================================================================================
+Goto and labels
+================================================================================
+
+f()
+{
+	goto LOC_1;
+	jumpiffalse( c ) LOC_1;
+LOC_1:
+	goto = 1;
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_definition
+    (identifier)
+    (parameter_list)
+    (block
+      (goto_statement
+        (identifier))
+      (goto_statement
+        (condition
+          (identifier))
+        (identifier))
+      (label_statement
+        (identifier))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (integer))))))
+
+================================================================================
+Case-folded keywords
+================================================================================
+
+Function f()
+{
+	If ( x )
+		Return;
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_definition
+    (identifier)
+    (parameter_list)
+    (block
+      (if_statement
+        (condition
+          (identifier))
+        (return_statement)))))

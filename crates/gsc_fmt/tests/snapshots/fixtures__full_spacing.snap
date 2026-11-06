@@ -1,0 +1,47 @@
+---
+source: crates/gsc_fmt/tests/fixtures.rs
+expression: "run(&fixture(\"spacing.gsc\"), &Options::default())"
+---
+#using scripts\shared\util_shared;
+
+#namespace demo;
+
+function autoexec init( a, b = 2, c )
+{
+	x = a + b * c;
+	y = x - 1;
+	z = -x;
+	flag = !isdefined( y ) && z >= 0 || ( x <= 2 );
+	w = ( flag ? x : y );
+	self thread run( a, b );
+	level.callbacks["spawn"] = &on_spawn;
+	pos = ( 0, 0, 1 ) + self.origin;
+	self endon( "death" );
+	foo::bar();
+	[[ level.func ]]( a, b );
+	self [[ level.func ]]( a );
+	i++;
+	j += 2;
+}
+
+function run( a, b )
+{
+	for ( i = 0; i < a; i++ )
+	{
+		wait( 0.05 );
+	}
+	for (;;)
+		break;
+	foreach ( k, v in b )
+		do_it( k, v );
+	while ( 1 )
+	{
+		wait 1;
+	}
+	do
+	{
+		a--;
+	}
+	while ( a > 0 );
+	return a;
+}

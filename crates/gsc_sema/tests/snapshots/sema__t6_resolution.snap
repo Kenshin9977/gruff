@@ -1,0 +1,15 @@
+---
+source: crates/gsc_sema/tests/sema.rs
+expression: "dump(&include_family(\"t6\"))"
+---
+== maps/mp/_zm_shared.gsc (namespace maps/mp/_zm_shared)
+== maps/mp/_zm_utility.gsc (namespace maps/mp/_zm_utility)
+  #include maps/mp/_zm_shared -> maps/mp/_zm_shared.gsc
+  5:9 call Keyword("isdefined") -> builtin isdefined
+  5:32 call Bare("shared_check") -> include maps/mp/_zm_shared::shared_check @ maps/mp/_zm_shared.gsc:1:1
+== maps/mp/zm_mod.gsc (namespace maps/mp/zm_mod)
+  #include maps/mp/_zm_utility -> maps/mp/_zm_utility.gsc
+  5:12 call Bare("getplayers") -> builtin getplayers
+  6:7 call Bare("is_player_valid") -> include maps/mp/_zm_utility::is_player_valid @ maps/mp/_zm_utility.gsc:3:1
+  9:3 call Bare("shared_check") -> unresolved shared_check
+  11:22 call Qualified(Some("maps/mp/_zm_shared"), "shared_check") -> qualified maps/mp/_zm_shared::shared_check @ maps/mp/_zm_shared.gsc:1:1

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://tree-sitter.github.io/tree-sitter/assets/schemas/config.schema.json",
+  "grammars": [
+    {
+      "name": "gsc",
+      "camelcase": "Gsc",
+      "title": "GSC",
+      "scope": "source.gsc",
+      "file-types": [
+        "gsc",
+        "csc",
+        "gsh"
+      ],
+      "injection-regex": "^(gsc|csc)$",
+      "highlights": "queries/highlights.scm",
+      "locals": "queries/locals.scm",
+      "tags": "queries/tags.scm"
+    }
+  ],
+  "metadata": {
+    "version": "0.2.0",
+    "license": "MIT",
+    "description": "GSC (Call of Duty game script) grammar: the superset of every dialect from CoD1 to BO7",
+    "links": {
+      "repository": "https://github.com/Kenshin9977/gruff"
+    },
+    "authors": [
+      {
+        "name": "Gruff contributors"
+      }
+    ]
+  },
+  "bindings": {
+    "c": false,
+    "go": false,
+    "node": false,
+    "python": false,
+    "rust": false,
+    "swift": false
+  }
+}

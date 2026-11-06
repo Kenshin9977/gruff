@@ -1,0 +1,33 @@
+---
+source: crates/gsc_check/tests/snapshots.rs
+expression: "output::rule_list()"
+---
+B001  unknown-builtin               Call to a name that is neither a builtin nor a script function (fix)
+B002  builtin-arg-count             Builtin called with the wrong number of arguments
+B003  dev-only-builtin              Dev-only builtin called outside a `/# #/` dev block (preview)
+B004  bare-call-other-namespace     Bare call or `&f` that only a function of another namespace defines (fix)
+B005  thread-builtin                `thread` on a builtin, or `::f` of one in `file-first` and `builtin-strict` games
+D001  unavailable-feature           Syntax the selected game does not have
+D002  missing-function-keyword      Function declared without the `function` keyword
+D003  import-after-declaration      `#using` or `#insert` after the first declaration
+D004  decompiler-control-flow       `goto` or a label, which only decompilers write
+D005  unavailable-cast              A `(type)` cast the selected game does not have
+D006  unavailable-builtin-call      A `builtin` call the selected game does not have
+E0101 unterminated-string           String literal without its closing quote
+E0102 unexpected-character          Character that starts no token
+E0103 unterminated-block-comment    Block comment without its closing `*/`
+E0104 unbalanced-conditional        `#if` without `#endif`, or the reverse
+E0201 expected-token                A token the grammar requires is missing
+E0202 unexpected-token              A token that cannot appear here
+E0203 nesting-too-deep              Statements or expressions nest too deeply to parse
+E0204 vector-arity                  Vector literal without exactly three components
+E0299 parser-stuck                  The parser made no progress (a parser bug)
+E0301 decompiler-name               Decompiler name no tokenizer can read as one name
+F001  unknown-field                 Field read that nothing sets, one typo away from one that is set (preview, fix)
+L001  infinite-loop-without-wait    Infinite loop whose body never waits (fix)
+S100  unused-suppression            Suppression comment that suppresses nothing (fix)
+T001  unknown-event                 `waittill` or `endon` on an event no script and not the engine notifies (preview)
+T002  misspelled-event              `waittill` or `endon` on an event nothing notifies, one typo away from one that is (preview)
+T003  waittill-arg-count            `waittill` binds (or its BO4+ result is read for) values no notify of the event sends (preview)
+T004  missing-endon                 Function threaded on a player that loops forever with no `endon` (preview)
+V001  hash-equality                 `==` on a hash, a script error in games that do not compare hashes by value (preview)

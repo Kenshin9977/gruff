@@ -1,0 +1,42 @@
+[package]
+name = "gruff"
+description = "Gruff: GSC language tools for Call of Duty scripts (linter, formatter, language server, MCP server)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+default-run = "gruff"
+
+[lib]
+name = "gruff_cli"
+path = "src/lib.rs"
+
+[[bin]]
+name = "gruff"
+path = "src/main.rs"
+
+# Deprecated alias (the binary's former name), kept for one version.
+[[bin]]
+name = "gsc"
+path = "src/bin/gsc.rs"
+
+[dependencies]
+gsc_hash.workspace = true
+gsc_syntax.workspace = true
+gsc_check.workspace = true
+gsc_index.workspace = true
+gsc_sema.workspace = true
+gsc_fmt.workspace = true
+gsc_lsp.workspace = true
+gsc_mcp.workspace = true
+clap.workspace = true
+mimalloc.workspace = true
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+serde_json = "1"

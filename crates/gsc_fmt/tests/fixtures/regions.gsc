@@ -1,0 +1,48 @@
+#define   DOUBLE(x)   ( (x)*2 )
+#define MULTI(a,b) \
+	a+b
+
+#if DEVELOPER
+function dev_only(  a  )
+{
+	x=a;
+}
+#else
+function dev_only( a ) { }
+#endif
+
+function with_region()
+{
+	x=1;
+#if   DEVELOPER
+	z=3;
+#else
+	z=4 ;
+#endif
+	v=5;
+}
+
+function manual()
+{
+	a=1;
+	// gsc-fmt: off
+	keep   =   [  1,2,
+	               3,4  ];
+	also_kept(   x   );
+	// gsc-fmt: on
+	b=2;
+}
+
+// gsc-fmt: off
+function   untouched(  )
+{
+  q=1;
+}
+// gsc-fmt: on
+
+/#
+function dev_function(a)
+{
+println(a);
+}
+#/

@@ -1,0 +1,75 @@
+---
+source: crates/gsc_syntax/tests/snapshots.rs
+expression: "render(&text, &p, &check_dialect(&p.syntax(), dialect))"
+---
+3:6: E0101 unterminated string literal
+4:2: E0201 expected `;`, found `t`
+4:8: E0102 unexpected character "`"
+4:8: E0201 expected `;`, found ```
+5:13: E0204 a vector has 3 components, found 2
+7:1: E0103 unterminated block comment
+
+SOURCE_FILE@0..80
+  FUNCTION_DEF@0..63
+    FUNCTION_KW@0..8 "function"
+    WHITESPACE@8..9 " "
+    NAME@9..10
+      IDENT@9..10 "g"
+    PARAM_LIST@10..12
+      L_PAREN@10..11 "("
+      R_PAREN@11..12 ")"
+    WHITESPACE@12..13 "\n"
+    BLOCK@13..63
+      L_CURLY@13..14 "{"
+      WHITESPACE@14..16 "\n\t"
+      EXPR_STMT@16..34
+        ASSIGN_EXPR@16..34
+          NAME_REF@16..17
+            IDENT@16..17 "s"
+          WHITESPACE@17..18 " "
+          EQ@18..19 "="
+          WHITESPACE@19..20 " "
+          LITERAL@20..34
+            STRING@20..34 "\"unterminated;"
+      WHITESPACE@34..36 "\n\t"
+      EXPR_STMT@36..41
+        ASSIGN_EXPR@36..41
+          NAME_REF@36..37
+            IDENT@36..37 "t"
+          WHITESPACE@37..38 " "
+          EQ@38..39 "="
+          WHITESPACE@39..40 " "
+          LITERAL@40..41
+            INT_NUMBER@40..41 "1"
+      WHITESPACE@41..42 " "
+      ERROR@42..43
+        ERROR_TOKEN@42..43 "`"
+      WHITESPACE@43..44 " "
+      EXPR_STMT@44..46
+        LITERAL@44..45
+          INT_NUMBER@44..45 "2"
+        SEMICOLON@45..46 ";"
+      WHITESPACE@46..48 "\n\t"
+      EXPR_STMT@48..61
+        ASSIGN_EXPR@48..60
+          NAME_REF@48..49
+            IDENT@48..49 "u"
+          WHITESPACE@49..50 " "
+          EQ@50..51 "="
+          WHITESPACE@51..52 " "
+          VECTOR_EXPR@52..60
+            L_PAREN@52..53 "("
+            WHITESPACE@53..54 " "
+            LITERAL@54..55
+              INT_NUMBER@54..55 "1"
+            COMMA@55..56 ","
+            WHITESPACE@56..57 " "
+            LITERAL@57..58
+              INT_NUMBER@57..58 "2"
+            WHITESPACE@58..59 " "
+            R_PAREN@59..60 ")"
+        SEMICOLON@60..61 ";"
+      WHITESPACE@61..62 "\n"
+      R_CURLY@62..63 "}"
+  WHITESPACE@63..64 "\n"
+  BLOCK_COMMENT@64..80 "/* never closed\n"

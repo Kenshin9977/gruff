@@ -1,0 +1,53 @@
+---
+source: crates/gsc_syntax/tests/snapshots.rs
+expression: "render(&text, &p, &check_dialect(&p.syntax(), dialect))"
+---
+SOURCE_FILE@0..137
+  PP_IF@0..21 "#if DEMO_VERSION >= 2"
+  WHITESPACE@21..22 "\n"
+  FUNCTION_DEF@22..136
+    FUNCTION_KW@22..30 "function"
+    WHITESPACE@30..31 " "
+    NAME@31..36
+      IDENT@31..36 "setup"
+    PARAM_LIST@36..47
+      L_PAREN@36..37 "("
+      WHITESPACE@37..38 " "
+      PARAM@38..39
+        NAME@38..39
+          IDENT@38..39 "a"
+      COMMA@39..40 ","
+      WHITESPACE@40..41 " "
+      PARAM@41..42
+        NAME@41..42
+          IDENT@41..42 "b"
+      COMMA@42..43 ","
+      WHITESPACE@43..44 " "
+      PARAM@44..45
+        NAME@44..45
+          IDENT@44..45 "c"
+      WHITESPACE@45..46 " "
+      R_PAREN@46..47 ")"
+    WHITESPACE@47..48 "\n"
+    BLOCK@48..136
+      L_CURLY@48..49 "{"
+      WHITESPACE@49..50 "\n"
+      PP_ELSE@50..55 "#else"
+      DISABLED_TEXT@55..113 " // older builds\nfunction setup( a, b )\n{\n\tc = undefined;\n"
+      PP_ENDIF@113..119 "#endif"
+      WHITESPACE@119..121 "\n\t"
+      RETURN_STMT@121..134
+        RETURN_KW@121..127 "return"
+        WHITESPACE@127..128 " "
+        BIN_EXPR@128..133
+          NAME_REF@128..129
+            IDENT@128..129 "a"
+          WHITESPACE@129..130 " "
+          PLUS@130..131 "+"
+          WHITESPACE@131..132 " "
+          NAME_REF@132..133
+            IDENT@132..133 "b"
+        SEMICOLON@133..134 ";"
+      WHITESPACE@134..135 "\n"
+      R_CURLY@135..136 "}"
+  WHITESPACE@136..137 "\n"

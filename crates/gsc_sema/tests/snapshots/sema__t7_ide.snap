@@ -1,0 +1,221 @@
+---
+source: crates/gsc_sema/tests/sema.rs
+expression: out
+---
+## qualified call: mymod.gsc "waittill_any_timeout("+3
+definition: Function waittill_any_timeout at scripts/shared/util_shared.gsc:9:10
+hover:
+```gsc
+function util::waittill_any_timeout( timeout, a, b )
+```
+
+defined in `scripts/shared/util_shared.gsc:9`
+
+---
+
+Summary: Waits for one of the notifies, or the timeout
+MandatoryArg: <timeout> seconds
+references: scripts/zm/mymod.gsc:26:15, scripts/shared/util_shared.gsc:9:10
+
+## namespace before builtin: mymod.gsc "s = spawnstruct"+6
+definition: Function spawnstruct at scripts/zm/mymod.gsc:55:10
+hover:
+```gsc
+function mymod::spawnstruct()
+```
+
+defined in `scripts/zm/mymod.gsc:55`
+references: scripts/zm/mymod.gsc:27:6, scripts/zm/mymod.gsc:55:10, scripts/zm/mymod_more.gsc:7:9
+
+## builtin method: mymod.gsc "getentitynumber"+0
+hover:
+```gsc
+builtin method getentitynumber
+```
+
+GSC method: takes 0 arguments  
+engine builtin (fixture)
+references: scripts/zm/mymod.gsc:28:11
+
+## sys builtin: mymod.gsc "sys::spawnstruct"+6
+hover:
+```gsc
+builtin function spawnstruct
+```
+
+GSC function: takes 0 arguments  
+engine builtin (fixture)
+references: scripts/zm/mymod.gsc:29:7, scripts/zm/mymod_helpers.gsc:9:9
+
+## macro from #insert: mymod.gsc "IS_TRUE"+1
+definition: Macro IS_TRUE at scripts/shared/shared.gsh:1:9
+hover:
+```gsc
+#define IS_TRUE(x)
+```
+
+`= ( isdefined( x ) && x )`  
+defined in `scripts/shared/shared.gsh:1`
+references: scripts/zm/mymod.gsc:30:7, scripts/shared/shared.gsh:1:9
+
+## same namespace, other file: mymod.gsc "helper_in_namespace"+0
+definition: Function helper_in_namespace at scripts/zm/mymod_more.gsc:3:10
+hover:
+```gsc
+function mymod::helper_in_namespace()
+```
+
+defined in `scripts/zm/mymod_more.gsc:3`
+references: scripts/zm/mymod.gsc:32:3, scripts/zm/mymod_more.gsc:3:10
+
+## #using'd file: mymod.gsc "helper_from_using"+0
+hover:
+```gsc
+helper_from_using
+```
+
+unresolved
+
+## builtin before #using: mymod.gsc "earthquake"+0
+hover:
+```gsc
+builtin function earthquake
+```
+
+GSC function: takes 4 arguments  
+engine builtin (fixture)
+references: scripts/zm/mymod.gsc:38:2
+
+## other-VM builtin: mymod.gsc "playfx"+0
+hover:
+```gsc
+builtin function playfx
+```
+
+CSC function: takes 2 to 6 arguments  
+not available in GSC scripts
+references: scripts/zm/mymod.gsc:39:2, scripts/shared/util_shared.csc:5:2
+
+## class method via base: mymod.gsc "toggle();"+0
+definition: Method lamp::toggle at scripts/zm/mymod.gsc:18:11
+hover:
+```gsc
+function mymod::lamp::toggle()
+```
+
+defined in `scripts/zm/mymod.gsc:18`
+references: scripts/zm/mymod.gsc:11:3, scripts/zm/mymod.gsc:18:11, scripts/zm/mymod.gsc:41:11
+
+## unresolved: mymod.gsc "nobody_defines_this"+0
+hover:
+```gsc
+nobody_defines_this
+```
+
+unresolved
+
+## function pointer: mymod.gsc "&watch"+1
+definition: Function watch at scripts/zm/mymod.gsc:44:10
+hover:
+```gsc
+function mymod::watch( count )
+```
+
+defined in `scripts/zm/mymod.gsc:44`
+references: scripts/zm/mymod.gsc:25:15, scripts/zm/mymod.gsc:35:7, scripts/zm/mymod.gsc:36:8, scripts/zm/mymod.gsc:44:10, scripts/zm/mymod_helpers.gsc:7:9, scripts/zm/mymod_more.gsc:5:2
+
+## definition name: mymod.gsc "function watch"+9
+definition: Function watch at scripts/zm/mymod.gsc:44:10
+hover:
+```gsc
+function mymod::watch( count )
+```
+
+defined in `scripts/zm/mymod.gsc:44`
+references: scripts/zm/mymod.gsc:25:15, scripts/zm/mymod.gsc:35:7, scripts/zm/mymod.gsc:36:8, scripts/zm/mymod.gsc:44:10, scripts/zm/mymod_helpers.gsc:7:9, scripts/zm/mymod_more.gsc:5:2
+
+## parameter: mymod.gsc "count + player"+0
+definition: Param count at scripts/zm/mymod.gsc:44:17
+hover:
+```gsc
+param count
+```
+references: scripts/zm/mymod.gsc:44:17, scripts/zm/mymod.gsc:49:11
+
+## foreach binding: mymod.gsc "player.score"+0
+definition: Local player at scripts/zm/mymod.gsc:47:12
+hover:
+```gsc
+local player
+```
+references: scripts/zm/mymod.gsc:47:12, scripts/zm/mymod.gsc:49:19
+
+## waittill binding: mymod.gsc "who.health"+0
+definition: Local who at scripts/zm/mymod.gsc:51:25
+hover:
+```gsc
+local who
+```
+references: scripts/zm/mymod.gsc:51:25, scripts/zm/mymod.gsc:52:9
+
+## engine field: mymod.gsc "who.health"+4
+hover:
+```gsc
+field health
+```
+
+engine field
+references: scripts/zm/mymod.gsc:52:13
+
+## script field: util_shared.gsc "util_ready"+0
+hover:
+```gsc
+field util_ready
+```
+
+script field
+references: scripts/shared/util_shared.gsc:19:8
+
+## import path: mymod.gsc "util_shared;"+2
+definition: File scripts/shared/util_shared.gsc at scripts/shared/util_shared.gsc:1:1
+hover:
+```gsc
+#using scripts/shared/util_shared
+```
+
+`scripts/shared/util_shared.gsc` (root `game`)
+references: scripts/zm/mymod.gsc:1:8, scripts/zm/mymod_helpers.gsc:1:8
+
+## /// doc and autoexec: util_shared.gsc "function autoexec init"+18
+definition: Function init at scripts/shared/util_shared.gsc:17:19
+hover:
+```gsc
+autoexec function util::init()
+```
+
+defined in `scripts/shared/util_shared.gsc:17`
+
+---
+
+Starts the util system.
+references: scripts/shared/util_shared.gsc:17:19
+
+## namespace before builtin, other file: mymod_more.gsc "return spawnstruct"+7
+definition: Function spawnstruct at scripts/zm/mymod.gsc:55:10
+hover:
+```gsc
+function mymod::spawnstruct()
+```
+
+defined in `scripts/zm/mymod.gsc:55`
+references: scripts/zm/mymod.gsc:27:6, scripts/zm/mymod.gsc:55:10, scripts/zm/mymod_more.gsc:7:9
+
+## builtin before a #using'd function: mymod_helpers.gsc "return spawnstruct"+7
+hover:
+```gsc
+builtin function spawnstruct
+```
+
+GSC function: takes 0 arguments  
+engine builtin (fixture)
+references: scripts/zm/mymod.gsc:29:7, scripts/zm/mymod_helpers.gsc:9:9

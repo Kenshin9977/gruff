@@ -1,0 +1,204 @@
+{
+  "name": "gruff",
+  "displayName": "Gruff — GSC language tools",
+  "description": "Language support for Call of Duty GSC/CSC scripts, CoD 1 to Black Ops 7: diagnostics, navigation, completion, rename, formatting, powered by the Gruff language server.",
+  "version": "0.2.0",
+  "publisher": "gruff",
+  "license": "GPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kenshin9977/gruff"
+  },
+  "homepage": "https://github.com/Kenshin9977/gruff",
+  "private": true,
+  "engines": {
+    "vscode": "^1.91.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Formatters"
+  ],
+  "keywords": [
+    "gsc",
+    "csc",
+    "call of duty",
+    "black ops",
+    "modding"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onLanguage:gsc",
+    "onLanguage:csc",
+    "onLanguage:gsh",
+    "workspaceContains:**/gruff.toml",
+    "workspaceContains:**/gsc.toml"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "gsc",
+        "aliases": [
+          "GSC",
+          "gsc"
+        ],
+        "extensions": [
+          ".gsc"
+        ],
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "csc",
+        "aliases": [
+          "CSC (client script)",
+          "csc"
+        ],
+        "extensions": [
+          ".csc"
+        ],
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "gsh",
+        "aliases": [
+          "GSH (script header)",
+          "gsh"
+        ],
+        "extensions": [
+          ".gsh"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "gsc",
+        "scopeName": "source.gsc",
+        "path": "./syntaxes/gsc.tmLanguage.json"
+      },
+      {
+        "language": "csc",
+        "scopeName": "source.csc",
+        "path": "./syntaxes/csc.tmLanguage.json"
+      },
+      {
+        "language": "gsh",
+        "scopeName": "source.gsh",
+        "path": "./syntaxes/gsh.tmLanguage.json"
+      }
+    ],
+    "semanticTokenTypes": [
+      {
+        "id": "hashLiteral",
+        "superType": "string",
+        "description": "A hashed name literal (#\"name\", %\"asset\", @\"dvar\")."
+      }
+    ],
+    "semanticTokenScopes": [
+      {
+        "scopes": {
+          "hashLiteral": [
+            "constant.other.hash.gsc"
+          ],
+          "function.defaultLibrary": [
+            "support.function.builtin.gsc"
+          ],
+          "macro": [
+            "entity.name.function.preprocessor.gsc"
+          ]
+        }
+      }
+    ],
+    "configuration": {
+      "title": "Gruff",
+      "properties": {
+        "gruff.game": {
+          "type": "string",
+          "default": "auto",
+          "markdownDescription": "Game id or alias of the dialect (`t7`, `bo3`, `t6`, `iw5`...). `auto` reads `game` from `gruff.toml` (or `gsc.toml`), else guesses from the folder (name, `#using` versus `#include`, client scripts)."
+        },
+        "gruff.dataDir": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "The `gruff-data` directory (game profiles, builtin and field catalogues). Empty: `data-dir` in `gruff.toml`, then `$GRUFF_DATA` (or `$GSC_DATA`), then a `gruff-data` (or `gsc-data`) folder above the workspace or the server binary."
+        },
+        "gruff.libraryRoots": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "markdownDescription": "Library roots: the game's own scripts (e.g. the mod tools' `share/raw`, a decompiled dump), read for name resolution and never reported on. Relative paths are relative to the first workspace folder; `${workspaceFolder}` is expanded. Adds to `library` in `gruff.toml`."
+        },
+        "gruff.hashPackages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "markdownDescription": "Hash packages (files or directories) naming the hashed identifiers of Black Ops III, Black Ops 4 to 7 and Modern Warfare III: hover, completion and messages show `name (#hash)`. Relative paths are relative to the first workspace folder; `${workspaceFolder}` is expanded. Adds to `hash_packages` in `gruff.toml` and `$GSC_HASH_PACKAGES`."
+        },
+        "gruff.mode": {
+          "type": "string",
+          "enum": [
+            "retail",
+            "community"
+          ],
+          "enumDescriptions": [
+            "The game's own compiler.",
+            "A community compiler or client (gsc-tool, Plutonium...): e.g. the BO2 preprocessor."
+          ],
+          "default": "retail",
+          "markdownDescription": "Compiler semantics the scripts target."
+        },
+        "gruff.server.path": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Path to the `gruff` binary. Empty: the binary bundled with the extension, then `gruff` on `PATH` (else the deprecated `gsc`)."
+        },
+        "gruff.trace.server": {
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Trace the messages between VS Code and the Gruff language server."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "gruff.restartServer",
+        "title": "Gruff: Restart Language Server"
+      },
+      {
+        "command": "gruff.showStatus",
+        "title": "Gruff: Show Server Status"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p .",
+    "watch": "tsc -watch -p .",
+    "bundle": "node scripts/bundle.js",
+    "bundle-server": "node scripts/bundle-server.js",
+    "smoke": "node scripts/smoke.js",
+    "pretest": "npm run compile && node scripts/bundle.js --dev",
+    "test": "node out/test/runTest.js",
+    "vscode:prepublish": "npm run compile && npm run bundle",
+    "package": "npm run bundle-server && vsce package --no-dependencies --allow-missing-repository"
+  },
+  "dependencies": {
+    "vscode-languageclient": "10.1.2"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "@types/vscode": "1.91.0",
+    "@vscode/test-electron": "3.1.0",
+    "@vscode/vsce": "3.9.2",
+    "esbuild": "0.25.12",
+    "typescript": "5.9.3"
+  }
+}

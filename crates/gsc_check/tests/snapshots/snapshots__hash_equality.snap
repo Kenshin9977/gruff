@@ -1,0 +1,6 @@
+---
+source: crates/gsc_check/tests/snapshots.rs
+expression: "output::render(&run(&load(true), &selection), Format::Concise)"
+---
+hashes.gsc:6:10: V001 `==` with a hash is a script error in this game ('unmatching types') and is always false: compare the strings instead
+hashes.gsc:10:10: V001 `==` with a hash is a script error in this game ('unmatching types') and is always false: compare the strings instead

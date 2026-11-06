@@ -1,0 +1,47 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/gsc_hash",
+    "crates/gsc_syntax",
+    "crates/gsc_sema",
+    "crates/gsc_check",
+    "crates/gsc_index",
+    "crates/gsc_fmt",
+    "crates/gsc_lsp",
+    "crates/gsc_mcp",
+    "crates/gruff",
+    "crates/gsc_wasm",
+]
+
+[workspace.package]
+version = "0.2.0"
+edition = "2021"
+rust-version = "1.85"
+license = "GPL-3.0-or-later"
+authors = ["Gruff contributors"]
+repository = "https://github.com/Kenshin9977/gruff"
+homepage = "https://github.com/Kenshin9977/gruff"
+
+[workspace.dependencies]
+gsc_hash = { path = "crates/gsc_hash" }
+gsc_syntax = { path = "crates/gsc_syntax" }
+gsc_sema = { path = "crates/gsc_sema" }
+gsc_check = { path = "crates/gsc_check" }
+gsc_index = { path = "crates/gsc_index" }
+gsc_fmt = { path = "crates/gsc_fmt" }
+gsc_lsp = { path = "crates/gsc_lsp" }
+gsc_mcp = { path = "crates/gsc_mcp" }
+clap = { version = "4.5", features = ["derive"] }
+xxhash-rust = { version = "0.8", features = ["xxh3"] }
+rowan = "0.16"
+toml = "0.8"
+insta = "1.40"
+proptest = "1.5"
+ungrammar = "1.16"
+mimalloc = { version = "0.1", default-features = false }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[profile.release]
+lto = "thin"

@@ -1,0 +1,11 @@
+---
+source: crates/gsc_check/tests/snapshots.rs
+expression: "output::render(&results, Format::Concise)"
+---
+scripts/mod/mod_main.gsc:17:2: B004 a bare call to `wait_network_frame` resolves in namespace `mymod`, then the builtins, never in another namespace: `wait_network_frame` is defined in namespace `util` (scripts/shared/util_shared.gsc); write `util::wait_network_frame`
+scripts/mod/mod_main.gsc:19:14: B004 a bare call to `wait_network_frame` resolves in namespace `mymod`, then the builtins, never in another namespace: `wait_network_frame` is defined in namespace `util` (scripts/shared/util_shared.gsc); write `util::wait_network_frame`
+scripts/mod/mod_main.gsc:20:7: B004 `&wait_network_frame` resolves in namespace `mymod`, then the builtins, never in another namespace: `wait_network_frame` is defined in namespace `util` (scripts/shared/util_shared.gsc); write `util::wait_network_frame`
+scripts/mod/mod_main.gsc:21:2: B004 a bare call to `in_two_namespaces` resolves in namespace `mymod`, then the builtins, never in another namespace: `in_two_namespaces` is defined in namespace `util` (scripts/shared/util_shared.gsc) and 1 other namespace
+scripts/mod/mod_main.gsc:24:9: B005 `randomint` is a builtin, and a threaded call never reaches a builtin: the game cannot link `thread randomint()`; call it without `thread`, or thread a script function that calls it
+scripts/mod/mod_main.gsc:26:14: B005 `setmodel` is a builtin, and a threaded call never reaches a builtin: the game cannot link `thread setmodel()`; call it without `thread`, or thread a script function that calls it
+scripts/mod/mod_main.gsc:27:2: B001 unknown builtin function `nobody_defines_this`

@@ -1,0 +1,15 @@
+---
+source: crates/gsc_sema/tests/sema.rs
+expression: "dump(&file_first(\"t4\"))"
+---
+== maps/lib.gsc (namespace maps/lib)
+== maps/main.gsc (namespace maps/main)
+  #include maps/lib -> maps/lib.gsc
+  5:6 call Bare("spawnstruct") -> builtin spawnstruct
+  6:6 call Bare("lib_only") -> include maps/lib::lib_only @ maps/lib.gsc:7:1
+  7:6 call Bare("getplayers") -> local maps/main::getplayers @ maps/main.gsc:15:1
+  8:9 thread Bare("spawnstruct") -> include maps/lib::spawnstruct @ maps/lib.gsc:2:1
+  9:9 thread Bare("iprintln") -> unresolved iprintln
+  10:8 pointer Qualified(None, "lib_only") -> include maps/lib::lib_only @ maps/lib.gsc:7:1
+  11:8 pointer Qualified(None, "iprintln") -> unresolved ::iprintln
+  12:8 pointer Qualified(None, "getplayers") -> local maps/main::getplayers @ maps/main.gsc:15:1

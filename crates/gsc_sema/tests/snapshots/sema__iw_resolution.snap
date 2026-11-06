@@ -1,0 +1,16 @@
+---
+source: crates/gsc_sema/tests/sema.rs
+expression: "dump(&include_family(\"iw\"))"
+---
+== maps/mp/_utility.gsc (namespace maps/mp/_utility)
+  11:2 call Bare("iprintln") -> builtin iprintln
+== maps/mp/gametypes/dm.gsc (namespace maps/mp/gametypes/dm)
+  #include maps/mp/_utility -> maps/mp/_utility.gsc
+  5:2 call Bare("announce") -> include maps/mp/_utility::announce @ maps/mp/_utility.gsc:9:1
+  6:20 call Qualified(Some("maps/mp/_utility"), "waittill_any_timeout") -> qualified maps/mp/_utility::waittill_any_timeout @ maps/mp/_utility.gsc:2:1
+  7:20 call Qualified(Some("maps/mp/_missing"), "nothing") -> unresolved maps/mp/_missing::nothing
+  8:6 call Bare("spawnstruct") -> builtin spawnstruct
+  9:9 thread Bare("onplayerconnect") -> local maps/mp/gametypes/dm::onplayerconnect @ maps/mp/gametypes/dm.gsc:14:1
+  10:21 pointer Qualified(None, "onplayerconnect") -> local maps/mp/gametypes/dm::onplayerconnect @ maps/mp/gametypes/dm.gsc:14:1
+  11:2 call Bare("not_included") -> unresolved not_included
+== maps/mp/gametypes/tdm.gsc (namespace maps/mp/gametypes/tdm)

@@ -1,0 +1,200 @@
+---
+source: crates/gsc_syntax/tests/snapshots.rs
+expression: "render(&text, &p, &check_dialect(&p.syntax(), dialect))"
+---
+SOURCE_FILE@0..333
+  DOC_COMMENT@0..64 "/@\n\"Name: tally( <count>, [step] )\"\n\"Summary: adds things up\"\n@/"
+  WHITESPACE@64..65 "\n"
+  FUNCTION_DEF@65..233
+    FUNCTION_KW@65..73 "function"
+    WHITESPACE@73..74 " "
+    PRIVATE_KW@74..81 "private"
+    WHITESPACE@81..82 " "
+    NAME@82..87
+      IDENT@82..87 "tally"
+    PARAM_LIST@87..117
+      L_PAREN@87..88 "("
+      WHITESPACE@88..89 " "
+      PARAM@89..94
+        NAME@89..94
+          IDENT@89..94 "count"
+      COMMA@94..95 ","
+      WHITESPACE@95..96 " "
+      PARAM@96..104
+        NAME@96..100
+          IDENT@96..100 "step"
+        WHITESPACE@100..101 " "
+        DEFAULT_VALUE@101..104
+          EQ@101..102 "="
+          WHITESPACE@102..103 " "
+          LITERAL@103..104
+            INT_NUMBER@103..104 "1"
+      COMMA@104..105 ","
+      WHITESPACE@105..106 " "
+      PARAM@106..110
+        AMP@106..107 "&"
+        NAME@107..110
+          IDENT@107..110 "out"
+      COMMA@110..111 ","
+      WHITESPACE@111..112 " "
+      VARARG_PARAM@112..115
+        DOT3@112..115 "..."
+      WHITESPACE@115..116 " "
+      R_PAREN@116..117 ")"
+    WHITESPACE@117..118 "\n"
+    BLOCK@118..233
+      L_CURLY@118..119 "{"
+      WHITESPACE@119..121 "\n\t"
+      EXPR_STMT@121..131
+        ASSIGN_EXPR@121..130
+          NAME_REF@121..126
+            IDENT@121..126 "total"
+          WHITESPACE@126..127 " "
+          EQ@127..128 "="
+          WHITESPACE@128..129 " "
+          LITERAL@129..130
+            INT_NUMBER@129..130 "0"
+        SEMICOLON@130..131 ";"
+      WHITESPACE@131..133 "\n\t"
+      FOR_STMT@133..188
+        FOR_KW@133..136 "for"
+        WHITESPACE@136..137 " "
+        L_PAREN@137..138 "("
+        WHITESPACE@138..139 " "
+        FOR_INIT@139..144
+          ASSIGN_EXPR@139..144
+            NAME_REF@139..140
+              IDENT@139..140 "i"
+            WHITESPACE@140..141 " "
+            EQ@141..142 "="
+            WHITESPACE@142..143 " "
+            LITERAL@143..144
+              INT_NUMBER@143..144 "0"
+        SEMICOLON@144..145 ";"
+        WHITESPACE@145..146 " "
+        FOR_CONDITION@146..155
+          BIN_EXPR@146..155
+            NAME_REF@146..147
+              IDENT@146..147 "i"
+            WHITESPACE@147..148 " "
+            LT@148..149 "<"
+            WHITESPACE@149..150 " "
+            NAME_REF@150..155
+              IDENT@150..155 "count"
+        SEMICOLON@155..156 ";"
+        WHITESPACE@156..157 " "
+        FOR_STEP@157..166
+          ASSIGN_EXPR@157..166
+            NAME_REF@157..158
+              IDENT@157..158 "i"
+            WHITESPACE@158..159 " "
+            PLUSEQ@159..161 "+="
+            WHITESPACE@161..162 " "
+            NAME_REF@162..166
+              IDENT@162..166 "step"
+        WHITESPACE@166..167 " "
+        R_PAREN@167..168 ")"
+        WHITESPACE@168..170 "\n\t"
+        BLOCK@170..188
+          L_CURLY@170..171 "{"
+          WHITESPACE@171..174 "\n\t\t"
+          EXPR_STMT@174..185
+            ASSIGN_EXPR@174..184
+              NAME_REF@174..179
+                IDENT@174..179 "total"
+              WHITESPACE@179..180 " "
+              PLUSEQ@180..182 "+="
+              WHITESPACE@182..183 " "
+              NAME_REF@183..184
+                IDENT@183..184 "i"
+            SEMICOLON@184..185 ";"
+          WHITESPACE@185..187 "\n\t"
+          R_CURLY@187..188 "}"
+      WHITESPACE@188..190 "\n\t"
+      EXPR_STMT@190..202
+        ASSIGN_EXPR@190..201
+          NAME_REF@190..193
+            IDENT@190..193 "out"
+          WHITESPACE@193..194 " "
+          EQ@194..195 "="
+          WHITESPACE@195..196 " "
+          NAME_REF@196..201
+            IDENT@196..201 "total"
+        SEMICOLON@201..202 ";"
+      WHITESPACE@202..204 "\n\t"
+      RETURN_STMT@204..231
+        RETURN_KW@204..210 "return"
+        WHITESPACE@210..211 " "
+        BIN_EXPR@211..230
+          NAME_REF@211..216
+            IDENT@211..216 "total"
+          WHITESPACE@216..217 " "
+          PLUS@217..218 "+"
+          WHITESPACE@218..219 " "
+          FIELD_EXPR@219..230
+            NAME_REF@219..225
+              VARARG_KW@219..225 "vararg"
+            DOT@225..226 "."
+            NAME_REF@226..230
+              SIZE_KW@226..230 "size"
+        SEMICOLON@230..231 ";"
+      WHITESPACE@231..232 "\n"
+      R_CURLY@232..233 "}"
+  WHITESPACE@233..235 "\n\n"
+  FUNCTION_DEF@235..285
+    FUNCTION_KW@235..243 "function"
+    WHITESPACE@243..244 " "
+    AUTOEXEC_KW@244..252 "autoexec"
+    WHITESPACE@252..253 " "
+    NAME@253..257
+      IDENT@253..257 "boot"
+    PARAM_LIST@257..259
+      L_PAREN@257..258 "("
+      R_PAREN@258..259 ")"
+    WHITESPACE@259..260 "\n"
+    BLOCK@260..285
+      L_CURLY@260..261 "{"
+      WHITESPACE@261..263 "\n\t"
+      EXPR_STMT@263..283
+        ASSIGN_EXPR@263..282
+          FIELD_EXPR@263..275
+            NAME_REF@263..268
+              LEVEL_KW@263..268 "level"
+            DOT@268..269 "."
+            NAME_REF@269..275
+              IDENT@269..275 "booted"
+          WHITESPACE@275..276 " "
+          EQ@276..277 "="
+          WHITESPACE@277..278 " "
+          LITERAL@278..282
+            TRUE_KW@278..282 "true"
+        SEMICOLON@282..283 ";"
+      WHITESPACE@283..284 "\n"
+      R_CURLY@284..285 "}"
+  WHITESPACE@285..287 "\n\n"
+  FUNCTION_DEF@287..332
+    FUNCTION_KW@287..295 "function"
+    WHITESPACE@295..296 " "
+    CODECALL_KW@296..304 "codecall"
+    WHITESPACE@304..305 " "
+    NAME@305..320
+      IDENT@305..320 "on_engine_event"
+    PARAM_LIST@320..328
+      L_PAREN@320..321 "("
+      WHITESPACE@321..322 " "
+      PARAM@322..323
+        NAME@322..323
+          IDENT@322..323 "a"
+      COMMA@323..324 ","
+      WHITESPACE@324..325 " "
+      PARAM@325..326
+        NAME@325..326
+          IDENT@325..326 "b"
+      WHITESPACE@326..327 " "
+      R_PAREN@327..328 ")"
+    WHITESPACE@328..329 "\n"
+    BLOCK@329..332
+      L_CURLY@329..330 "{"
+      WHITESPACE@330..331 "\n"
+      R_CURLY@331..332 "}"
+  WHITESPACE@332..333 "\n"

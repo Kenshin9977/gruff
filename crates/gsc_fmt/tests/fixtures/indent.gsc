@@ -1,0 +1,40 @@
+function pick( n )
+{
+    if ( n == 0 )
+        return 1;
+    else if ( n == 1 )
+    {
+            return 2;
+    }
+    else
+    return 3;
+
+  if ( n ) { a(); }
+  else { b(); }
+
+	switch ( n )
+	{
+	case 0:
+		c();
+		break;
+			case 1:
+			{
+				d();
+				break;
+			}
+		default:
+	e();
+	}
+
+	if ( a &&
+			b )
+	{
+		long_call( 1,
+			2,
+		3 );
+	}
+}
+
+    function other()
+    {
+    }

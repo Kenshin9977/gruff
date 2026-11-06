@@ -1,0 +1,30 @@
+{
+ "out": "C:/path/to/gsc-toolchain/hash-packages",
+ "sources": [
+  {"kind": "bo7-archive", "path": "C:/path/to/bo7-gsc-archive/names/all_names.tsv", "game": "t10, t11",
+   "name": "t11-bo7-gsc-archive.tsv",
+   "source": "bo7-gsc-archive names/all_names.tsv (verified hash/name pairs, 11 families)",
+   "licence": "no licence stated; names recovered from Black Ops 7 files (Activision-derived): local only"},
+  {"kind": "bo7-archive", "path": "C:/path/to/bo7-gsc-archive/names/all_names.tsv", "game": "jup, t8, t9",
+   "name": "names-bo7-gsc-archive.tsv", "names_only": true,
+   "source": "bo7-gsc-archive names/all_names.tsv, names only, rehashed per game",
+   "licence": "no licence stated; Activision-derived: local only"},
+  {"kind": "wni", "path": "C:/path/to/GrayWolf/package_index/bo7_names.wni", "game": "t11",
+   "source": "GrayWolf package_index bo7_names.wni", "licence": "GrayWolf is GPL-3.0; names from game files: local only"},
+  {"kind": "wni", "path": "C:/path/to/GrayWolf/package_index/bo6_names.wni", "game": "t10",
+   "source": "GrayWolf package_index bo6_names.wni", "licence": "GrayWolf is GPL-3.0; names from game files: local only"},
+  {"kind": "wni", "path": "C:/path/to/GrayWolf/package_index/bo3_script_hashes.wni", "game": "*",
+   "name": "names-bo3-script-hashes.tsv", "names_only": true,
+   "source": "GrayWolf package_index bo3_script_hashes.wni (codehash BO3 names), names only",
+   "licence": "GrayWolf is GPL-3.0; names from game files: local only"},
+  {"kind": "scripts", "path": "C:/path/to/t7-src/scripts", "game": "*", "name": "names-t7-src.tsv",
+   "source": "t7-src: identifiers and strings of the BO3 scripts decompiled with names",
+   "licence": "Activision scripts: local only"},
+  {"kind": "csv", "path": "C:/path/to/GreyhoundPackageIndex/PackageIndexSources/FNV1A/fnv1a_string.csv",
+   "game": "t8, t9", "source": "Greyhound Package Index fnv1a_string.csv",
+   "licence": "no licence stated (community index); names from game files: local only"},
+  {"kind": "csv", "path": "C:/path/to/cod-hash-recovery/data/names/bo7/2026-10-18_mapinfo_bundles.csv",
+   "game": "t11", "source": "cod-hash-recovery bo7 mapinfo and bundle names",
+   "licence": "no licence stated; Activision-derived: local only"}
+ ]
+}

@@ -1,0 +1,19 @@
+---
+source: crates/gsc_syntax/tests/dialect.rs
+expression: out
+---
+== ok/expressions.gsc
+4:42: D001 `===` is not available in demo (feature `strict_equality`)  [===]
+4:53: D001 `!==` is not available in demo (feature `strict_equality`)  [!==]
+9:20: D001 a `#"..."` hashed string is not available in demo (feature `hash_string_literal`)  [#"hashed"]
+13:6: D001 a `&` function pointer is not available in demo (feature `function_pointer_style`)  [&helper]
+14:6: D001 a `&` function pointer is not available in demo (feature `function_pointer_style`)  [&demo_ns::helper]
+24:8: D001 `new` is not available in demo (feature `classes`)  [new demo_class()]
+25:11: D001 `->` is not available in demo (feature `classes`)  [->]
+== ok/classes.gsc
+1:1: D001 `class` is not available in demo (feature `classes`)  [class demo_base]
+21:1: D001 `class` is not available in demo (feature `classes`)  [class demo_child : demo_base]
+== ok/directives.gsc
+1:1: D001 `#using` is not available in demo (feature `import_directive`)  [#using scripts\demo\common_util;]
+2:1: D001 `#using` is not available in demo (feature `import_directive`)  [#using scripts/demo/other_util;]
+17:24: D001 a `&` function pointer is not available in demo (feature `function_pointer_style`)  [&init]

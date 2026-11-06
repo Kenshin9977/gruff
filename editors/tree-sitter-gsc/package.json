@@ -1,0 +1,24 @@
+{
+  "name": "tree-sitter-gsc",
+  "version": "0.2.0",
+  "description": "GSC (Call of Duty game script) grammar for tree-sitter: the superset of every dialect from CoD1 to BO7",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kenshin9977/gruff",
+    "directory": "editors/tree-sitter-gsc"
+  },
+  "private": true,
+  "main": "bindings/node",
+  "keywords": ["tree-sitter", "parser", "gsc", "csc", "call-of-duty"],
+  "files": ["grammar.js", "tree-sitter.json", "src/**", "queries/**", "LICENSE"],
+  "scripts": {
+    "generate": "tree-sitter generate",
+    "test": "tree-sitter test",
+    "build-wasm": "tree-sitter build --wasm -o tree-sitter-gsc.wasm"
+  },
+  "devDependencies": {
+    "tree-sitter-cli": "0.27.1",
+    "web-tree-sitter": "0.27.1"
+  }
+}

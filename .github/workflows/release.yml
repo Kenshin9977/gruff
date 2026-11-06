@@ -1,0 +1,196 @@
+# Release: build `gruff` (and its deprecated `gsc` alias) for six targets, package archives
+# (binaries, README, licence, a gruff-data snapshot) with SHA256SUMS, package one .vsix per
+# platform, and draft a GitHub release.
+# Publishing the extension (VS Code Marketplace, Open VSX) is a separate job behind the
+# `marketplace` environment: configure it with required reviewers, and the VSCE_PAT and OVSX_PAT
+# secrets. Nothing is published unless that job is approved.
+#
+# Repository variable GRUFF_DATA_REPO (owner/name) names the gruff-data repository; default
+# <owner>/gruff-data. GRUFF_DATA_REF pins the snapshot (default: its default branch).
+
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Also run the Marketplace / Open VSX publish job (still needs approval)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  GRUFF_DATA_REPO: ${{ vars.GRUFF_DATA_REPO || format('{0}/gruff-data', github.repository_owner) }}
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - run: cargo test --workspace --locked
+
+  build:
+    needs: check
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { target: x86_64-pc-windows-msvc, os: windows-2022, vsce: win32-x64, archive: zip }
+          - { target: aarch64-pc-windows-msvc, os: windows-2022, vsce: win32-arm64, archive: zip }
+          - { target: x86_64-unknown-linux-gnu, os: ubuntu-22.04, vsce: linux-x64, archive: tar.gz }
+          - { target: aarch64-unknown-linux-gnu, os: ubuntu-22.04-arm, vsce: linux-arm64, archive: tar.gz }
+          - { target: x86_64-apple-darwin, os: macos-14, vsce: darwin-x64, archive: tar.gz }
+          - { target: aarch64-apple-darwin, os: macos-14, vsce: darwin-arm64, archive: tar.gz }
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: gruff
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ env.GRUFF_DATA_REPO }}
+          ref: ${{ vars.GRUFF_DATA_REF }}
+          path: gruff-data
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build
+        working-directory: gruff
+        run: cargo build --release --locked --target ${{ matrix.target }} -p gruff
+
+      - name: Archive
+        id: archive
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          [[ "$GITHUB_REF_TYPE" == tag ]] || version="$(sed -n 's/^version = "\(.*\)"/\1/p' gruff/Cargo.toml | head -1)"
+          name="gruff-${version}-${{ matrix.target }}"
+          ext=; [[ "${{ matrix.target }}" == *windows* ]] && ext=.exe
+          mkdir -p "dist/$name"
+          # gruff, and gsc: the deprecated alias (the binary's former name).
+          for exe in "gruff$ext" "gsc$ext"; do
+            cp "gruff/target/${{ matrix.target }}/release/$exe" "dist/$name/"
+          done
+          cp gruff/LICENSE gruff/README.md gruff/CHANGELOG.md "dist/$name/"
+          # gruff-data snapshot: what the binary reads plus its licence, schema and docs.
+          # evidence/ (measurements) and tools/ (probes) stay in the gruff-data repository.
+          git -C gruff-data archive --format=tar --prefix=gruff-data/ HEAD -- . ':!evidence' ':!tools' \
+            | tar -x -C "dist/$name"
+          git -C gruff-data log -1 --format='gruff-data %H %cs' > "dist/$name/gruff-data/SNAPSHOT"
+          cd dist
+          if [[ "${{ matrix.archive }}" == zip ]]; then
+            7z a -tzip -mx=9 "$name.zip" "$name" > /dev/null
+            file="$name.zip"
+          else
+            tar -czf "$name.tar.gz" "$name"
+            file="$name.tar.gz"
+          fi
+          rm -rf "$name"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Package the extension
+        working-directory: gruff/editors/vscode
+        env:
+          GSC_BIN: ../../target/${{ matrix.target }}/release/${{ contains(matrix.target, 'windows') && 'gruff.exe' || 'gruff's }}
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts
+          node node_modules/esbuild/install.js
+          # The server folder must match the target's platform-arch, not the runner's.
+          dir="server/${{ matrix.vsce }}"
+          mkdir -p "$dir"
+          cp "$GSC_BIN" "$dir/"
+          chmod +x "$dir"/gruff* || true
+          npx vsce package --no-dependencies --allow-missing-repository \
+            --target ${{ matrix.vsce }} \
+            -o "../../../dist/gruff-vscode-${{ steps.archive.outputs.version }}-${{ matrix.vsce }}.vsix"
+
+      - name: Smoke test
+        if: ${{ !contains(matrix.target, 'aarch64-pc-windows') && !(contains(matrix.target, 'x86_64-apple')) }}
+        run: |
+          ext=; [[ "${{ matrix.target }}" == *windows* ]] && ext=.exe
+          gruff/target/${{ matrix.target }}/release/gruff$ext --version
+          gruff/target/${{ matrix.target }}/release/gruff$ext hash t7.canon main
+          gruff/target/${{ matrix.target }}/release/gsc$ext --version
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ matrix.target }}
+          path: dist/*
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: dist-*
+          path: dist
+          merge-multiple: true
+      - name: Checksums
+        working-directory: dist
+        run: sha256sum * > SHA256SUMS && cat SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release
+          path: dist/*
+      - name: Draft the GitHub release
+        if: ${{ github.ref_type == 'tag' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          # The notes are this version's CHANGELOG section.
+          awk -v h="## [$version]" 'index($0, h) == 1 {on = 1; next} /^## / {on = 0} on' \
+            CHANGELOG.md | grep -v '^\[.*\]: ' > notes.md
+          gh release create "$GITHUB_REF_NAME" dist/* --draft --verify-tag \
+            --title "Gruff $version" --notes-file notes.md
+
+  publish-extension:
+    needs: release
+    if: ${{ github.ref_type == 'tag' || inputs.publish }}
+    runs-on: ubuntu-24.04
+    # Required reviewers on this environment are the manual approval gate.
+    environment: marketplace
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release
+          path: dist
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: VS Code Marketplace
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: |
+          if [ -z "$VSCE_PAT" ]; then echo "VSCE_PAT is not set; skipping"; exit 0; fi
+          npx --yes @vscode/vsce@3.9.2 publish --packagePath dist/*.vsix
+      - name: Open VSX
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: |
+          if [ -z "$OVSX_PAT" ]; then echo "OVSX_PAT is not set; skipping"; exit 0; fi
+          for f in dist/*.vsix; do npx --yes ovsx@0.10.6 publish "$f" -p "$OVSX_PAT"; done

@@ -1,0 +1,17 @@
+[book]
+title = "Gruff — GSC language tools"
+description = "A linter, formatter, indexer and language server for GSC scripts, CoD 1 to Black Ops 7."
+authors = ["Gruff contributors"]
+language = "en"
+src = "."
+
+[build]
+build-dir = "../target/book"
+create-missing = false
+# Keep rules/README.md as README.html, so links work both on the forge and in the book.
+use-default-preprocessors = false
+
+[preprocessor.links]
+
+[output.html]
+no-section-label = true

@@ -1,0 +1,19 @@
+---
+source: crates/gsc_sema/tests/sema.rs
+expression: dump(&ws)
+---
+== maps/lib.gsc (namespace maps/lib)
+== maps/main.gsc (namespace maps/main)
+  #include maps/lib -> maps/lib.gsc
+  5:6 call Bare("spawnstruct") -> builtin spawnstruct
+  6:6 call Bare("lib_only") -> include maps/lib::lib_only @ maps/lib.gsc:7:1
+  7:6 call Bare("getplayers") -> builtin getplayers
+  8:17 call Qualified(Some("maps/main"), "getplayers") -> qualified maps/main::getplayers @ maps/main.gsc:24:1
+  9:9 thread Bare("getplayers") -> local maps/main::getplayers @ maps/main.gsc:24:1
+  10:9 thread Bare("spawnstruct") -> include maps/lib::spawnstruct @ maps/lib.gsc:2:1
+  11:9 thread Bare("iprintln") -> unresolved iprintln
+  12:8 pointer Qualified(None, "lib_only") -> include maps/lib::lib_only @ maps/lib.gsc:7:1
+  13:8 pointer Qualified(None, "iprintln") -> builtin iprintln
+  14:8 pointer Qualified(None, "getplayers") -> builtin getplayers
+  15:6 call Bare("getentitynumber") -> local maps/main::getentitynumber @ maps/main.gsc:19:1
+  16:11 method Bare("getentitynumber") -> builtin getentitynumber

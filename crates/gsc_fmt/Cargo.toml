@@ -1,0 +1,23 @@
+[package]
+name = "gsc_fmt"
+description = "GSC formatter."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+gsc_syntax.workspace = true
+similar = "2.7.0"
+toml = "0.8.23"
+
+[dev-dependencies]
+gsc_sema.workspace = true
+insta = "1.49.0"
+proptest = "1.12.0"
+
+[lints]
+workspace = true

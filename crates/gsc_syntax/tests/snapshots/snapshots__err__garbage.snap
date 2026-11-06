@@ -1,0 +1,90 @@
+---
+source: crates/gsc_syntax/tests/snapshots.rs
+expression: "render(&text, &p, &check_dialect(&p.syntax(), dialect))"
+---
+1:1: E0202 expected a declaration, found `}`
+2:16: E0201 expected a parameter name, found `,`
+2:20: E0201 expected `,` or `)`, found `{`
+3:14: E0201 expected `)`, found `;`
+4:12: E0201 expected `,` or `]`, found `;`
+6:1: E0202 expected a declaration, found `#/`
+8:1: E0201 expected a name, found end of file
+
+SOURCE_FILE@0..68
+  ERROR@0..7
+    R_CURLY@0..1 "}"
+    WHITESPACE@1..2 " "
+    R_PAREN@2..3 ")"
+    WHITESPACE@3..4 " "
+    R_BRACK@4..5 "]"
+    WHITESPACE@5..6 " "
+    SEMICOLON@6..7 ";"
+  WHITESPACE@7..8 "\n"
+  FUNCTION_DEF@8..58
+    FUNCTION_KW@8..16 "function"
+    WHITESPACE@16..17 " "
+    NAME@17..18
+      IDENT@17..18 "h"
+    PARAM_LIST@18..26
+      L_PAREN@18..19 "("
+      WHITESPACE@19..20 " "
+      PARAM@20..21
+        NAME@20..21
+          IDENT@20..21 "a"
+      COMMA@21..22 ","
+      WHITESPACE@22..23 " "
+      PARAM@23..23
+      COMMA@23..24 ","
+      WHITESPACE@24..25 " "
+      PARAM@25..26
+        NAME@25..26
+          IDENT@25..26 "b"
+    WHITESPACE@26..27 " "
+    BLOCK@27..58
+      L_CURLY@27..28 "{"
+      WHITESPACE@28..30 "\n\t"
+      EXPR_STMT@30..43
+        ASSIGN_EXPR@30..41
+          NAME_REF@30..31
+            IDENT@30..31 "x"
+          WHITESPACE@31..32 " "
+          EQ@32..33 "="
+          WHITESPACE@33..34 " "
+          CALL_EXPR@34..41
+            NAME_REF@34..37
+              IDENT@34..37 "foo"
+            ARG_LIST@37..41
+              L_PAREN@37..38 "("
+              WHITESPACE@38..39 " "
+              LITERAL@39..40
+                INT_NUMBER@39..40 "1"
+              COMMA@40..41 ","
+        WHITESPACE@41..42 " "
+        SEMICOLON@42..43 ";"
+      WHITESPACE@43..45 "\n\t"
+      EXPR_STMT@45..56
+        ASSIGN_EXPR@45..55
+          NAME_REF@45..46
+            IDENT@45..46 "y"
+          WHITESPACE@46..47 " "
+          EQ@47..48 "="
+          WHITESPACE@48..49 " "
+          ARRAY_EXPR@49..55
+            L_BRACK@49..50 "["
+            WHITESPACE@50..51 " "
+            LITERAL@51..52
+              INT_NUMBER@51..52 "1"
+            COMMA@52..53 ","
+            WHITESPACE@53..54 " "
+            LITERAL@54..55
+              INT_NUMBER@54..55 "2"
+        SEMICOLON@55..56 ";"
+      WHITESPACE@56..57 "\n"
+      R_CURLY@57..58 "}"
+  WHITESPACE@58..59 "\n"
+  ERROR@59..61
+    DEV_CLOSE@59..61 "#/"
+  WHITESPACE@61..62 "\n"
+  CLASS_DEF@62..67
+    CLASS_KW@62..67 "class"
+  WHITESPACE@67..68 "\n"

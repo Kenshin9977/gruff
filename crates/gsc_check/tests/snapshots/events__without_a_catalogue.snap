@@ -1,0 +1,7 @@
+---
+source: crates/gsc_check/tests/events.rs
+expression: run(&workspace(None))
+---
+round.gsc:20:21: T002 no script notifies "round_startd": did you mean "round_started"? (otherwise this wait never ends)
+round.gsc:24:39: T003 every notify of "picked_up" sends 1 value: the last one of the 2 variables bound here is always undefined
+round.gsc:38:10: T004 `hud_loop` is threaded on a player (1 site) and loops forever, but nothing ends it when the player leaves: add `self endon( "disconnect" )`

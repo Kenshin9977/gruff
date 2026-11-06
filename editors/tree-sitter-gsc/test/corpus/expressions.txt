@@ -1,0 +1,454 @@
+================================================================================
+Operators and precedence
+================================================================================
+
+f()
+{
+	x = a + b * 2 - c % 4;
+	y = a < b && b <= a || !c;
+	z = a ? b : c ? 1 : 2;
+	w = a ?? b ?? c;
+	e = a === b || a !== b;
+	a += -b;
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_definition
+    (identifier)
+    (parameter_list)
+    (block
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (binary_expression
+            (binary_expression
+              (identifier)
+              (binary_expression
+                (identifier)
+                (integer)))
+            (binary_expression
+              (identifier)
+              (integer)))))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (binary_expression
+            (binary_expression
+              (binary_expression
+                (identifier)
+                (identifier))
+              (binary_expression
+                (identifier)
+                (identifier)))
+            (unary_expression
+              (identifier)))))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (ternary_expression
+            (identifier)
+            (identifier)
+            (ternary_expression
+              (identifier)
+              (integer)
+              (integer)))))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (binary_expression
+            (identifier)
+            (binary_expression
+              (identifier)
+              (identifier)))))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (binary_expression
+            (binary_expression
+              (identifier)
+              (identifier))
+            (binary_expression
+              (identifier)
+              (identifier)))))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (unary_expression
+            (identifier)))))))
+
+================================================================================
+Literals
+================================================================================
+
+f()
+{
+	v = ( 1, 2.5, -3 );
+	h = #"hashed";
+	l = &"DEMO_LABEL";
+	s = %"asset";
+	k = #name;
+	t = t"text";
+	a = [];
+	b = [ 1, 2 ];
+	c = { #a: 1, #b: 2 };
+	d = undefined;
+	tr = true;
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_definition
+    (identifier)
+    (parameter_list)
+    (block
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (vector
+            (integer)
+            (float)
+            (unary_expression
+              (integer)))))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (hash_string)))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (istring)))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (prefixed_string)))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (hash_identifier)))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (prefixed_string)))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (array)))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (array
+            (integer)
+            (integer))))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (struct
+            (struct_field
+              (hash_identifier)
+              (integer))
+            (struct_field
+              (hash_identifier)
+              (integer)))))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (undefined)))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (true))))))
+
+================================================================================
+Calls
+================================================================================
+
+f()
+{
+	self thread helper( 1 );
+	self demo_ns::helper();
+	thread helper();
+	level.ents[ 0 ] notify( "go", a );
+	self waittill( "done", result );
+	maps\mp\_utility::f();
+	::local_f();
+	self childthread g();
+	result = self getsomething().field;
+	waitframe( 1 );
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_definition
+    (identifier)
+    (parameter_list)
+    (block
+      (expression_statement
+        (call_expression
+          (identifier)
+          (call_modifier)
+          (identifier)
+          (argument_list
+            (integer))))
+      (expression_statement
+        (call_expression
+          (identifier)
+          (qualified_identifier
+            (identifier)
+            (identifier))
+          (argument_list)))
+      (expression_statement
+        (call_expression
+          (call_modifier)
+          (identifier)
+          (argument_list)))
+      (expression_statement
+        (call_expression
+          (subscript_expression
+            (field_expression
+              (identifier)
+              (identifier))
+            (integer))
+          (identifier)
+          (argument_list
+            (string)
+            (identifier))))
+      (expression_statement
+        (call_expression
+          (identifier)
+          (identifier)
+          (argument_list
+            (string)
+            (identifier))))
+      (expression_statement
+        (call_expression
+          (qualified_identifier
+            (path)
+            (identifier))
+          (argument_list)))
+      (expression_statement
+        (call_expression
+          (qualified_identifier
+            (identifier))
+          (argument_list)))
+      (expression_statement
+        (call_expression
+          (identifier)
+          (call_modifier)
+          (identifier)
+          (argument_list)))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (field_expression
+            (call_expression
+              (identifier)
+              (identifier)
+              (argument_list))
+            (identifier))))
+      (expression_statement
+        (call_expression
+          (identifier)
+          (argument_list
+            (integer)))))))
+
+================================================================================
+Pointers
+================================================================================
+
+f()
+{
+	g = &helper;
+	h = &demo_ns::helper;
+	i = ::helper;
+	[[ g ]]( a );
+	self [[ level.callbacks[ "spawn" ] ]]();
+	thread [ [ g ] ]();
+	nested = [ [ g ] ];
+	obj = new demo_class();
+	[[ obj ]]->run( 1, 2 );
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_definition
+    (identifier)
+    (parameter_list)
+    (block
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (function_reference
+            (identifier))))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (function_reference
+            (qualified_identifier
+              (identifier)
+              (identifier)))))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (qualified_identifier
+            (identifier))))
+      (expression_statement
+        (pointer_call_expression
+          (identifier)
+          (argument_list
+            (identifier))))
+      (expression_statement
+        (pointer_call_expression
+          (identifier)
+          (subscript_expression
+            (field_expression
+              (identifier)
+              (identifier))
+            (string))
+          (argument_list)))
+      (expression_statement
+        (pointer_call_expression
+          (call_modifier)
+          (identifier)
+          (argument_list)))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (array
+            (array
+              (identifier)))))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (new_expression
+            (identifier)
+            (argument_list))))
+      (expression_statement
+        (method_call_expression
+          (identifier)
+          (identifier)
+          (argument_list
+            (integer)
+            (integer)))))))
+
+================================================================================
+Animations, dollar names, is, casts
+================================================================================
+
+f()
+{
+	a = %demo_idle;
+	b = %generic::demo_idle;
+	c = #animtree;
+	d = $my_ent;
+	e = x is undefined;
+	g = x is not true;
+	i = (int) y;
+	j = float( s );
+	k = thisthread;
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_definition
+    (identifier)
+    (parameter_list)
+    (block
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (animation_reference
+            (animation_name))))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (animation_reference
+            (animation_name)
+            (animation_name))))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (animtree)))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (dollar_name)))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (is_expression
+            (identifier)
+            (undefined))))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (is_expression
+            (identifier)
+            (true))))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (cast_expression
+            (type)
+            (identifier))))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (call_expression
+            (identifier)
+            (argument_list
+              (identifier)))))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (thisthread))))))
+
+================================================================================
+Fields
+================================================================================
+
+f()
+{
+	n = a.size;
+	m = a?.b;
+	o = a.( key );
+	p = a.#hashed;
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_definition
+    (identifier)
+    (parameter_list)
+    (block
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (field_expression
+            (identifier)
+            (identifier))))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (field_expression
+            (identifier)
+            (identifier))))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (field_expression
+            (identifier)
+            (parenthesized_expression
+              (identifier)))))
+      (expression_statement
+        (assignment_expression
+          (identifier)
+          (field_expression
+            (identifier)
+            (hash_identifier)))))))

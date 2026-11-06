@@ -1,0 +1,22 @@
+---
+source: crates/gsc_syntax/tests/dialect.rs
+expression: "diagnostics(&data(\"dialect/t7_gating.gsc\"), &t7)"
+---
+2:1: D001 `#include` is not available in t7 (feature `import_directive`)  [#include demo\_old_style;]
+3:1: D001 `#inline` is not available in t7 (feature `header_directive`)  [#inline demo\_old_header;]
+4:1: D001 `#undef` is not available in t7 (feature `preprocessor_ifdef_undef`)  [#undef DEMO_FLAG]
+5:1: D001 `#ifdef`/`#ifndef` is not available in t7 (feature `preprocessor_ifdef_undef`)  [#ifdef DEMO_FLAG]
+8:1: D001 a file-scope constant is not available in t7 (feature `file_scope_constants`)  [DEMO_CONSTANT = 3;]
+10:10: D001 `event_handler` is not available in t7 (feature `event_handler_modifier`)  [event_handler[demo_event]]
+14:30: D001 a `*` pointer parameter is not available in t7 (feature `pointer_parameters`)  [*target]
+20:7: D001 `childthread` is not available in t7 (feature `childthread`)  [childthread]
+21:2: D001 `call` is not available in t7 (feature `call_pointer_sync`)  [call]
+22:8: D001 `??` is not available in t7 (feature `null_coalescing`)  [??]
+23:7: D001 `?.` is not available in t7 (feature `optional_chaining`)  [?.]
+24:6: D001 an `is` test is not available in t7 (feature `is_expression`)  [a is undefined]
+25:8: D001 a non-empty array literal is not available in t7 (feature `array_literal`)  [[ 1, 2 ]]
+26:6: D001 a struct literal is not available in t7 (feature `struct_literal`)  [{ #key: 1 }]
+27:2: D001 a tuple assignment is not available in t7 (feature `tuple_assignment`)  [[ first, second ] = pair()]
+28:6: D001 a `::` function pointer is not available in t7 (feature `function_pointer_style`)  [::watcher]
+29:2: D001 a path-qualified name is not available in t7 (feature `path_qualified_calls`)  [maps\demo\_util::go]
+33:1: D002 function declarations need the `function` keyword in t7  [old_style_function()]

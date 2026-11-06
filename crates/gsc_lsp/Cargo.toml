@@ -1,0 +1,25 @@
+[package]
+name = "gsc_lsp"
+description = "The GSC language server: an LSP front end over gsc_sema, gsc_check and gsc_fmt"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+gsc_syntax.workspace = true
+gsc_sema.workspace = true
+gsc_check.workspace = true
+gsc_fmt.workspace = true
+lsp-server = "0.10.0"
+lsp-types = "0.97"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+crossbeam-channel = "0.5"
+toml.workspace = true
+
+[lints]
+workspace = true

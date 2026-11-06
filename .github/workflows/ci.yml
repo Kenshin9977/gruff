@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      all_platforms:
+        description: "Also run Linux, tree-sitter and WASM (Windows only by default for now)"
+        type: boolean
+        default: false
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+
+jobs:
+  check:
+    strategy:
+      matrix:
+        os: ${{ fromJSON(inputs.all_platforms && '["ubuntu-latest", "windows-latest"]' || '["windows-latest"]') }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: fmt
+        run: cargo fmt --all -- --check
+      - name: clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: test
+        # The name-database tests are #[ignore]d: they need local files that are never committed.
+        run: cargo test --workspace
+
+  tree-sitter:
+    if: inputs.all_platforms
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: editors/tree-sitter-gsc
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - name: generated parser is up to date
+        run: npx tree-sitter generate && git diff --exit-code -- src
+      - run: npx tree-sitter test
+      - name: wasm
+        run: npx tree-sitter build --wasm -o tree-sitter-gsc.wasm
+
+  wasm:
+    if: inputs.all_platforms
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: wasm-bindgen-cli
+        run: cargo install wasm-bindgen-cli --version 0.2.130 --locked
+      # Without a gruff-data checkout no game is embedded; the smoke test then covers the
+      # superset dialect only.
+      - name: build the playground
+        run: sh editors/playground/build.sh
+      - name: smoke test
+        run: node editors/playground/smoke-test.mjs

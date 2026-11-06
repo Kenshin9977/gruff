@@ -1,0 +1,128 @@
+---
+source: crates/gsc_syntax/tests/snapshots.rs
+expression: "render(&text, &p, &check_dialect(&p.syntax(), dialect))"
+---
+SOURCE_FILE@0..358
+  USING_DIRECTIVE@0..32
+    USING_KW@0..6 "#using"
+    WHITESPACE@6..7 " "
+    PATH@7..31 "scripts\\demo\\common_util"
+    SEMICOLON@31..32 ";"
+  WHITESPACE@32..33 "\n"
+  USING_DIRECTIVE@33..64
+    USING_KW@33..39 "#using"
+    WHITESPACE@39..40 " "
+    PATH@40..63 "scripts/demo/other_util"
+    SEMICOLON@63..64 ";"
+  WHITESPACE@64..66 "\n\n"
+  INSERT_DIRECTIVE@66..96
+    INSERT_KW@66..73 "#insert"
+    WHITESPACE@73..74 " "
+    PATH@74..95 "scripts\\demo\\demo.gsh"
+    SEMICOLON@95..96 ";"
+  WHITESPACE@96..98 "\n\n"
+  NAMESPACE_DIRECTIVE@98..117
+    NAMESPACE_KW@98..108 "#namespace"
+    WHITESPACE@108..109 " "
+    NAME@109..116
+      IDENT@109..116 "demo_ns"
+    SEMICOLON@116..117 ";"
+  WHITESPACE@117..119 "\n\n"
+  PRECACHE_DIRECTIVE@119..152
+    PRECACHE_KW@119..128 "#precache"
+    ARG_LIST@128..151
+      L_PAREN@128..129 "("
+      WHITESPACE@129..130 " "
+      LITERAL@130..137
+        STRING@130..137 "\"model\""
+      COMMA@137..138 ","
+      WHITESPACE@138..139 " "
+      LITERAL@139..149
+        STRING@139..149 "\"demo_box\""
+      WHITESPACE@149..150 " "
+      R_PAREN@150..151 ")"
+    SEMICOLON@151..152 ";"
+  WHITESPACE@152..153 "\n"
+  USING_ANIMTREE_DIRECTIVE@153..184
+    USING_ANIMTREE_KW@153..168 "#using_animtree"
+    ARG_LIST@168..183
+      L_PAREN@168..169 "("
+      WHITESPACE@169..170 " "
+      LITERAL@170..181
+        STRING@170..181 "\"demo_tree\""
+      WHITESPACE@181..182 " "
+      R_PAREN@182..183 ")"
+    SEMICOLON@183..184 ";"
+  WHITESPACE@184..186 "\n\n"
+  PREPROC_DEFINE@186..205
+    DEFINE_KW@186..193 "#define"
+    WHITESPACE@193..194 " "
+    NAME@194..203
+      IDENT@194..203 "MAX_COUNT"
+    WHITESPACE@203..204 " "
+    MACRO_BODY@204..205 "8"
+  WHITESPACE@205..206 "\n"
+  PREPROC_DEFINE@206..235
+    DEFINE_KW@206..213 "#define"
+    WHITESPACE@213..214 " "
+    NAME@214..220
+      IDENT@214..220 "SQUARE"
+    MACRO_PARAMS@220..223
+      L_PAREN@220..221 "("
+      IDENT@221..222 "x"
+      R_PAREN@222..223 ")"
+    WHITESPACE@223..224 " "
+    MACRO_BODY@224..235 "((x) * (x))"
+  WHITESPACE@235..236 "\n"
+  PREPROC_DEFINE@236..273
+    DEFINE_KW@236..243 "#define"
+    WHITESPACE@243..244 " "
+    NAME@244..252
+      IDENT@244..252 "LONG_ONE"
+    MACRO_PARAMS@252..258
+      L_PAREN@252..253 "("
+      IDENT@253..254 "a"
+      COMMA@254..255 ","
+      WHITESPACE@255..256 " "
+      IDENT@256..257 "b"
+      R_PAREN@257..258 ")"
+    WHITESPACE@258..262 " \\\n\t"
+    MACRO_BODY@262..273 "(a + \\\n\t b)"
+  WHITESPACE@273..274 " "
+  COMMENT@274..293 "// trailing comment"
+  WHITESPACE@293..295 "\n\n"
+  MACRO_CALL_ITEM@295..336
+    NAME_REF@295..308
+      IDENT@295..308 "REGISTER_DEMO"
+    ARG_LIST@308..336
+      L_PAREN@308..309 "("
+      WHITESPACE@309..310 " "
+      LITERAL@310..316
+        STRING@310..316 "\"demo\""
+      COMMA@316..317 ","
+      WHITESPACE@317..318 " "
+      FUNCTION_REF@318..323
+        AMP@318..319 "&"
+        NAME_REF@319..323
+          IDENT@319..323 "init"
+      COMMA@323..324 ","
+      WHITESPACE@324..325 " "
+      LITERAL@325..334
+        UNDEFINED_KW@325..334 "undefined"
+      WHITESPACE@334..335 " "
+      R_PAREN@335..336 ")"
+  WHITESPACE@336..338 "\n\n"
+  FUNCTION_DEF@338..357
+    FUNCTION_KW@338..346 "function"
+    WHITESPACE@346..347 " "
+    NAME@347..351
+      IDENT@347..351 "init"
+    PARAM_LIST@351..353
+      L_PAREN@351..352 "("
+      R_PAREN@352..353 ")"
+    WHITESPACE@353..354 "\n"
+    BLOCK@354..357
+      L_CURLY@354..355 "{"
+      WHITESPACE@355..356 "\n"
+      R_CURLY@356..357 "}"
+  WHITESPACE@357..358 "\n"

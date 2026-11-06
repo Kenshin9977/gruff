@@ -1,0 +1,13 @@
+# Only the bundled client (dist/), the grammars, the language configuration, the licence, the
+# README and the bundled server go into the .vsix. vscode-languageclient is inlined by esbuild.
+src/**
+out/**
+dist/**/*.map
+scripts/**
+node_modules/**
+.vscode-test/**
+.gitignore
+tsconfig.json
+package-lock.json
+**/*.ts
+*.vsix

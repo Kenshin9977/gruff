@@ -1,0 +1,39 @@
+# A tiny builtin catalogue for the gsc_lsp tests (made-up arities, not game data).
+schema_version = 1
+game = "superset"
+license = "CC0-1.0"
+source = "written for the gsc_lsp tests"
+hash_family = "t7.canon"
+
+[[builtin]]
+name = "spawn"
+vm = "gsc"
+kind = "function"
+min_args = 1
+max_args = 3
+param_types = ["string", "vector", "int"]
+evidence = "test"
+
+[[builtin]]
+name = "randomint"
+vm = "gsc"
+kind = "function"
+min_args = 1
+max_args = 1
+evidence = "test"
+
+[[builtin]]
+name = "waittill"
+vm = "gsc"
+kind = "method"
+min_args = 1
+max_args = 2147483647
+evidence = "test"
+
+[[builtin]]
+name = "wait"
+vm = "gsc"
+kind = "function"
+min_args = 1
+max_args = 1
+evidence = "test"

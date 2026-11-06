@@ -1,0 +1,55 @@
+---
+source: crates/gsc_sema/tests/sema.rs
+expression: out
+---
+## document_symbols mymod.gsc
+Class beacon (lamp)
+  Method on ()
+Class lamp ()
+  Method toggle ()
+Function main ()
+Function watch (count)
+Function spawnstruct ()
+
+## workspace_symbols "wat"
+Function watch at scripts/zm/mymod.gsc:44:10
+Function waittill_any_timeout at scripts/shared/util_shared.gsc:9:10
+
+## workspace_symbols "util::"
+Function init at scripts/shared/util_shared.gsc:17:19
+Function hidden at scripts/shared/util_shared.gsc:30:18
+Function client_only at scripts/shared/util_shared.csc:3:10
+Function spawnstruct at scripts/shared/util_shared.gsc:25:10
+Function waittill_any_timeout at scripts/shared/util_shared.gsc:9:10
+
+## completions in watch, typed `to`
+total:Local
+
+## completions after `who.`
+health:Field origin:Field ready:Field score:Field util_ready:Field
+
+## completions after `util::`
+waittill_any_timeout:Function init:Function spawnstruct:Function
+
+## completions in a method, typed `tog`
+toggle:Method
+
+## completions bare, typed `hel`
+helper_in_namespace:Function
+
+## call hierarchy of mymod::watch
+incoming from mymod::main at 25:15, 35:7, 36:8
+incoming from mymod_helpers::helper_from_using at 7:9
+incoming from mymod::helper_in_namespace at 5:2
+outgoing to mymod::watch x3
+outgoing to util::waittill_any_timeout x1
+outgoing to mymod::spawnstruct x1
+outgoing to builtin getentitynumber x1
+outgoing to builtin spawnstruct x1
+outgoing to shared::IS_TRUE x1
+outgoing to mymod::helper_in_namespace x1
+outgoing to other helper_from_using x1
+outgoing to other nobody_defines_this x1
+outgoing to builtin earthquake x1
+outgoing to builtin playfx x1
+outgoing to mymod::lamp::toggle x1

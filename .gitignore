@@ -1,0 +1,18 @@
+/target
+**/*.rs.bk
+*.pdb
+# Never commit game material: dumps, name databases, scripts, fastfiles.
+*.wni
+*.gwn
+*.ff
+*.gscc
+*.gscbin
+/local/
+# This machine's corpus paths (template: tools/corpus/games.example.json).
+/tools/corpus/games.local.json
+__pycache__/
+/tools/re/paths.local.json
+# Hash packages built from local name lists (Activision-derived or GPL'd): never commit them.
+/hash-packages/
+/tools/hash_packages/sources.local.json
+*.hashes.tsv

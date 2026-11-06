@@ -1,0 +1,13 @@
+# Made-up engine event catalogue for the tests (no game data).
+[meta]
+game = "test"
+[coverage]
+complete = true
+[[event]]
+name = "death"
+receiver = "entity"
+args = [{ type = "entity" }]
+[[event]]
+name = "disconnect"
+receiver = "player"
+args = []

@@ -1,0 +1,4 @@
+function broken( a
+{
+	x = ;
+}

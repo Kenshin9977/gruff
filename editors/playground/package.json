@@ -1,0 +1,12 @@
+{
+  "name": "gruff-playground",
+  "version": "0.2.0",
+  "private": true,
+  "license": "GPL-3.0-or-later",
+  "type": "module",
+  "scripts": {
+    "build": "sh build.sh",
+    "test": "node smoke-test.mjs",
+    "serve": "python -m http.server 8000"
+  }
+}

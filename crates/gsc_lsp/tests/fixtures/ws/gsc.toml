@@ -1,0 +1,4 @@
+game = "superset"
+
+[check]
+extend-select = ["L"]

@@ -1,0 +1,131 @@
+---
+source: crates/gsc_syntax/tests/snapshots.rs
+expression: "render(&text, &p, &check_dialect(&p.syntax(), dialect))"
+---
+SOURCE_FILE@0..239
+  CLASS_DEF@0..150
+    CLASS_KW@0..5 "class"
+    WHITESPACE@5..6 " "
+    NAME@6..15
+      IDENT@6..15 "demo_base"
+    WHITESPACE@15..16 "\n"
+    L_CURLY@16..17 "{"
+    WHITESPACE@17..19 "\n\t"
+    CLASS_VAR@19..31
+      VAR_KW@19..22 "var"
+      WHITESPACE@22..23 " "
+      NAME@23..30
+        IDENT@23..30 "m_count"
+      SEMICOLON@30..31 ";"
+    WHITESPACE@31..33 "\n\t"
+    CLASS_VAR@33..53
+      VAR_KW@33..36 "var"
+      WHITESPACE@36..37 " "
+      NAME@37..43
+        IDENT@37..43 "m_name"
+      WHITESPACE@43..44 " "
+      EQ@44..45 "="
+      WHITESPACE@45..46 " "
+      LITERAL@46..52
+        STRING@46..52 "\"base\""
+      SEMICOLON@52..53 ";"
+    WHITESPACE@53..56 "\n\n\t"
+    CONSTRUCTOR@56..90
+      CONSTRUCTOR_KW@56..67 "constructor"
+      PARAM_LIST@67..69
+        L_PAREN@67..68 "("
+        R_PAREN@68..69 ")"
+      WHITESPACE@69..71 "\n\t"
+      BLOCK@71..90
+        L_CURLY@71..72 "{"
+        WHITESPACE@72..75 "\n\t\t"
+        EXPR_STMT@75..87
+          ASSIGN_EXPR@75..86
+            NAME_REF@75..82
+              IDENT@75..82 "m_count"
+            WHITESPACE@82..83 " "
+            EQ@83..84 "="
+            WHITESPACE@84..85 " "
+            LITERAL@85..86
+              INT_NUMBER@85..86 "0"
+          SEMICOLON@86..87 ";"
+        WHITESPACE@87..89 "\n\t"
+        R_CURLY@89..90 "}"
+    WHITESPACE@90..93 "\n\n\t"
+    DESTRUCTOR@93..111
+      DESTRUCTOR_KW@93..103 "destructor"
+      PARAM_LIST@103..105
+        L_PAREN@103..104 "("
+        R_PAREN@104..105 ")"
+      WHITESPACE@105..107 "\n\t"
+      BLOCK@107..111
+        L_CURLY@107..108 "{"
+        WHITESPACE@108..110 "\n\t"
+        R_CURLY@110..111 "}"
+    WHITESPACE@111..114 "\n\n\t"
+    FUNCTION_DEF@114..148
+      FUNCTION_KW@114..122 "function"
+      WHITESPACE@122..123 " "
+      NAME@123..127
+        IDENT@123..127 "bump"
+      PARAM_LIST@127..129
+        L_PAREN@127..128 "("
+        R_PAREN@128..129 ")"
+      WHITESPACE@129..131 "\n\t"
+      BLOCK@131..148
+        L_CURLY@131..132 "{"
+        WHITESPACE@132..135 "\n\t\t"
+        EXPR_STMT@135..145
+          POSTFIX_EXPR@135..144
+            NAME_REF@135..142
+              IDENT@135..142 "m_count"
+            PLUS2@142..144 "++"
+          SEMICOLON@144..145 ";"
+        WHITESPACE@145..147 "\n\t"
+        R_CURLY@147..148 "}"
+    WHITESPACE@148..149 "\n"
+    R_CURLY@149..150 "}"
+  WHITESPACE@150..152 "\n\n"
+  CLASS_DEF@152..238
+    CLASS_KW@152..157 "class"
+    WHITESPACE@157..158 " "
+    NAME@158..168
+      IDENT@158..168 "demo_child"
+    WHITESPACE@168..169 " "
+    CLASS_BASE@169..180
+      COLON@169..170 ":"
+      WHITESPACE@170..171 " "
+      NAME_REF@171..180
+        IDENT@171..180 "demo_base"
+    WHITESPACE@180..181 "\n"
+    L_CURLY@181..182 "{"
+    WHITESPACE@182..184 "\n\t"
+    FUNCTION_DEF@184..236
+      FUNCTION_KW@184..192 "function"
+      WHITESPACE@192..193 " "
+      NAME@193..201
+        IDENT@193..201 "describe"
+      PARAM_LIST@201..203
+        L_PAREN@201..202 "("
+        R_PAREN@202..203 ")"
+      WHITESPACE@203..205 "\n\t"
+      BLOCK@205..236
+        L_CURLY@205..206 "{"
+        WHITESPACE@206..209 "\n\t\t"
+        RETURN_STMT@209..233
+          RETURN_KW@209..215 "return"
+          WHITESPACE@215..216 " "
+          BIN_EXPR@216..232
+            NAME_REF@216..222
+              IDENT@216..222 "m_name"
+            WHITESPACE@222..223 " "
+            PLUS@223..224 "+"
+            WHITESPACE@224..225 " "
+            NAME_REF@225..232
+              IDENT@225..232 "m_count"
+          SEMICOLON@232..233 ";"
+        WHITESPACE@233..235 "\n\t"
+        R_CURLY@235..236 "}"
+    WHITESPACE@236..237 "\n"
+    R_CURLY@237..238 "}"
+  WHITESPACE@238..239 "\n"

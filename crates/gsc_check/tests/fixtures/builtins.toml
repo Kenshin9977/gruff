@@ -1,0 +1,96 @@
+# A tiny builtin catalogue for the tests (made-up arities, not game data).
+schema_version = 1
+game = "test"
+license = "CC0-1.0"
+source = "written for the gsc_check tests"
+hash_family = "t7.canon"
+
+[[builtin]]
+name = "spawn"
+vm = "gsc"
+kind = "function"
+min_args = 1
+max_args = 5
+evidence = "test"
+
+[[builtin]]
+name = "spawn"
+vm = "csc"
+kind = "function"
+min_args = 3
+max_args = 3
+evidence = "test"
+
+[[builtin]]
+name = "randomint"
+vm = "gsc"
+kind = "function"
+min_args = 1
+max_args = 1
+evidence = "test"
+
+[[builtin]]
+name = "iprintlnbold"
+vm = "gsc"
+kind = "method"
+min_args = 1
+max_args = 2147483647
+variadic = true
+evidence = "test"
+
+[[builtin]]
+name = "setmodel"
+vm = "gsc"
+kind = "method"
+min_args = 1
+max_args = 1
+evidence = "test"
+
+[[builtin]]
+name = "setmodel"
+vm = "csc"
+kind = "method"
+min_args = 1
+max_args = 1
+evidence = "test"
+
+[[builtin]]
+name = "getent"
+vm = "gsc"
+kind = "function"
+min_args = 2
+max_args = 2
+evidence = "test"
+
+[[builtin]]
+name = "getent"
+vm = "csc"
+kind = "function"
+min_args = 3
+max_args = 3
+evidence = "test"
+
+[[builtin]]
+name = "line"
+vm = "gsc"
+kind = "function"
+min_args = 2
+max_args = 6
+type_flags = 1
+evidence = "test"
+
+[[builtin]]
+name = "playfx"
+vm = "csc"
+kind = "function"
+min_args = 3
+max_args = 6
+evidence = "test"
+
+[[builtin]]
+name = "getplayers"
+vm = "gsc"
+kind = "function"
+min_args = 0
+max_args = 1
+evidence = "test"

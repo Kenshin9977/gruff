@@ -1,0 +1,112 @@
+---
+source: crates/gsc_check/tests/snapshots.rs
+expression: "output::render(&results, Format::Text)"
+---
+basic/scripts/broken.gsc:7:2: E0201 expected `;`, found `b`
+  |
+7 |     b = mystery_call( 2 );
+  |     ^
+
+basic/scripts/broken.gsc:8:18: E0201 expected `;`, found `garbage`
+  |
+8 |     c = randomint() garbage;
+  |                     ^^^^^^^
+
+basic/scripts/client.csc:6:14: B002 builtin function `getent` takes 3 arguments, but 2 were given
+  |
+6 |     ent = getent( "x", "targetname" );
+  |                 ^^^^^^^^^^^^^^^^^^^^^
+
+basic/scripts/demo.gsc:9:6: B001 unknown builtin function `spwan`; did you mean `spawn`?
+  |
+9 |     e = spwan( "script_origin", ( 0, 0, 0 ) );
+  |         ^^^^^
+  = unsafe fix: Replace with `spawn`
+
+basic/scripts/demo.gsc:10:15: B002 builtin function `randomint` takes 1 argument, but 0 were given
+   |
+10 |     n = randomint();
+   |                  ^^
+
+basic/scripts/demo.gsc:13:15: B002 builtin method `setmodel` takes 1 argument, but 0 were given
+   |
+13 |     self setmodel();
+   |                  ^^
+
+basic/scripts/demo.gsc:14:2: B001 unknown builtin function `notamethod`
+   |
+14 |     notamethod();
+   |     ^^^^^^^^^^
+
+basic/scripts/demo.gsc:15:7: B001 `getplayers` is a builtin function, not a method: call it without a receiver
+   |
+15 |     self getplayers();
+   |          ^^^^^^^^^^
+
+basic/scripts/demo.gsc:16:2: B001 `playfx` is a CSC builtin function, not available in GSC scripts
+   |
+16 |     playfx( "fx", ( 0, 0, 0 ), ( 0, 0, 1 ) );
+   |     ^^^^^^
+
+basic/scripts/demo.gsc:23:2: B003 `line` is a dev-only builtin; wrap the call in a `/# #/` dev block
+   |
+23 |     line( ( 0, 0, 0 ), ( 1, 1, 1 ) );
+   |     ^^^^
+
+basic/scripts/demo.gsc:26:2: B001 unknown builtin function `totally_unknown_thing`
+   |
+26 |     totally_unknown_thing( 1 );
+   |     ^^^^^^^^^^^^^^^^^^^^^
+
+basic/scripts/demo.gsc:36:2: L001 infinite loop never waits: the VM stops the script with "potential infinite loop"
+   |
+36 |     while ( 1 )
+   |     ^^^^^^^^^^^
+   = unsafe fix: Add `wait 0.05;` at the end of the loop body
+
+basic/scripts/demo.gsc:44:2: L001 infinite loop never waits: the VM stops the script with "potential infinite loop"
+   |
+44 |     for ( ;; )
+   |     ^^^^^^^^^^
+   = unsafe fix: Add `wait 0.05;` at the end of the loop body
+
+basic/scripts/demo.gsc:77:2: L001 infinite loop never waits: the VM stops the script with "potential infinite loop"
+   |
+77 |     while ( 1 )
+   |     ^^^^^^^^^^^
+   = unsafe fix: Add `wait 0.05;` at the end of the loop body
+
+basic/scripts/demo.gsc:99:3: B001 unknown builtin function `not_defined_anywhere`
+   |
+99 |         not_defined_anywhere();
+   |         ^^^^^^^^^^^^^^^^^^^^
+
+basic/scripts/demo.gsc:114:10: S100 [*] unused suppression: `L001` suppresses nothing here
+    |
+114 |     wait 1; // gsc: ignore[L001]
+    |             ^^^^^^^^^^^^^^^^^^^^
+    = fix: Remove the suppression comment
+
+basic/scripts/demo.gsc:115:10: S100 [*] suppression names unknown or unused codes: `B001`, `Q123`
+    |
+115 |     wait 1; // gsc: ignore[B001, Q123]
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = fix: Remove the suppression comment
+
+basic/scripts/demo.gsc:116:19: S100 [*] unused suppression: `L001` suppresses nothing here
+    |
+116 |     n = randomint(); // gsc: ignore[B002, L001]
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = fix: Remove the unused codes
+
+basic/scripts/fields.gsc:6:12: F001 field `helath` is never set by the engine or any script here; did you mean `health`?
+  |
+6 |     if ( self.helath < 50 )        // a typo of the engine's `health`
+  |               ^^^^^^
+  = unsafe fix: Replace with `health`
+
+basic/scripts/fields.gsc:14:11: F001 field `coutner` is never set by the engine or any script here; did you mean `counter`?
+   |
+14 |     y = self.coutner;              // a typo of `counter`, set above
+   |              ^^^^^^^
+   = unsafe fix: Replace with `counter`

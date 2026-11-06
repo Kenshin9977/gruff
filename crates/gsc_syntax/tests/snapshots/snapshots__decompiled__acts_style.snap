@@ -1,0 +1,231 @@
+---
+source: crates/gsc_syntax/tests/snapshots.rs
+expression: "render(&text, &p, &check_dialect(&p.syntax(), dialect))"
+---
+SOURCE_FILE@0..513
+  COMMENT@0..17 "// Namespace demo"
+  WHITESPACE@17..18 "\n"
+  COMMENT@18..29 "// Params 1"
+  WHITESPACE@29..30 "\n"
+  COMMENT@30..67 "// Checksum 0x12345678, Offset: 0x100"
+  WHITESPACE@67..68 "\n"
+  FUNCTION_DEF@68..474
+    FUNCTION_KW@68..76 "function"
+    WHITESPACE@76..77 " "
+    NAME@77..94
+      IDENT@77..94 "function_1a2b3c4d"
+    PARAM_LIST@94..110
+      L_PAREN@94..95 "("
+      WHITESPACE@95..96 " "
+      PARAM@96..108
+        NAME@96..108
+          IDENT@96..108 "var_5e6f7a8b"
+      WHITESPACE@108..109 " "
+      R_PAREN@109..110 ")"
+    WHITESPACE@110..111 "\n"
+    BLOCK@111..474
+      L_CURLY@111..112 "{"
+      WHITESPACE@112..117 "\n    "
+      EXPR_STMT@117..166
+        ASSIGN_EXPR@117..165
+          NAME_REF@117..118
+            IDENT@117..118 "s"
+          WHITESPACE@118..119 " "
+          EQ@119..120 "="
+          WHITESPACE@120..121 " "
+          STRUCT_EXPR@121..165
+            L_CURLY@121..122 "{"
+            WHITESPACE@122..123 " "
+            STRUCT_FIELD@123..149
+              LITERAL@123..136
+                HASH_IDENT@123..136 "#var_01020304"
+              COLON@136..137 ":"
+              NAME_REF@137..149
+                IDENT@137..149 "var_5e6f7a8b"
+            COMMA@149..150 ","
+            WHITESPACE@150..151 " "
+            STRUCT_FIELD@151..163
+              LITERAL@151..156
+                HASH_IDENT@151..156 "#team"
+              COLON@156..157 ":"
+              LITERAL@157..163
+                STRING@157..163 "\"axis\""
+            WHITESPACE@163..164 " "
+            R_CURLY@164..165 "}"
+        SEMICOLON@165..166 ";"
+      WHITESPACE@166..171 "\n    "
+      EXPR_STMT@171..188
+        ASSIGN_EXPR@171..187
+          NAME_REF@171..172
+            IDENT@171..172 "v"
+          WHITESPACE@172..173 " "
+          EQ@173..174 "="
+          WHITESPACE@174..175 " "
+          FIELD_EXPR@175..187
+            NAME_REF@175..176
+              IDENT@175..176 "s"
+            DOT@176..177 "."
+            PAREN_EXPR@177..187
+              L_PAREN@177..178 "("
+              WHITESPACE@178..179 " "
+              LITERAL@179..185
+                STRING@179..185 "\"team\""
+              WHITESPACE@185..186 " "
+              R_PAREN@186..187 ")"
+        SEMICOLON@187..188 ";"
+      WHITESPACE@188..193 "\n    "
+      EXPR_STMT@193..217
+        ASSIGN_EXPR@193..216
+          FIELD_EXPR@193..212
+            NAME_REF@193..197
+              SELF_KW@193..197 "self"
+            DOT@197..198 "."
+            NAME_REF@198..212
+              HASH_IDENT@198..212 "#tm7/demo_name"
+          WHITESPACE@212..213 " "
+          EQ@213..214 "="
+          WHITESPACE@214..215 " "
+          LITERAL@215..216
+            INT_NUMBER@215..216 "1"
+        SEMICOLON@216..217 ";"
+      WHITESPACE@217..222 "\n    "
+      EXPR_STMT@222..242
+        ASSIGN_EXPR@222..241
+          FIELD_EXPR@222..237
+            NAME_REF@222..227
+              LEVEL_KW@222..227 "level"
+            DOT@227..228 "."
+            NAME_REF@228..237
+              IDENT@228..237 "@odd_name"
+          WHITESPACE@237..238 " "
+          EQ@238..239 "="
+          WHITESPACE@239..240 " "
+          LITERAL@240..241
+            INT_NUMBER@240..241 "2"
+        SEMICOLON@241..242 ";"
+      WHITESPACE@242..247 "\n    "
+      EXPR_STMT@247..269
+        CALL_EXPR@247..268
+          QUALIFIED_REF@247..266
+            QUALIFIER@247..254
+              IDENT@247..254 "demo_ns"
+            COLON2@254..256 "::"
+            NAME_REF@256..266
+              BANG@256..257 "!"
+              IDENT@257..266 "_odd_func"
+          ARG_LIST@266..268
+            L_PAREN@266..267 "("
+            R_PAREN@267..268 ")"
+        SEMICOLON@268..269 ";"
+      WHITESPACE@269..274 "\n    "
+      EXPR_STMT@274..306
+        ASSIGN_EXPR@274..305
+          NAME_REF@274..275
+            IDENT@274..275 "x"
+          WHITESPACE@275..276 " "
+          EQ@276..277 "="
+          WHITESPACE@277..278 " "
+          CALL_EXPR@278..305
+            NAME_REF@278..282
+              SELF_KW@278..282 "self"
+            WHITESPACE@282..283 " "
+            NAME_REF@283..300
+              PATH@283..300 "maps/demo/fx_name"
+            ARG_LIST@300..305
+              L_PAREN@300..301 "("
+              WHITESPACE@301..302 " "
+              LITERAL@302..303
+                INT_NUMBER@302..303 "1"
+              WHITESPACE@303..304 " "
+              R_PAREN@304..305 ")"
+        SEMICOLON@305..306 ";"
+      WHITESPACE@306..311 "\n    "
+      WAITTILL_FRAME_END_STMT@311..330
+        WAITTILLFRAMEEND_KW@311..327 "waittillframeend"
+        L_PAREN@327..328 "("
+        R_PAREN@328..329 ")"
+        SEMICOLON@329..330 ";"
+      WHITESPACE@330..335 "\n    "
+      GOTO_STMT@335..353
+        IDENT@335..339 "goto"
+        WHITESPACE@339..340 " "
+        NAME_REF@340..352
+          IDENT@340..352 "LOC_00000010"
+        SEMICOLON@352..353 ";"
+      WHITESPACE@353..354 "\n"
+      LABEL_STMT@354..367
+        NAME@354..366
+          IDENT@354..366 "LOC_00000010"
+        COLON@366..367 ":"
+      WHITESPACE@367..372 "\n    "
+      GOTO_STMT@372..415
+        IDENT@372..383 "jumpiffalse"
+        L_PAREN@383..384 "("
+        WHITESPACE@384..385 " "
+        CALL_EXPR@385..399
+          NAME_REF@385..394
+            ISDEFINED_KW@385..394 "isdefined"
+          ARG_LIST@394..399
+            L_PAREN@394..395 "("
+            WHITESPACE@395..396 " "
+            NAME_REF@396..397
+              IDENT@396..397 "v"
+            WHITESPACE@397..398 " "
+            R_PAREN@398..399 ")"
+        WHITESPACE@399..400 " "
+        R_PAREN@400..401 ")"
+        WHITESPACE@401..402 " "
+        NAME_REF@402..414
+          IDENT@402..414 "LOC_00000010"
+        SEMICOLON@414..415 ";"
+      WHITESPACE@415..420 "\n    "
+      FOREACH_STMT@420..472
+        FOREACH_KW@420..427 "foreach"
+        WHITESPACE@427..428 " "
+        L_PAREN@428..429 "("
+        WHITESPACE@429..430 " "
+        FOREACH_BINDINGS@430..442
+          FIELD_EXPR@430..442
+            NAME_REF@430..435
+              LEVEL_KW@430..435 "level"
+            DOT@435..436 "."
+            NAME_REF@436..442
+              IDENT@436..442 "var_12"
+        WHITESPACE@442..443 " "
+        IN_KW@443..445 "in"
+        WHITESPACE@445..446 " "
+        FIELD_EXPR@446..458
+          NAME_REF@446..451
+            LEVEL_KW@446..451 "level"
+          DOT@451..452 "."
+          NAME_REF@452..458
+            IDENT@452..458 "var_34"
+        WHITESPACE@458..459 " "
+        R_PAREN@459..460 ")"
+        WHITESPACE@460..465 "\n    "
+        BLOCK@465..472
+          L_CURLY@465..466 "{"
+          WHITESPACE@466..471 "\n    "
+          R_CURLY@471..472 "}"
+      WHITESPACE@472..473 "\n"
+      R_CURLY@473..474 "}"
+  WHITESPACE@474..476 "\n\n"
+  FUNCTION_DEF@476..512
+    FUNCTION_KW@476..484 "function"
+    WHITESPACE@484..485 " "
+    NAME@485..493
+      IDENT@485..493 "01ab_odd"
+    PARAM_LIST@493..508
+      L_PAREN@493..494 "("
+      WHITESPACE@494..495 " "
+      PARAM@495..506
+        NAME@495..506
+          PATH@495..506 "2/odd_param"
+      WHITESPACE@506..507 " "
+      R_PAREN@507..508 ")"
+    WHITESPACE@508..509 "\n"
+    BLOCK@509..512
+      L_CURLY@509..510 "{"
+      WHITESPACE@510..511 "\n"
+      R_CURLY@511..512 "}"
+  WHITESPACE@512..513 "\n"

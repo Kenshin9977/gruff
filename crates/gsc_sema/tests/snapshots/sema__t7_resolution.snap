@@ -1,0 +1,38 @@
+---
+source: crates/gsc_sema/tests/sema.rs
+expression: dump(&t7())
+---
+== scripts/zm/mymod.gsc (namespace mymod)
+  #using scripts/shared/util_shared -> scripts/shared/util_shared.gsc
+  #using scripts/zm/mymod_helpers -> scripts/zm/mymod_helpers.gsc
+  #insert scripts/shared/shared.gsh -> scripts/shared/shared.gsh
+  11:3 call Bare("toggle") -> method mymod::lamp::toggle @ scripts/zm/mymod.gsc:18:11
+  12:3 call Bare("reset_all") -> unresolved reset_all
+  25:15 thread Bare("watch") -> local mymod::watch @ scripts/zm/mymod.gsc:44:10
+  26:15 thread Qualified(Some("util"), "waittill_any_timeout") -> qualified util::waittill_any_timeout @ scripts/shared/util_shared.gsc:9:10
+  27:6 call Bare("spawnstruct") -> local mymod::spawnstruct @ scripts/zm/mymod.gsc:55:10
+  28:11 method Bare("getentitynumber") -> builtin getentitynumber
+  29:7 call Qualified(Some("sys"), "spawnstruct") -> builtin spawnstruct
+  30:7 call Bare("is_true") -> macro IS_TRUE @ scripts/shared/shared.gsh:1:9
+  32:3 call Bare("helper_in_namespace") -> namespace mymod::helper_in_namespace @ scripts/zm/mymod_more.gsc:3:10
+  34:2 call Bare("helper_from_using") -> unresolved helper_from_using
+  35:7 pointer Bare("watch") -> local mymod::watch @ scripts/zm/mymod.gsc:44:10
+  36:8 pointer Qualified(None, "watch") -> local mymod::watch @ scripts/zm/mymod.gsc:44:10
+  37:2 call Bare("nobody_defines_this") -> unresolved nobody_defines_this
+  38:2 call Bare("earthquake") -> builtin earthquake
+  39:2 call Bare("playfx") -> builtin_othervm playfx
+  41:11 call Method("toggle") -> method mymod::lamp::toggle @ scripts/zm/mymod.gsc:18:11
+  47:22 call Bare("getplayers") -> builtin getplayers
+== scripts/zm/mymod_helpers.gsc (namespace mymod_helpers)
+  #using scripts/shared/util_shared -> scripts/shared/util_shared.gsc
+  7:9 call Qualified(Some("mymod"), "watch") -> qualified mymod::watch @ scripts/zm/mymod.gsc:44:10
+  9:9 call Bare("spawnstruct") -> builtin spawnstruct
+== scripts/zm/mymod_more.gsc (namespace mymod)
+  5:2 call Bare("watch") -> namespace mymod::watch @ scripts/zm/mymod.gsc:44:10
+  7:9 call Bare("spawnstruct") -> namespace mymod::spawnstruct @ scripts/zm/mymod.gsc:55:10
+== scripts/shared/shared.gsh (namespace shared)
+== scripts/shared/util_shared.csc (namespace util)
+  5:2 call Bare("playfx") -> builtin playfx
+== scripts/shared/util_shared.gsc (namespace util)
+  #insert scripts/shared/shared.gsh -> scripts/shared/shared.gsh
+  20:2 call Bare("spawnstruct") -> local util::spawnstruct @ scripts/shared/util_shared.gsc:25:10

@@ -1,0 +1,109 @@
+---
+source: crates/gsc_index/tests/index.rs
+expression: "render(\"t7\", &t7(), Some(b), 1)"
+---
+===== CALLS.tsv
+caller	callee	resolution	kind	receiver	at	via_macro
+beacon::start	beacon::watch_lamp	local	thread	self	scripts/shared/beacon.gsc:15	-
+beacon::start	relay::send	qualified	call	-	scripts/shared/beacon.gsc:16	-
+beacon::start	IS_ON	macro	call	-	scripts/shared/beacon.gsc:21	-
+beacon::start	setmodel	builtin	method	self	scripts/shared/beacon.gsc:25	-
+beacon::watch_lamp	util::waittill_any_timeout	unresolved	method	self	scripts/shared/beacon.gsc:34	-
+beacon::watch_lamp	[[callback]]	dynamic	method	self	scripts/shared/beacon.gsc:40	-
+beacon::watch_lamp	getplayers	builtin	call	-	scripts/shared/beacon.gsc:41	-
+beacon::watch_lamp	relay::on_out	qualified	childthread	player	scripts/shared/beacon.gsc:42	-
+beacon::watch_lamp	nobody_defines_this	unresolved	call	-	scripts/shared/beacon.gsc:44	-
+beacon::watch_lamp	unknown_ns::thing	unresolved	call	-	scripts/shared/beacon.gsc:45	-
+beacon::watch_lamp	relay::debug_draw	qualified	call	-	scripts/shared/beacon.gsc:47	-
+beacon::extinguish	BURN_OUT	macro	call	-	scripts/shared/beacon.gsc:60	-
+beacon::start	isdefined	builtin	call	-	scripts/shared/beacon.gsc:21	IS_ON
+beacon::extinguish	relay::send	qualified	call	-	scripts/shared/beacon.gsc:60	BURN_OUT
+relay::client_init	playfx	builtin	call	-	scripts/shared/relay.csc:9	-
+relay::register	relay::on_out	local	pointer	-	scripts/shared/relay.gsc:12	-
+relay::register	beacon::start	qualified	pointer	-	scripts/shared/relay.gsc:13	-
+relay::register	relay::send	local	thread	-	scripts/shared/relay.gsc:14	-
+relay::register	relay::helper	namespace	call	-	scripts/shared/relay.gsc:15	-
+relay::on_out	util::delay_notify	unresolved	method	self	scripts/shared/relay.gsc:21	-
+relay::lamp::toggle	relay::lamp::reset	method	call	-	scripts/shared/relay.gsc:41	-
+relay::strong_lamp::toggle	relay::lamp::toggle	method	call	-	scripts/shared/relay.gsc:53	-
+relay::strong_lamp::toggle	relay::lamp::reset	method	call	-	scripts/shared/relay.gsc:54	-
+relay::use_lamp	->toggle	dynamic	call	other	scripts/shared/relay.gsc:60	-
+relay::helper	getplayers	builtin	call	-	scripts/shared/relay_helpers.gsc:6	-
+===== EVENTS.tsv
+event	op	receiver	receiver_text	args	function	at	expr	via_macro
+game_over	endon	level	level	0	beacon::start	scripts/shared/beacon.gsc:14	-	-
+beacon_lit	notify	level	level	2	beacon::start	scripts/shared/beacon.gsc:18	-	-
+death	endon	self	self	0	beacon::watch_lamp	scripts/shared/beacon.gsc:33	-	-
+disconnect	endon	self	self	0	beacon::watch_lamp	scripts/shared/beacon.gsc:33	-	-
+lamp_broken	waittill_any_timeout	self	self	1	beacon::watch_lamp	scripts/shared/beacon.gsc:34	-	-
+lamp_removed	waittill_any_timeout	self	self	1	beacon::watch_lamp	scripts/shared/beacon.gsc:34	-	-
+trigger_*_hit	waittill	self	self	1	beacon::watch_lamp	scripts/shared/beacon.gsc:35	"trigger_" + id + "_hit"	-
+<dynamic>	waittill	self	self	0	beacon::watch_lamp	scripts/shared/beacon.gsc:37	msg	-
+lamp_out	notify	self	self	0	beacon::watch_lamp	scripts/shared/beacon.gsc:38	-	-
+spawned_player	waittill	player	player	0	beacon::watch_lamp	scripts/shared/beacon.gsc:43	-	-
+trigger_7_hit	notify	level	level	0	beacon::dev_only	scripts/shared/beacon.gsc:54	-	-
+beacon_out	notify	level	level	1	beacon::extinguish	scripts/shared/beacon.gsc:60	-	BURN_OUT
+relay_ready	waittill	level	level	0	relay::client_init	scripts/shared/relay.csc:8	-	-
+<dynamic>	notify	level	level	0	relay::send	scripts/shared/relay.gsc:6	msg	-
+beacon_lit	waittill	level	level	2	relay::send	scripts/shared/relay.gsc:7	-	-
+anim_done	waittillmatch	self	self	1	relay::on_out	scripts/shared/relay.gsc:20	-	-
+relay_timeout	delay_notify	self	self	1	relay::on_out	scripts/shared/relay.gsc:21	-	-
+toggled	notify	self	self	0	relay::lamp::toggle	scripts/shared/relay.gsc:40	-	-
+===== EVENTS_SUMMARY.tsv
+event	emit	wait	endon	files	receivers	flags
+<dynamic>	1	1	0	2	level:1,self:1	-
+anim_done	0	1	0	1	self:1	no_script_emitter
+beacon_lit	1	1	0	2	level:2	-
+beacon_out	1	0	0	1	level:1	no_script_listener
+death	0	0	1	1	self:1	no_script_emitter
+disconnect	0	0	1	1	self:1	no_script_emitter
+game_over	0	0	1	1	level:1	no_script_emitter
+lamp_broken	0	1	0	1	self:1	no_script_emitter
+lamp_out	1	0	0	1	self:1	no_script_listener
+lamp_removed	0	1	0	1	self:1	no_script_emitter
+relay_ready	0	1	0	1	level:1	no_script_emitter
+relay_timeout	1	0	0	1	self:1	no_script_listener
+spawned_player	0	1	0	1	player:1	no_script_emitter
+toggled	1	0	0	1	self:1	no_script_listener
+trigger_*_hit	0	1	0	1	self:1	pattern
+trigger_7_hit	1	0	0	1	level:1	-
+===== FIELDS.tsv
+object	field	op	function	at	via_macro
+level	beacons	write_index	beacon::start	scripts/shared/beacon.gsc:19	-
+level	beacon_count	write	beacon::start	scripts/shared/beacon.gsc:20	-
+self	ready	read	beacon::start	scripts/shared/beacon.gsc:21	-
+self	state	write	beacon::start	scripts/shared/beacon.gsc:23	-
+self	next_msg	read	beacon::watch_lamp	scripts/shared/beacon.gsc:36	-
+level	on_lamp_out	read	beacon::watch_lamp	scripts/shared/beacon.gsc:39	-
+self	ready	read	beacon::start	scripts/shared/beacon.gsc:21	IS_ON
+level	beacon_count	write	beacon::extinguish	scripts/shared/beacon.gsc:60	BURN_OUT
+level	on_lamp_out	write	relay::register	scripts/shared/relay.gsc:12	-
+level	on_ready	write	relay::register	scripts/shared/relay.gsc:13	-
+===== INCLUDES.tsv
+file	directive	target	resolved	at
+scripts/shared/beacon.gsc	using	scripts/shared/relay	scripts/shared/relay.gsc	scripts/shared/beacon.gsc:2
+scripts/shared/beacon.gsc	using	scripts/shared/missing_file	?	scripts/shared/beacon.gsc:3
+scripts/shared/beacon.gsc	insert	scripts/shared/flags.gsh	scripts/shared/flags.gsh	scripts/shared/beacon.gsc:4
+scripts/shared/relay.csc	using	scripts/shared/relay	scripts/shared/relay.csc	scripts/shared/relay.csc:2
+===== SYMBOLS.tsv
+kind	namespace	name	at	params	flags	doc
+function	beacon	start	scripts/shared/beacon.gsc:12	id, delay=1	autoexec	Lights the beacon and waits for it to burn out.
+function	beacon	watch_lamp	scripts/shared/beacon.gsc:31	id	private	Waits for the lamp to break. Then reports it.
+function	beacon	dev_only	scripts/shared/beacon.gsc:52	-	dev	-
+function	beacon	extinguish	scripts/shared/beacon.gsc:58	id	-	-
+define	flags	IS_ON	scripts/shared/flags.gsh:2	__f	-	= ( isdefined( __f ) && __f )
+define	flags	TICK	scripts/shared/flags.gsh:3	-	-	= 0.05
+define	flags	BURN_OUT	scripts/shared/flags.gsh:4	__id	-	= level notify( "beacon_out", __id ); level.beacon_count--; relay::send( "out_" +~
+function	relay	client_init	scripts/shared/relay.csc:6	-	autoexec	-
+function	relay	send	scripts/shared/relay.gsc:4	msg	-	-
+function	relay	register	scripts/shared/relay.gsc:10	-	-	-
+function	relay	on_out	scripts/shared/relay.gsc:18	id	-	-
+function	relay	debug_draw	scripts/shared/relay.gsc:24	-	-	-
+class	relay	lamp	scripts/shared/relay.gsc:28	-	-	-
+method	relay	lamp::constructor	scripts/shared/relay.gsc:32	-	-	-
+method	relay	lamp::toggle	scripts/shared/relay.gsc:37	-	-	-
+method	relay	lamp::reset	scripts/shared/relay.gsc:44	-	-	-
+class	relay	strong_lamp	scripts/shared/relay.gsc:49	lamp	-	-
+method	relay	strong_lamp::toggle	scripts/shared/relay.gsc:51	-	-	-
+function	relay	use_lamp	scripts/shared/relay.gsc:58	l	-	-
+function	relay	helper	scripts/shared/relay_helpers.gsc:4	-	-	-

@@ -1,0 +1,9 @@
+# Test fixtures and snapshots are compared byte for byte (diagnostic offsets, fix text, rendered
+# output), so they keep LF in every checkout and `git archive`, whatever core.autocrlf says. No
+# fixture needs CRLF: the CRLF tests build their input in code (`replace('\n', "\r\n")`).
+crates/*/tests/** text eol=lf
+*.snap text eol=lf
+# `gruff check --explain` embeds these with include_str!.
+docs/rules/*.md text eol=lf
+# The sourcegen test parses the grammar, and ungrammar does not accept CRLF.
+grammar/*.ungram text eol=lf

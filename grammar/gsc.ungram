@@ -1,0 +1,506 @@
+// gsc.ungram: shape of the GSC concrete syntax tree, superset of every dialect from CoD1 to BO7.
+//
+// Draft 1, checked against the parser in crates/gsc_syntax (phase 1). rust-analyzer ungrammar
+// notation: `Node = ...`, 'token', label:Node, `*`, `?`, `|`. It describes tree shape, not a
+// parsing algorithm. Every production parses in every dialect; a production marked `gate:` is
+// reported as "not available in <game>" when the active profile's feature is off. Feature names
+// are the keys of gruff-data/schema/profile.schema.json. tests/sourcegen.rs generates the typed
+// AST (crates/gsc_syntax/src/ast/generated.rs) from this file and fails when it is stale.
+//
+// Notation for gates:
+//   gate: f            feature f must be true
+//   gate: f = v        enum feature f must equal v
+//   gate: f has v      set or list feature f must contain v
+//   (no gate)          universal: every profile accepts it
+//
+// Tokens produced by the lexer rather than spelled here:
+//   'ident'           identifier; also decompiler hash spellings (function_1a2b, _id_1A2B,
+//                     script_<hex>, @name) and, in a Name or NameRef, a keyword of another game
+//                     remapped to 'ident' by the parser
+//   'path'            maps\mp\_utility (backslashes); in directive paths also / and . (`#using
+//                     scripts/shared/util;`, `#insert scripts\shared\shared.gsh;`); in decompiler
+//                     output, names glued with / \ . or starting with a digit (hash collisions)
+//   'int' 'float'     numeric literals
+//   'string'          "..."
+//   'istring'         &"..."                       gate: istring_literal
+//   'hash_string'     #"..."                       gate: hash_string_literal
+//   'prefixed_string' @"..." %"..." t"..." s"..." r"..." o"...
+//                                                  gate: extra_string_prefixes has <prefix>
+//   'hash_ident'      #name: a hashed name literal (struct keys and fields in acts output); in
+//                     decompiler output also a bare `#` before `;` `,` `)` `]` `}` `:`, acts'
+//                     spelling of a zero hash value (`x ?? #;`, beside the zero asset `%""`)
+//   'encoded_name'    after `%`: an animation name acts printed as escaped bytes (`%\x83\x99...`,
+//                     BO7 names it could not decrypt); one token, so `$` `;` `)` inside never lex
+//   'macro_body'      the rest of a #define line, continuation lines included
+//   'keyword'         a word in profile.keywords.words; outside that set the same word is 'ident',
+//                     and the parser promotes it back where the identifier reading is a syntax
+//                     error (contextual keywords: function, autoexec, private, codecall, class,
+//                     var, const, constructor, destructor, childthread, call, threadendon,
+//                     builtin, in, is, not)
+// Trivia (never nodes): whitespace, `//` comments, block comments, the BOM, and:
+//   /@ ... @/ doc comment                          gate: doc_comment_style = at-block
+//   #if / #elif / #else / #endif lines             gate: preprocessor_conditionals
+//   #ifdef / #ifndef lines                         gate: preprocessor_ifdef_undef
+//   disabled text: every #elif/#else branch up to its #endif. The first branch of a group is the
+//   active one, so shipped files whose branches split a function header still parse.
+// The parser wraps unparsable text in Error nodes, which are not listed here.
+//
+// Profile features with no production of their own (lexer, resolver or semantics only):
+// case_insensitive_identifiers, file_kinds, identifier_encoding, name_resolution,
+// bare_call_resolution, array_argument_passing, predefined_macros, assert_keywords,
+// opcode_builtins, global_objects, isdefined_form, istrue_operator and waittill_return_value
+// (callee or value classification), hashed_identifier_spellings (lexer), pointer_call (universal),
+// waittill_multiple_events, endon_multiple_events, notify_wakes_waiters and hash_equality (VM
+// semantics: event sites, the T rules, V001, hover).
+//
+// Modes: a feature's `value` describes the retail compiler; `community.value`, when present, the
+// community compilers (gsc-tool, Plutonium). The gates read the value of the active mode
+// (`gruff parse --mode community`), so BO2's #define, #if and #inline are reported in retail mode
+// only. Dedicated codes: D004 goto/labels (goto_labels), D005 casts (casts), D006 builtin calls
+// (builtin_call); every other gate reports D001.
+
+// ===== File =====================================================================================
+
+SourceFile =
+  Item*
+
+Item =
+  UsingDirective
+| IncludeDirective
+| InsertDirective
+| InlineDirective
+| NamespaceDirective
+| PrecacheDirective
+| UsingAnimtreeDirective
+| PreprocDefine
+| PreprocUndef
+| MacroCallItem
+| FunctionDef
+| ClassDef
+| FileConstant
+| DevBlockItem
+
+// ===== Directives (declarative: part of the grammar, meaningful to name resolution) ============
+
+// gate: import_directive = using. Ordering rule (imports_before_declarations) is a check, not shape.
+UsingDirective =
+  '#using' ('path' | 'string') ';'
+
+// gate: import_directive = include
+IncludeDirective =
+  '#include' ('path' | 'string') ';'
+
+// gate: header_directive = insert. The path keeps the .gsh extension.
+InsertDirective =
+  '#insert' ('path' | 'string') ';'
+
+// gate: header_directive = inline (gsc-tool spelling for IW and t6)
+InlineDirective =
+  '#inline' ('path' | 'string') ';'
+
+// gate: namespace_directive
+NamespaceDirective =
+  '#namespace' Name ';'
+
+// gate: precache_directive
+PrecacheDirective =
+  '#precache' ArgList ';'
+
+// gate: using_animtree_directive
+UsingAnimtreeDirective =
+  '#using_animtree' ArgList ';'
+
+// ===== Preprocessor =============================================================================
+
+// gate: preprocessor_define. With MacroParams, gate: preprocessor_function_macros.
+// The body runs to the end of the line; a trailing backslash continues it.
+PreprocDefine =
+  '#define' Name MacroParams? 'macro_body'?
+
+MacroParams =
+  '(' ('ident' (',' 'ident')* (',' '...')?)? ')'
+
+// gate: preprocessor_ifdef_undef
+PreprocUndef =
+  '#undef' Name
+
+// gate: file_scope_macro_calls. A macro invoked at file scope, e.g. a registration macro that
+// expands to a function. The `;` is usually absent.
+MacroCallItem =
+  NameRef ArgList ';'?
+
+// ===== Declarations =============================================================================
+
+// gate: function_keyword. On profiles where it is true the keyword is required (D002); where it
+// is false it is reported. Modifiers:
+//   'autoexec'            gate: autoexec_modifier
+//   'private'             gate: private_modifier
+//   'codecall'            gate: codecall_modifier
+//   EventHandlerModifier  gate: event_handler_modifier
+FunctionDef =
+  'function'? ('autoexec' | 'private' | 'codecall' | EventHandlerModifier)* Name ParamList
+  body:Block
+
+// gate: event_handler_modifier
+EventHandlerModifier =
+  'event_handler' '[' Name ']'
+
+ParamList =
+  '(' (AnyParam (',' AnyParam)*)? ')'
+
+AnyParam =
+  Param
+| VarargParam
+
+// '&' gate: reference_parameters. '*' gate: pointer_parameters. DefaultValue gate: default_parameters.
+Param =
+  ('&' | '*')? Name DefaultValue?
+
+DefaultValue =
+  '=' Expr
+
+// gate: varargs. Extra arguments are read through the implicit `vararg` array.
+VarargParam =
+  '...'
+
+// gate: classes (class, var, constructor, destructor, new, ->)
+ClassDef =
+  'class' Name ClassBase? '{' ClassMember* '}'
+
+ClassBase =
+  ':' NameRef (',' NameRef)*
+
+ClassMember =
+  ClassVar
+| Constructor
+| Destructor
+| FunctionDef
+| PreprocDefine
+| PreprocUndef
+| DevBlockItem
+| MacroCallItem
+
+ClassVar =
+  'var' Name ('=' Expr)? ';'
+
+Constructor =
+  'constructor' ParamList body:Block
+
+Destructor =
+  'destructor' ParamList body:Block
+
+// gate: file_scope_constants. IW `NAME = expr;` between functions; not a macro.
+FileConstant =
+  Name '=' Expr ';'
+
+// gate: dev_blocks. At file scope a dev block holds whole declarations; shipped files may leave
+// it open until the end of the file.
+DevBlockItem =
+  '/#' Item* '#/'?
+
+// ===== Statements ===============================================================================
+
+Stmt =
+  Block
+| ExprStmt
+| MacroStmt
+| IfStmt
+| WhileStmt
+| DoWhileStmt
+| ForStmt
+| ForeachStmt
+| SwitchStmt
+| BreakStmt
+| ContinueStmt
+| ReturnStmt
+| WaitStmt
+| WaitRealTimeStmt
+| WaitFrameStmt
+| WaittillFrameEndStmt
+| ConstStmt
+| ProfilerStmt
+| BreakpointStmt
+| DevBlockStmt
+| PreprocDefine
+| PreprocUndef
+| GotoStmt
+| LabelStmt
+| EmptyStmt
+
+Block =
+  '{' Stmt* '}'
+
+// Only calls, assignments and increments are valid here; that is a check, not shape.
+// notify, endon, waittill, waittillmatch and assert are calls whose callee is a keyword token.
+// A tuple assignment `[ a, b ] = v;` is an AssignExpr whose left side is an ArrayExpr
+// (gate: tuple_assignment).
+ExprStmt =
+  Expr ';'
+
+// An upper-case macro used as a statement on its own line, `WAIT_SERVER_FRAME` or
+// `MACRO( x )`, whose body supplies the `;`. In decompiler output also gsc-tool's `__asm_jmp(...)`.
+MacroStmt =
+  Expr
+
+IfStmt =
+  'if' '(' condition:Expr ')' then_branch:Stmt ElseBranch?
+
+ElseBranch =
+  'else' Stmt
+
+WhileStmt =
+  'while' '(' condition:Expr ')' body:Stmt
+
+// gate: do_while
+DoWhileStmt =
+  'do' body:Stmt 'while' '(' condition:Expr ')' ';'
+
+ForStmt =
+  'for' '(' ForInit? ';' ForCondition? ';' ForStep? ')' body:Stmt
+
+ForInit =
+  Expr
+
+ForCondition =
+  Expr
+
+ForStep =
+  Expr
+
+// gate: foreach. With a key binding, gate: foreach_key_value.
+ForeachStmt =
+  'foreach' '(' ForeachBindings 'in' iterable:Expr ')' body:Stmt
+
+// Each binding is a Name; gsc-tool output may bind a field instead (`level.x`), an Expr.
+ForeachBindings =
+  (Name | Expr) (',' (Name | Expr))?
+
+SwitchStmt =
+  'switch' '(' Expr ')' '{' SwitchClause* '}'
+
+SwitchClause =
+  ('case' value:Expr | 'default') ':' Stmt*
+
+BreakStmt =
+  'break' ';'
+
+ContinueStmt =
+  'continue' ';'
+
+ReturnStmt =
+  'return' Expr? ';'
+
+WaitStmt =
+  'wait' Expr ';'
+
+// gate: waitrealtime
+WaitRealTimeStmt =
+  'waitrealtime' Expr ';'
+
+// gate: waitframe (otherwise `waitframe()` is an ordinary call to a script function)
+WaitFrameStmt =
+  'waitframe' ('(' ')')? ';'
+
+// gate: waittillframeend. Decompilers write `waittillframeend();`.
+WaittillFrameEndStmt =
+  'waittillframeend' ('(' ')')? ';'
+
+// gate: const_locals
+ConstStmt =
+  'const' Name '=' Expr ';'
+
+// gate: profiler_keywords has <word>
+ProfilerStmt =
+  ('prof_begin' | 'prof_end' | 'profilestart' | 'profilestop') ArgList? ';'
+
+// gate: breakpoint_keyword
+BreakpointStmt =
+  'breakpoint' ';'
+
+// gate: dev_blocks
+DevBlockStmt =
+  '/#' Stmt* '#/'
+
+// gate: goto_labels, reported as D004 unless the feature is on (an unknown value reports too:
+// these are decompiler control flow). `goto LOC_1;`, and acts' conditional jumps
+// `jumpiffalse( c ) LOC_1;`. The leading word is an 'ident'. Accessors hand-written.
+GotoStmt =
+  'ident' ('(' condition:Expr ')')? target:NameRef ';'
+
+// gate: goto_labels (D004, as GotoStmt). `LOC_1:`.
+LabelStmt =
+  Name ':'
+
+EmptyStmt =
+  ';'
+
+// ===== Expressions ==============================================================================
+// Precedence (loosest first): assignment, ?:, ??, ||, &&, |, ^, &, equality and `is`,
+// comparison, shifts, + -, * / %, prefix, postfix (. [] ++ -- and calls with a receiver).
+
+Expr =
+  Literal
+| NameRef
+| QualifiedRef
+| FunctionRef
+| CallExpr
+| PointerCallExpr
+| MethodCallExpr
+| FieldExpr
+| IndexExpr
+| PrefixExpr
+| PostfixExpr
+| BinExpr
+| AssignExpr
+| TernaryExpr
+| IsExpr
+| ParenExpr
+| VectorExpr
+| ArrayExpr
+| StructExpr
+| NewExpr
+| AnimRef
+| AnimtreeExpr
+| DollarName
+| ThisThreadExpr
+| CastExpr
+
+Literal =
+  'int' | 'float' | 'string' | 'istring' | 'hash_string' | 'prefixed_string' | 'hash_ident'
+| 'true' | 'false' | 'undefined'
+
+Name =
+  'ident'
+
+// Also a name-like keyword (self, level, game, anim, world, classes, isdefined, notify, endon,
+// waittill, waittillmatch, assert, size, vararg...). global_objects is a resolver check.
+NameRef =
+  'ident'
+
+// A qualified name. Qualifier forms:
+//   'path' '::'      gate: path_qualified_calls
+//   'ident' '::'     gate: namespace_qualified_calls, or a one-word path where
+//                    path_qualified_calls is on (IW `character::main()`); the word `sys`
+//                    gate: builtin_namespace_qualifier
+//   '::' alone       local file function; as a value, gate: function_pointer_style = colon
+QualifiedRef =
+  Qualifier? '::' NameRef
+
+Qualifier =
+  'ident' | 'path'
+
+// Function pointer `&f`, `&ns::f`. gate: function_pointer_style = ampersand
+FunctionRef =
+  '&' (NameRef | QualifiedRef)
+
+// Call modifiers:
+//   'thread'       universal
+//   'childthread'  gate: childthread
+//   'call'         gate: call_pointer_sync
+//   'threadendon'  gate: threadendon_call (acts spelling)
+//   'builtin'      gate: builtin_call (acts spelling of a builtin pointer call, MWIII and BO7);
+//                  reported as D006
+// A receiver makes it a method call: `self thread foo()` (receiver by juxtaposition, postfix
+// binding power). Callee keywords: isdefined, the opcode builtins, notify/endon/waittill...
+// The callee is a NameRef or QualifiedRef, so receiver and callee are both Exprs: their
+// accessors are hand-written (ast/ext.rs), as for the other nodes marked "hand-written".
+CallExpr =
+  receiver:Expr? ('thread' | 'childthread' | 'call' | 'threadendon' | 'builtin')?
+  callee:Expr ArgList
+
+// `[[ expr ]]( args )`, also with a receiver and a modifier. `[ [` may be spaced. Universal.
+// Hand-written.
+PointerCallExpr =
+  receiver:Expr? ('thread' | 'childthread' | 'call' | 'threadendon' | 'builtin')?
+  '[' '[' target:Expr ']' ']' ArgList
+
+// gate: classes. `[[ obj ]]->method( args )`. Hand-written.
+MethodCallExpr =
+  receiver:Expr? ('thread' | 'childthread' | 'call' | 'threadendon' | 'builtin')?
+  '[' '[' object:Expr ']' ']' '->' method:NameRef ArgList
+
+ArgList =
+  '(' (Expr (',' Expr)*)? ')'
+
+// '?.' gate: optional_chaining. `.size` is an ordinary field name. acts writes a field named by
+// an expression as `obj.( expr )`, a ParenExpr. Hand-written.
+FieldExpr =
+  base:Expr ('.' | '?.') field:Expr
+
+IndexExpr =
+  base:Expr '[' index:Expr ']'
+
+PrefixExpr =
+  ('!' | '~' | '-' | '+' | '++' | '--') Expr
+
+PostfixExpr =
+  Expr ('++' | '--')
+
+// '===' and '!==' gate: strict_equality. '??' gate: null_coalescing.
+BinExpr =
+  lhs:Expr
+  ( '||' | '&&' | '|' | '^' | '&'
+  | '==' | '!=' | '===' | '!=='
+  | '<' | '<=' | '>' | '>='
+  | '<<' | '>>' | '+' | '-' | '*' | '/' | '%'
+  | '??' )
+  rhs:Expr
+
+AssignExpr =
+  lhs:Expr
+  ( '=' | '+=' | '-=' | '*=' | '/=' | '%=' | '&=' | '|=' | '^=' | '<<=' | '>>=' )
+  rhs:Expr
+
+TernaryExpr =
+  condition:Expr '?' then_value:Expr ':' else_value:Expr
+
+// gate: is_expression
+IsExpr =
+  Expr 'is' 'not'? ('undefined' | 'true' | 'false' | 'function' | 'ident')
+
+ParenExpr =
+  '(' Expr ')'
+
+// Three components; other counts are syntax errors.
+VectorExpr =
+  '(' x:Expr ',' y:Expr ',' z:Expr ')'
+
+// `[]` is universal. Elements gate: array_literal; `key: value` elements are an acts superset form.
+ArrayExpr =
+  '[' ((Expr | ArrayElement) (',' (Expr | ArrayElement))* ','?)? ']'
+
+ArrayElement =
+  key:Expr ':' value:Expr
+
+// gate: struct_literal
+StructExpr =
+  '{' (StructField (',' StructField)* ','?)? '}'
+
+StructField =
+  key:Expr ':' value:Expr
+
+// gate: classes
+NewExpr =
+  'new' NameRef ArgList?
+
+// gate: anim_reference. With a tree qualifier, gate: anim_reference_qualified. An animation name
+// may start with a digit (`%2h_idle`): its Name then holds several tokens. An undecrypted BO7 name
+// is one 'encoded_name' token in the Name. Hand-written.
+AnimRef =
+  '%' tree:Name? '::'? anim:Name
+
+// gate: animtree_expression
+AnimtreeExpr =
+  '#animtree'
+
+// gate: dollar_identifiers
+DollarName =
+  '$' Name
+
+// gate: thisthread
+ThisThreadExpr =
+  'thisthread'
+
+// gate: casts, reported as D005. `(int) x`, `(float) x`: CoD1 source. Hand-written.
+CastExpr =
+  '(' ty:NameRef ')' Expr

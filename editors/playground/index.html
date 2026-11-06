@@ -1,0 +1,64 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gruff Playground</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Gruff playground</h1>
+    <span id="version" class="muted"></span>
+    <label>Game
+      <select id="game"></select>
+    </label>
+    <label class="file">Profile TOML <input id="profile" type="file" accept=".toml"></label>
+    <label class="file">Builtins TOML <input id="builtins" type="file" accept=".toml"></label>
+    <span id="status" class="muted" role="status"></span>
+  </header>
+  <main>
+    <section class="editor">
+      <textarea id="source" spellcheck="false" autocomplete="off" aria-label="GSC source"></textarea>
+    </section>
+    <section class="output">
+      <nav role="tablist">
+        <button role="tab" data-tab="diagnostics" aria-selected="true">Diagnostics <span id="count"></span></button>
+        <button role="tab" data-tab="highlight">Highlighted</button>
+        <button role="tab" data-tab="tree">Syntax tree</button>
+        <button role="tab" data-tab="format">Format</button>
+        <button role="tab" data-tab="hash">Hash</button>
+      </nav>
+      <div id="tab-diagnostics" class="tab" role="tabpanel">
+        <label><input id="preview" type="checkbox"> preview rules</label>
+        <label>select <input id="select" placeholder="default (e.g. ALL, B, L001)"></label>
+        <ul id="diagnostics"></ul>
+      </div>
+      <div id="tab-highlight" class="tab" role="tabpanel" hidden>
+        <p class="muted">tree-sitter-gsc, <code>queries/highlights.scm</code>.</p>
+        <pre id="highlighted"></pre>
+      </div>
+      <div id="tab-tree" class="tab" role="tabpanel" hidden>
+        <p class="muted">The lossless tree of <code>gsc_syntax</code>.</p>
+        <pre id="tree"></pre>
+      </div>
+      <div id="tab-format" class="tab" role="tabpanel" hidden>
+        <label>style
+          <select id="style"><option>full</option><option>minimal</option></select>
+        </label>
+        <button id="apply-format">Replace the source</button>
+        <p id="format-status" class="muted"></p>
+        <pre id="formatted"></pre>
+      </div>
+      <div id="tab-hash" class="tab" role="tabpanel" hidden>
+        <label>family <select id="family"></select></label>
+        <label>text <input id="hash-input" value="main"></label>
+        <p><output id="hash-output"></output></p>
+        <table id="hash-all"></table>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="main.js"></script>
+</body>
+</html>

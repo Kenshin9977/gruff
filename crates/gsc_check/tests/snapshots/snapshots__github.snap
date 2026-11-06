@@ -1,0 +1,24 @@
+---
+source: crates/gsc_check/tests/snapshots.rs
+expression: "output::render(&results, Format::Github)"
+---
+::error title=gruff (E0201 expected-token),file=basic/scripts/broken.gsc,line=7,col=2,endLine=7,endColumn=3::E0201 expected `;`, found `b`
+::error title=gruff (E0201 expected-token),file=basic/scripts/broken.gsc,line=8,col=18,endLine=8,endColumn=25::E0201 expected `;`, found `garbage`
+::error title=gruff (B002 builtin-arg-count),file=basic/scripts/client.csc,line=6,col=14,endLine=6,endColumn=35::B002 builtin function `getent` takes 3 arguments, but 2 were given
+::error title=gruff (B001 unknown-builtin),file=basic/scripts/demo.gsc,line=9,col=6,endLine=9,endColumn=11::B001 unknown builtin function `spwan`; did you mean `spawn`?
+::error title=gruff (B002 builtin-arg-count),file=basic/scripts/demo.gsc,line=10,col=15,endLine=10,endColumn=17::B002 builtin function `randomint` takes 1 argument, but 0 were given
+::error title=gruff (B002 builtin-arg-count),file=basic/scripts/demo.gsc,line=13,col=15,endLine=13,endColumn=17::B002 builtin method `setmodel` takes 1 argument, but 0 were given
+::error title=gruff (B001 unknown-builtin),file=basic/scripts/demo.gsc,line=14,col=2,endLine=14,endColumn=12::B001 unknown builtin function `notamethod`
+::error title=gruff (B001 unknown-builtin),file=basic/scripts/demo.gsc,line=15,col=7,endLine=15,endColumn=17::B001 `getplayers` is a builtin function, not a method: call it without a receiver
+::error title=gruff (B001 unknown-builtin),file=basic/scripts/demo.gsc,line=16,col=2,endLine=16,endColumn=8::B001 `playfx` is a CSC builtin function, not available in GSC scripts
+::error title=gruff (B003 dev-only-builtin),file=basic/scripts/demo.gsc,line=23,col=2,endLine=23,endColumn=6::B003 `line` is a dev-only builtin; wrap the call in a `/# #/` dev block
+::error title=gruff (B001 unknown-builtin),file=basic/scripts/demo.gsc,line=26,col=2,endLine=26,endColumn=23::B001 unknown builtin function `totally_unknown_thing`
+::error title=gruff (L001 infinite-loop-without-wait),file=basic/scripts/demo.gsc,line=36,col=2,endLine=36,endColumn=13::L001 infinite loop never waits: the VM stops the script with "potential infinite loop"
+::error title=gruff (L001 infinite-loop-without-wait),file=basic/scripts/demo.gsc,line=44,col=2,endLine=44,endColumn=12::L001 infinite loop never waits: the VM stops the script with "potential infinite loop"
+::error title=gruff (L001 infinite-loop-without-wait),file=basic/scripts/demo.gsc,line=77,col=2,endLine=77,endColumn=13::L001 infinite loop never waits: the VM stops the script with "potential infinite loop"
+::error title=gruff (B001 unknown-builtin),file=basic/scripts/demo.gsc,line=99,col=3,endLine=99,endColumn=23::B001 unknown builtin function `not_defined_anywhere`
+::error title=gruff (S100 unused-suppression),file=basic/scripts/demo.gsc,line=114,col=10,endLine=114,endColumn=30::S100 unused suppression: `L001` suppresses nothing here
+::error title=gruff (S100 unused-suppression),file=basic/scripts/demo.gsc,line=115,col=10,endLine=115,endColumn=36::S100 suppression names unknown or unused codes: `B001`, `Q123`
+::error title=gruff (S100 unused-suppression),file=basic/scripts/demo.gsc,line=116,col=19,endLine=116,endColumn=45::S100 unused suppression: `L001` suppresses nothing here
+::error title=gruff (F001 unknown-field),file=basic/scripts/fields.gsc,line=6,col=12,endLine=6,endColumn=18::F001 field `helath` is never set by the engine or any script here; did you mean `health`?
+::error title=gruff (F001 unknown-field),file=basic/scripts/fields.gsc,line=14,col=11,endLine=14,endColumn=18::F001 field `coutner` is never set by the engine or any script here; did you mean `counter`?
