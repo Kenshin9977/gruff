@@ -53,10 +53,8 @@ fn parse_comment(text: &str) -> Option<(bool, List)> {
     let rest = rest.trim_start();
     let (file_level, tail, kw_len) = if let Some(t) = rest.strip_prefix("ignore-file") {
         (true, t, "ignore-file".len())
-    } else if let Some(t) = rest.strip_prefix("ignore") {
-        (false, t, "ignore".len())
     } else {
-        return None;
+        (false, rest.strip_prefix("ignore")?, "ignore".len())
     };
     if let Some(t) = tail.strip_prefix('[') {
         let close = t.find(']')?;
