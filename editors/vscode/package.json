@@ -176,8 +176,47 @@
       {
         "command": "gruff.showStatus",
         "title": "Gruff: Show Server Status"
+      },
+      {
+        "command": "gruff.showReferences",
+        "title": "Gruff: Show References"
       }
-    ]
+    ],
+    "submenus": [
+      {
+        "id": "gruff.editorContext",
+        "label": "Gruff"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "gruff.showReferences",
+          "when": "false"
+        }
+      ],
+      "editor/context": [
+        {
+          "submenu": "gruff.editorContext",
+          "when": "editorLangId =~ /^(gsc|csc|gsh)$/",
+          "group": "1_modification@9"
+        }
+      ],
+      "gruff.editorContext": [
+        {
+          "command": "editor.action.organizeImports",
+          "group": "1_source@1"
+        },
+        {
+          "command": "gruff.showStatus",
+          "group": "2_server@1"
+        },
+        {
+          "command": "gruff.restartServer",
+          "group": "2_server@2"
+        }
+      ]
+    }
   },
   "scripts": {
     "compile": "tsc -p .",

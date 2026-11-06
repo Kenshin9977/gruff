@@ -126,6 +126,21 @@ export async function activate(context: vscode.ExtensionContext): Promise<Api> {
       await refreshStatus();
       output?.show(true);
     }),
+    // What a "N references" code lens runs: the server sends plain JSON, the peek view wants
+    // VS Code's own types.
+    vscode.commands.registerCommand(
+      "gruff.showReferences",
+      async (uri: string, line: number, character: number) => {
+        const u = vscode.Uri.parse(uri);
+        const p = new vscode.Position(line, character);
+        const locations = await vscode.commands.executeCommand<vscode.Location[]>(
+          "vscode.executeReferenceProvider",
+          u,
+          p,
+        );
+        await vscode.commands.executeCommand("editor.action.showReferences", u, p, locations ?? []);
+      },
+    ),
     vscode.workspace.onDidChangeConfiguration(async (e) => {
       if (!e.affectsConfiguration("gruff")) {
         return;

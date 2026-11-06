@@ -8,6 +8,26 @@ records the data snapshot it bundles.
 
 ## [Unreleased]
 
+### Added
+
+- **Language server: GSCode editor parity.** Folding ranges (declarations, blocks, comment runs,
+  dev blocks, import runs, `region`/`endregion` comments), selection ranges, document highlights
+  (writes marked), document links on `#using`/`#include`/`#insert`/`#inline`, "N references"
+  code lenses (functions, methods, classes, macros; autoexec says so), inlay hints (parameter
+  names, macro parameter names, the type of a local at its first assignment), go to
+  implementation (method overrides, a field's `=` writes and the functions they bind), go to
+  type definition (the class a local or field holds, the function it points to), type hierarchy
+  for classes. Class members are navigable (a bare name in the class's methods reaches its
+  `var`), fields go to their writes, and both rename; class references include `new C()` and
+  base lists. Hover and signature help show what a macro expands to at the use. Completion
+  offers known event names inside strings and, from three characters on, functions of files not
+  imported, adding `#using` or `#include` as the game's profile says (`ns::f` in the namespace
+  games). Code actions: add a missing import, remove a duplicate one, organize imports (unused
+  ones are judged conservatively). Each family can be turned off in the initialization options
+  (`inlayHints.parameterNames`, `inlayHints.inferredTypes`, `inlayHints.macroParameterNames`,
+  `codeLens.references`, `completion.autoImport`, `completion.literals`); the VS Code extension
+  adds a Gruff submenu to the editor's context menu and opens the references of a lens.
+
 ### Renamed
 
 - **The project is now Gruff** (formerly gsc-tools; the data repository is now gruff-data, formerly
