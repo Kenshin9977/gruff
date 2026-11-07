@@ -77,6 +77,21 @@ script, is marked `// unsupported:`, still runs, and records the compiler's refu
 says when such a run differs from its own expectation. `// vs t7:` (t4) and `// vs t4:` (iw3)
 give the dialect fact. Reports: `tools/re/reports/vm_t4.md`, `vm_iw3.md`.
 
+## iw5, iw6, s1, h1 and iw7
+
+    py -3.11 -I tools/re/vm/iw_suite.py --game iw5|iw6|s1|h1|iw7 [name ...] [--jobs 2]
+
+The IW3 scripts in the dialect of the x64 IW games (`#include zz\other;`, `logprint`). None of
+these games ships a compiler (its ScriptFile assets are bytecode compiled offline): the scripts
+are compiled by gsc-tool and linked by the game's own loader, so `expect compile error` is
+gsc-tool's message, and a bare call's resolution (decided at compile time: the bytecode calls a
+builtin by id and a script function by code position) is not measured; the tests about it are
+`unsupported` (gsc-tool refuses a function named like a builtin). These builds keep no runtime
+error text: a script error is `script error: <opcode name> (opcode 0x..)`, the name from
+gsc-tool's opcode table of the game. `f<n>` counts scrVarPub.time from the entry thread's start.
+`// vs iw3:` (iw5), `// vs iw5:` (iw6), `// vs iw6:` (s1), `// vs s1:` (h1, iw7) give the
+dialect fact. Report: `tools/re/reports/vm_iw.md`.
+
 ## t6 and t5
 
     py -3.11 -I tools/re/vm/t56_suite.py --game t6|t5 [name ...] [--developer]

@@ -8,6 +8,24 @@ records the data snapshot it bundles.
 
 ## [Unreleased]
 
+### Added
+
+- **VM semantics of the x64 IW games.** `tools/re/vm/iw_run.py`, `iw_suite.py`, `iw_facts.py`
+  and `iwvm.py` run the conformance suite in the script VMs of Modern Warfare 3 (the x64
+  re-release), Ghosts, Advanced Warfare, Modern Warfare Remastered and Infinite Warfare, emulated
+  offline (gsc-tool compiles, the game's own loader links): 44-45 PASS and 12-13 UNSUPPORTED
+  each, `conformance/{iw5,iw6,s1,h1,iw7}/`, report `tools/re/reports/vm_iw.md`. Runtime behaviour
+  is IW3's; childthread inherits its starter's endons and outlives it; the loop guard kills a
+  thread silently after 5 s; S1 and H1 have `waitframe()`. Bare-call resolution is decided at
+  compile time in these games and stays unmeasured. Modern Warfare 2's x64 re-release has no
+  compiler or loader (its scripts are compiled into the executable) and is not run.
+  `tools/re/vm/pycrt.py` does a dynamically linked build's C runtime imports in Python.
+
+### Changed
+
+- **V002 thread-call-value** now reports in MW3, Ghosts, AW, MWR and IW, whose profiles measure
+  `thread_call_value = "callee-result"` (decompiled corpora: 68, 51, 52, 6 and 68 findings).
+
 ## [0.3.0] - 2026-11-07
 
 The first release under the Gruff name: the rename, GSCode editor parity, 25 new rules and VM

@@ -81,12 +81,21 @@ fn profiles_carry_the_measured_semantics() {
         assert_eq!(cfg(game).thread_call_result, Some(true), "{game}");
     }
     assert_eq!(cfg("t9").thread_call_result, Some(false));
-    assert_eq!(cfg("iw5").thread_call_result, None);
+    // The x64 IW games (MW3 to IW), measured in their VMs: IW3's runtime semantics; their
+    // bare-call resolution is decided at compile time and stays as documented.
+    for game in ["iw5", "iw6", "s1", "h1", "iw7"] {
+        let c = cfg(game);
+        assert_eq!(c.thread_call_result, Some(true), "{game}");
+        assert_eq!(c.notify_inline, Some(false), "{game}");
+        assert_eq!(c.waittill_args, EventArgs::Bindings, "{game}");
+        assert!(!c.waittill_struct, "{game}");
+    }
     assert_eq!(cfg("iw5").bare_call, BareCall::BuiltinFirst);
-    // Games whose VM has not been run stay unknown.
-    let iw5 = cfg("iw5");
-    assert_eq!(iw5.waittill_args, EventArgs::Guess);
-    assert_eq!(iw5.notify_inline, None);
+    // Games whose VM has not been run stay unknown (MW2's x64 re-release has no loader).
+    let iw4 = cfg("iw4");
+    assert_eq!(iw4.thread_call_result, None);
+    assert_eq!(iw4.waittill_args, EventArgs::Guess);
+    assert_eq!(iw4.notify_inline, None);
 }
 
 const SRC: &str = "function f( ev )\n{\n    level waittill( \"a\", \"b\", x );\n    \

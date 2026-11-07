@@ -310,6 +310,24 @@ Black Ops (T5, BlackOpsMP.exe, plain text compiled at load by the game), `report
 | `vm/t56vm.py` | its own x86 `GameVM32` (written in parallel with `vmcore32.py`) and `T56VM` with the `t6`/`t5` profiles: every address with how it was found, the boot order and call signatures, stubs, trace hooks. |
 | `vm/t56_run.py`, `vm/t56_suite.py`, `vm/t56_facts.py` | One script (`--verbose` lists a T6 object's imports as the linker reads them); the suite (one process at a time by default); the facts with `dialect` against T7 (t6) or T6 (t5). |
 
+Modern Warfare 3 (IW5, the x64 re-release), Ghosts (IW6, single-player dump), Advanced Warfare
+(S1), Modern Warfare Remastered (H1) and Infinite Warfare (IW7), x64, ScriptFile bytecode
+compiled by gsc-tool (none of these games ships a compiler) and linked by the game's own loader
+(`reports/vm_iw.md`):
+
+    py -3.11 -I vm/iw_run.py --game iw5 ../../conformance/iw5/notify_reentrant.gsc [--verbose]
+    py -3.11 -I vm/iw_suite.py --game iw5|iw6|s1|h1|iw7 [--jobs 2]
+    py -3.11 -I vm/iw_facts.py --game iw5|iw6|s1|h1|iw7
+
+| File | Role |
+|---|---|
+| `vm/iwvm.py` | `IWVM` on `vmcore.GameVM` and the five profiles: every address with how it was found; boot, the ScriptFile asset hook, load, frames, trace hooks (the logprint table slot pointed at a stub of ours, script errors at VM_ExecuteInternal's setjmp landing, named after gsc-tool's opcode table), and the replications a dump needs (hunk users, memory tree, builtin registration). |
+| `vm/pycrt.py` | The C runtime imports of a dynamically linked build (Ghosts: VCRUNTIME140 and the UCRT) in Python: setjmp/longjmp, mem*/str*, printf, floor. |
+| `vm/iw_run.py`, `vm/iw_suite.py`, `vm/iw_facts.py` | One script (compiled by gsc-tool, helpers first, cached in `out/vm_gscc_<game>/`); the suite; the facts with `dialect` against the previous game. |
+
+Modern Warfare 2 (IW4, the x64 re-release) is not run: the build has no GSC compiler and no
+loader, every script is compiled ahead of time into the executable (see `reports/vm_iw.md`).
+
 Unicorn is GPL-2.0-only: it stays in these Python research tools, which write data files; it is
 never linked into the Rust crates.
 
