@@ -18,8 +18,17 @@ fn describe_arity(entries: &[&Builtin], mode: Option<Mode>) -> String {
     parts.join(" or ")
 }
 
+/// Does `f` or a file it imports, transitively, have an import the workspace cannot find? A name
+/// it calls may then be a function of the missing file.
+fn imports_missing(ctx: &Ctx) -> bool {
+    super::calls::closure(ctx, ctx.file)
+        .into_iter()
+        .any(|u| ctx.ws.resolution(u).imports.iter().any(Option::is_none))
+}
+
 pub fn check(ctx: &mut Ctx) {
     let Some(cat) = ctx.catalogue else { return };
+    let mut missing: Option<bool> = None;
     let ws = ctx.ws;
     let cfg = ws.profile_of(ctx.file).config;
     let (b001, b002, b003) = (ctx.on("B001"), ctx.on("B002"), ctx.on("B003"));
@@ -88,6 +97,12 @@ pub fn check(ctx: &mut Ctx) {
             if !b001
                 || !cat.is_complete_in(ctx.mode)
                 || !ws.callables_matching(ctx.file, &ident).is_empty()
+            {
+                continue;
+            }
+            // A name no builtin of any mode or VM has, with an import missing from the
+            // workspace: most likely a function of that file (I003 reports the import).
+            if cat.lookup(&name).is_empty() && *missing.get_or_insert_with(|| imports_missing(ctx))
             {
                 continue;
             }

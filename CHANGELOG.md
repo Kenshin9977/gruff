@@ -32,8 +32,17 @@ records the data snapshot it bundles.
   builtin function of mp, zm scripts only"). Needs gruff-data with `modes`. On the corpora:
   Black Ops II B002 16 to 8 (the campaign's own `spawnfx`, `playloopedfx` and `playfx` calls
   among them), Black Ops B002 11 to 10; World at War B001 0 to 1,355, its catalogue now being
-  complete for campaign and zombies scripts (calls to functions no file of the corpus defines,
-  1,319 of them in `maps/_destructible_types.gsc`).
+  complete for campaign and zombies scripts. Those are calls to functions no file of the corpus
+  defines although every import resolves: 1,319 `destructible_*` builders in the Call of Duty 4
+  leftover `maps/_destructible_types.gsc` (World at War's `maps/_destructible.gsc` has none of
+  them), 31 Der Riese calls to `maps/_zombiemode_utility` functions of a later patch than the
+  corpus's copy, and 5 in `maps/_ai_supplements.gsc` to functions inside a block comment that
+  a stray `*/` suggests the game nests.
+- B001 no longer reports a name that no builtin has when the file or a file it imports has an
+  import missing from the workspace (a mod opened without the game's scripts): the name may be a
+  function of the missing file, and I003 reports the import once a library root is set. Builtins
+  keep their kind, VM, mode and arity checks. Same in every game (T7 reported them before too).
+  Corpora: Black Ops B001 17 to 12, Black Ops mod tools 623 to 478, Black Ops II 4 to 3.
 - **B006 builtin-shadowed-function** (preview, `builtin-strict` games: Black Ops II): a script
   function named like a builtin of its mode, whose bare calls in its file and in the files that
   `#include` it link to the builtin instead. 10 functions on the game's 3,864 scripts (15

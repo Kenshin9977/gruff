@@ -178,15 +178,10 @@ fn library_roots_resolve_but_are_not_checked() {
             })
             .collect()
     };
-    // Alone, the mod calls a function nothing defines, and a loop calling it seems to yield.
+    // Alone, the mod calls a function nothing defines, but its `#using` is missing from the
+    // workspace: the function may be there, so no B001; a loop calling it seems to yield.
     let alone = codes(&workspace(&["library/mod"], 0, 1));
-    assert_eq!(
-        alone,
-        vec![(
-            "library/mod/scripts/mod_main.gsc".to_owned(),
-            "B001".to_owned()
-        )]
-    );
+    assert_eq!(alone, vec![]);
     // With the game scripts as a library root, the function is found, its summary says it
     // never waits, and the library file itself (which has an L001 of its own) is not reported.
     let with = codes(&workspace(&["library/mod", "library/game"], 1, 1));
@@ -471,6 +466,36 @@ fn game_modes() {
     assert_eq!(
         codes,
         vec![("maps/_sp.gsc".to_owned(), "B002".to_owned())],
+        "{codes:?}"
+    );
+}
+
+/// B001 stays quiet on a name no builtin has when the file (or a file it imports) has an import
+/// missing from the workspace: the name may be a function of that file. Builtins keep B002.
+#[test]
+fn b001_with_a_missing_import() {
+    let ws = workspace(&["missing_import"], 0, 1);
+    let codes: Vec<(String, String)> = run(&ws, &preview())
+        .iter()
+        .flat_map(|r| {
+            r.diagnostics
+                .iter()
+                .filter(|d| d.code.starts_with('B'))
+                .map(|d| (r.display.clone(), d.code.clone()))
+        })
+        .collect();
+    assert_eq!(
+        codes,
+        vec![
+            (
+                "missing_import/maps/complete.gsc".to_owned(),
+                "B001".to_owned()
+            ),
+            (
+                "missing_import/maps/with_missing.gsc".to_owned(),
+                "B002".to_owned()
+            ),
+        ],
         "{codes:?}"
     );
 }
