@@ -7,6 +7,7 @@ B002  builtin-arg-count             Builtin called with the wrong number of argu
 B003  dev-only-builtin              Dev-only builtin called outside a `/# #/` dev block (preview)
 B004  bare-call-other-namespace     Bare call or `&f` that only a function of another namespace defines (fix)
 B005  thread-builtin                `thread` on a builtin, or `::f` of one in `file-first` and `builtin-strict` games
+B006  builtin-shadowed-function     Function named like a builtin of its game mode, which bare calls never reach in `builtin-strict` games (preview)
 D001  unavailable-feature           Syntax the selected game does not have
 D002  missing-function-keyword      Function declared without the `function` keyword
 D003  import-after-declaration      `#using` or `#insert` after the first declaration

@@ -27,6 +27,7 @@ them all.
 | [B003](B003.md) | `dev-only-builtin` | preview |
 | [B004](B004.md) | `bare-call-other-namespace` | unsafe fix; namespace-first games |
 | [B005](B005.md) | `thread-builtin` | namespace-first, file-first and builtin-strict games |
+| [B006](B006.md) | `builtin-shadowed-function` | preview; builtin-strict games |
 | [D001](D001.md) | `unavailable-feature` |  |
 | [D002](D002.md) | `missing-function-keyword` |  |
 | [D003](D003.md) | `import-after-declaration` |  |

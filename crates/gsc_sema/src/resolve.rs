@@ -291,24 +291,26 @@ impl Workspace {
         }
     }
 
-    /// Is `name` a builtin (or opcode builtin) of `f`'s VM?
+    /// Is `name` a builtin (or opcode builtin) of `f`'s VM and game mode?
     pub fn is_builtin(&self, f: FileId, name: &str) -> bool {
         let p = self.profile_of(f);
+        let data = self.file(f);
         p.builtins
             .as_ref()
-            .is_some_and(|c| c.contains(self.file(f).meta.vm, &name.to_ascii_lowercase()))
+            .is_some_and(|c| c.contains_in(data.meta.vm, &name.to_ascii_lowercase(), data.mode))
     }
 
-    /// Is `name` a builtin of `f`'s VM callable as a method (`ent foo()`), or as a function?
-    /// An intrinsic is both.
-    fn is_builtin_kind(&self, f: FileId, name: &str, method: bool) -> bool {
+    /// Is `name` a builtin of `f`'s VM and game mode callable as a method (`ent foo()`), or as
+    /// a function? An intrinsic is both.
+    pub fn is_builtin_kind(&self, f: FileId, name: &str, method: bool) -> bool {
         let vm = self.file(f).meta.vm.unwrap_or(Vm::Gsc);
+        let mode = self.file(f).mode;
         let kind = if method { Kind::Method } else { Kind::Function };
         let lower = name.to_ascii_lowercase();
         self.profile_of(f).builtins.as_ref().is_some_and(|c| {
             c.intrinsic(&lower)
                 .is_some_and(|i| i.vm.is_none_or(|v| v == vm))
-                || c.lookup(&lower)
+                || c.lookup_in(&lower, mode)
                     .iter()
                     .any(|b| b.vm == vm && b.kind == kind)
         })
@@ -601,9 +603,10 @@ impl Workspace {
             return r(How::Macro, spelled, Some(def));
         }
         let p = self.profile_of(f);
+        let mode = self.file(f).mode;
         if p.builtins
             .as_ref()
-            .is_some_and(|c| !c.lookup(&lower).is_empty())
+            .is_some_and(|c| !c.lookup_in(&lower, mode).is_empty())
         {
             return r(How::BuiltinOtherVm, lower, None);
         }

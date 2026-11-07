@@ -14,6 +14,7 @@ use std::sync::{Arc, OnceLock};
 use gsc_syntax::{is_binary, parse, GreenNode, SourceText, SyntaxError, SyntaxNode};
 
 use crate::facts::{self, DefKind, FileFacts};
+use crate::modes::Mode;
 use crate::par::par_map;
 use crate::profile::{Decompiled, Profile};
 use crate::resolve::FileResolution;
@@ -43,6 +44,8 @@ pub struct FileData {
     pub source: SourceText,
     /// Read as decompiler output.
     pub decompiled: bool,
+    /// The game mode it runs in (`gruff.toml`, else its path); `None`: unknown or shared.
+    pub mode: Option<Mode>,
     /// `None` once [`Workspace::drop_library_trees`] let it go: [`FileData::syntax`] re-parses.
     green: Option<GreenNode>,
     /// The profile the file was parsed with, to parse it again.
@@ -204,6 +207,11 @@ impl Workspace {
         &self.profiles[i]
     }
 
+    /// The game mode file `f` runs in, if known.
+    pub fn mode_of(&self, f: FileId) -> Option<Mode> {
+        self.file(f).mode
+    }
+
     /// The profile a file is read as.
     pub fn profile_of(&self, f: FileId) -> &Profile {
         let root = self.file(f).meta.root;
@@ -282,10 +290,16 @@ impl Workspace {
                 }
             }
         }
+        let library = self.roots.get(meta.root).is_some_and(|r| r.library);
+        let mode = (!library)
+            .then(|| profile.modes.mode_of(&meta.rel))
+            .flatten()
+            .unwrap_or_else(|| crate::modes::mode_of_path(&profile.dialect.id, &meta.rel));
         let profile = self.profiles[self.roots.get(meta.root).map_or(0, |r| r.profile)].clone();
         FileData {
             meta,
             decompiled,
+            mode,
             green: Some(p.green().clone()),
             profile,
             errors: p.errors().to_vec(),

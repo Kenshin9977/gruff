@@ -55,11 +55,13 @@ pub fn check(ctx: &mut Ctx) {
             (Target::Qualified(q, n), How::Unresolved) if ctx.on("N001") => {
                 let report = match q {
                     // `::f` may point at a builtin: only with a complete catalogue that has no
-                    // such name in either VM.
+                    // such name in either VM (in the file's game mode).
                     None => {
+                        let mode = ctx.mode;
                         ws.callables_matching(f, n).is_empty()
                             && ws.profile_of(f).builtins.as_ref().is_some_and(|c| {
-                                c.is_complete() && c.lookup(&n.to_ascii_lowercase()).is_empty()
+                                c.is_complete_in(mode)
+                                    && c.lookup_in(&n.to_ascii_lowercase(), mode).is_empty()
                             })
                     }
                     // `path::f` reaches what the file `#include`s too: report only when that

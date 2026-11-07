@@ -18,6 +18,7 @@ game = "t7"            # game id or alias: t7, bo3, t6, bo2, iw5, mw3...
 library = ["../share/raw"]   # library roots: read for name resolution, never reported on
 hash_packages = ["../names"] # hash packages: names for hashed identifiers (BO3, BO4 and later)
 mode = "retail"        # language server: "retail" (the game's compiler) or "community"
+game-mode = "zm"       # the game mode of the project's files: sp, mp, zm or any
 data-dir = "../gruff-data"     # language server: the gruff-data directory
 
 [check]
@@ -29,6 +30,9 @@ preview = false
 [check.per-file-ignores]
 "*_debug.gsc" = ["B003"]
 "scripts/zm/**" = ["F001"]
+
+[game-modes]           # glob = game mode, first match wins, before game-mode
+"maps/mp/gametypes/**" = "mp"
 
 [format]
 game = "t7"            # optional; wins over the top-level key for the style
@@ -51,6 +55,8 @@ max_blank_lines = 1    # 0 to 10
 | `library` | list of paths | Library roots, relative to the file. Adds to `--library`. |
 | `hash_packages` | list of paths | Hash packages (files or directories), relative to the file: names for the hashed identifiers of BO3, BO4 to BO7 and MWIII, shown in hover, completion and messages. Adds to `--hash-package`, the `gruff.hashPackages` editor setting and `$GSC_HASH_PACKAGES`. See [Hash packages](hash-packages.md). |
 | `mode` | string | `retail` or `community`. Community compilers (gsc-tool, Plutonium) accept more, such as the Black Ops II preprocessor. `gruff parse --mode` on the command line. |
+| `game-mode` | string | The game mode (`sp`, `mp`, `zm`, or `any` for none) of every file of the project, in the games with one executable per mode: only that mode's builtins are callable. Default: from each file's path. See [Game modes](modes.md). |
+| `game-modes` | table | Glob to game mode, matched like `per-file-ignores`; the first match wins over `game-mode`. Library roots keep the path conventions. |
 | `data-dir` | path | The gruff-data directory, for the language server. The CLI takes `--data-dir` or `GRUFF_DATA`. |
 | `check.select` | list | Replaces the default selection. Codes (`B001`), prefixes (`B`, `E02`), names (`unknown-builtin`) or `ALL`. |
 | `check.extend-select` | list | Adds to the selection. |

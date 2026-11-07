@@ -20,6 +20,28 @@ records the data snapshot it bundles.
   compile time in these games and stays unmeasured. Modern Warfare 2's x64 re-release has no
   compiler or loader (its scripts are compiled into the executable) and is not run.
   `tools/re/vm/pycrt.py` does a dynamically linked build's C runtime imports in Python.
+- **Builtins per game mode.** Games that ship one executable per mode (Black Ops II campaign,
+  multiplayer and zombies; Black Ops; Modern Warfare 3, Advanced Warfare and Modern Warfare
+  Remastered campaign and multiplayer) register different builtins in each. Every file now has
+  a game mode, from its path (`maps/mp/` multiplayer, zombies files by name, other `maps/` and
+  `clientscripts/` files campaign, shared folders none; `docs/modes.md`) or from `gruff.toml`
+  (`game-mode`, `[game-modes]` globs). B001, B002, B003, B005, N001's `::f`, name resolution,
+  hover and completion see only the builtins of the file's mode, and B002 holds a file to its
+  own executable's arity where the executables differ (Black Ops II `playfx`: 2 to 4 arguments
+  in multiplayer, 2 to 6 in the campaign). B001 names a builtin of another mode ("`x` is a
+  builtin function of mp, zm scripts only"). Needs gruff-data with `modes`. On the corpora:
+  Black Ops II B002 16 to 8 (the campaign's own `spawnfx`, `playloopedfx` and `playfx` calls
+  among them), Black Ops B002 11 to 10; World at War B001 0 to 1,355, its catalogue now being
+  complete for campaign and zombies scripts (calls to functions no file of the corpus defines,
+  1,319 of them in `maps/_destructible_types.gsc`).
+- **B006 builtin-shadowed-function** (preview, `builtin-strict` games: Black Ops II): a script
+  function named like a builtin of its mode, whose bare calls in its file and in the files that
+  `#include` it link to the builtin instead. 10 functions on the game's 3,864 scripts (15
+  without the game modes, 5 of them campaign functions such as `spawnfx`).
+- `tools/re/modes.py`: the `modes`, `mode_args`, `[extraction] modes` and (through
+  `calibrate.set_coverage`) `complete_modes` of the catalogues, from one extraction per
+  executable (T5, T6, IW5, S1, H1), run after any build like `calibrate.py`;
+  `reports/modes.md`.
 
 ### Changed
 

@@ -178,7 +178,8 @@ fn run_inner(args: Args) -> Result<ExitCode, String> {
     let names = common::load_hash_names(&game_id, &packages, args.quiet)?;
     let profile = Profile::new(dialect, catalogue, fields)
         .with_events(events)
-        .with_names(names);
+        .with_names(names)
+        .with_modes(cfg.modes.clone());
     let mut ws = Workspace::new(profile)
         .with_decompiled(common::decompiled(args.decompiled))
         .with_jobs(common::jobs(args.jobs));

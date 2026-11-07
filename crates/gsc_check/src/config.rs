@@ -1,9 +1,12 @@
 //! `gruff.toml` or `gsc.toml` (or `[tool.gruff]` / `[tool.gsc]` in a `pyproject.toml`): the
 //! project settings `gruff check` reads. `gruff.toml` wins over `gsc.toml` in the same directory.
 //! The keys (`game`, `select`, `extend-select`, `ignore`, `preview`, `per-file-ignores`,
-//! `library`, `hash_packages`) are accepted at the top level and in a `[check]` table; see `docs/rules/README.md`.
+//! `library`, `hash_packages`, `game-mode`, `game-modes`) are accepted at the top level and in a `[check]`
+//! table; see `docs/rules/README.md`.
 
 use std::path::{Path, PathBuf};
+
+use gsc_sema::ModeOverrides;
 
 use crate::select::{parse_list, Layer, Selector};
 
@@ -38,6 +41,10 @@ pub struct Config {
     /// Hash packages (files or directories) naming the game's hashed identifiers. Relative
     /// paths are relative to the configuration file.
     pub hash_packages: Vec<PathBuf>,
+    /// The game mode of the project's files: `game-mode` (all of them) and `[game-modes]`
+    /// (glob = mode),
+    /// over the game's path conventions.
+    pub modes: ModeOverrides,
 }
 
 /// The nearest configuration file at or above `start`. A `pyproject.toml` counts only when it has
@@ -136,6 +143,24 @@ fn apply(c: &mut Config, t: &toml::Table) -> Result<(), String> {
     if let Some(s) = strings(t, &["hash_packages", "hash-packages"])? {
         c.hash_packages.extend(s.into_iter().map(PathBuf::from));
     }
+    // `mode` (top level) is the language server's compiler mode (retail or community).
+    if let Some(m) = t.get("game-mode").or_else(|| t.get("game_mode")) {
+        let m = m
+            .as_str()
+            .ok_or("`game-mode` must be a string (sp, mp, zm or any)")?;
+        c.modes.all = Some(gsc_sema::modes::parse_setting(m)?);
+    }
+    if let Some(v) = t.get("game-modes").or_else(|| t.get("game_modes")) {
+        let table = v
+            .as_table()
+            .ok_or("`game-modes` must be a table of glob = mode (sp, mp, zm or any)")?;
+        for (glob, m) in table {
+            let m = m.as_str().ok_or("`game-modes` values must be strings")?;
+            c.modes
+                .globs
+                .push((glob.clone(), gsc_sema::modes::parse_setting(m)?));
+        }
+    }
     let pfi = t
         .get("per-file-ignores")
         .or_else(|| t.get("per_file_ignores"));
@@ -183,6 +208,23 @@ preview = true
         assert_eq!(c.per_file_ignores[0].0, "*_dev.gsc");
         assert_eq!(c.library, vec![PathBuf::from("../game/scripts")]);
         assert_eq!(c.hash_packages, vec![PathBuf::from("names/t7.tsv")]);
+    }
+
+    #[test]
+    fn reads_modes() {
+        let c = from_str(
+            "mode = 'retail'\ngame-mode = 'zm'\n[game-modes]\n'_mp_*' = 'mp'\n'*.csc' = 'any'\n",
+        )
+        .unwrap();
+        let m = |p| c.modes.mode_of(p);
+        assert_eq!(c.modes.all, Some(Some(gsc_sema::Mode::Zm)));
+        assert_eq!(m("maps/_mp_x.gsc"), Some(Some(gsc_sema::Mode::Mp)));
+        assert_eq!(m("shared/x.csc"), Some(None));
+        assert_eq!(m("maps/x.gsc"), Some(Some(gsc_sema::Mode::Zm)));
+        assert!(from_str("game-mode = 'coop'").is_err());
+        assert!(from_str("[game-modes]\nx = 1").is_err());
+        let c = from_str("[check]\ngame_mode = 'sp'\n").unwrap();
+        assert_eq!(c.modes.all, Some(Some(gsc_sema::Mode::Sp)));
     }
 
     #[test]

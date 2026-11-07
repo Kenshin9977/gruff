@@ -733,15 +733,19 @@ impl Workspace {
         } else {
             kinds.into_iter().collect::<Vec<_>>().join("/")
         };
+        let mode = self.file(file).mode;
         let mut detail = Vec::new();
         for b in entries {
             let mut line = format!("{} {}", b.vm.label(), b.kind.label());
-            match b.describe_arity() {
+            match b.describe_arity_in(mode) {
                 Some(a) => line.push_str(&format!(": takes {a}")),
                 None => line.push_str(": arity not recorded"),
             }
             if b.dev_only {
                 line.push_str(" (dev only)");
+            }
+            if let Some(m) = b.modes {
+                line.push_str(&format!(" ({} scripts only)", m.labels()));
             }
             detail.push(line);
         }
@@ -751,10 +755,12 @@ impl Workspace {
                 None => detail.push("compiled to an opcode".to_owned()),
             }
         }
+        let vm = self.file(file).meta.vm.unwrap_or(Vm::Gsc);
         if self.is_builtin(file, &lower) {
             detail.push(format!("engine builtin ({})", cat.game));
+        } else if let Some(m) = mode.filter(|_| cat.contains(Some(vm), &lower)) {
+            detail.push(format!("not available in {m} scripts"));
         } else {
-            let vm = self.file(file).meta.vm.unwrap_or(Vm::Gsc);
             detail.push(format!("not available in {} scripts", vm.label()));
         }
         Some(Hover {
@@ -958,6 +964,7 @@ impl Workspace {
             (label, def.kind.into(), Some(detail))
         };
         let vm = f.meta.vm;
+        let mode = f.mode;
         let profile = self.profile_of(file);
         match ctx {
             CompletionContext::Field => {
@@ -996,7 +1003,7 @@ impl Workspace {
                         }
                     }
                     Some(q) if q == "sys" => {
-                        Self::builtin_items(profile.builtins.as_ref(), vm, &mut push)
+                        Self::builtin_items(profile.builtins.as_ref(), vm, mode, &mut push)
                     }
                     Some(q) if cfg.resolution == Resolution::Namespace && !q.contains('/') => {
                         let scheme = profile.scheme;
@@ -1149,15 +1156,17 @@ impl Workspace {
                     let def = self.def(d);
                     push(def.name.clone(), SymbolKind::Macro, Some(def.doc.clone()));
                 }
-                Self::builtin_items(profile.builtins.as_ref(), vm, &mut push);
+                Self::builtin_items(profile.builtins.as_ref(), vm, mode, &mut push);
             }
         }
         items
     }
 
+    /// The builtins of `vm` a script of game mode `mode` can call.
     fn builtin_items(
         cat: Option<&crate::data::Catalogue>,
         vm: Option<Vm>,
+        mode: Option<crate::modes::Mode>,
         push: &mut impl FnMut(String, SymbolKind, Option<String>),
     ) {
         let Some(cat) = cat else { return };
@@ -1171,13 +1180,20 @@ impl Workspace {
         let mut names: Vec<&str> = by_name.keys().copied().collect();
         names.sort();
         for n in names {
-            let e: Vec<_> = cat.lookup(n).iter().filter(|b| b.vm == vm).collect();
+            let e: Vec<_> = cat
+                .lookup_in(n, mode)
+                .into_iter()
+                .filter(|b| b.vm == vm)
+                .collect();
+            if e.is_empty() {
+                continue;
+            }
             let kind = if e.iter().all(|b| b.kind == Kind::Method) {
                 "method"
             } else {
                 "function"
             };
-            let arity = e.iter().find_map(|b| b.describe_arity());
+            let arity = e.iter().find_map(|b| b.describe_arity_in(mode));
             let detail = match arity {
                 Some(a) => format!("builtin {kind}, {a}"),
                 None => format!("builtin {kind}"),

@@ -13,9 +13,10 @@ mod locals;
 mod loops;
 mod macros;
 mod namespaces;
+mod shadow;
 mod values;
 
-use gsc_sema::{Catalogue, FieldCatalogue, FileId, Vm, Workspace};
+use gsc_sema::{Catalogue, FieldCatalogue, FileId, Mode, Vm, Workspace};
 use gsc_syntax::{SyntaxKind, SyntaxNode, TextRange, TextSize};
 
 pub use gsc_sema::facts::in_dev_block;
@@ -33,6 +34,8 @@ pub struct Ctx<'a> {
     pub catalogue: Option<&'a Catalogue>,
     pub fields: Option<&'a FieldCatalogue>,
     pub vm: Option<Vm>,
+    /// The game mode the file runs in, if known: only that mode's builtins are callable.
+    pub mode: Option<Mode>,
     /// Decompiler output: dev blocks are gone (their calls remain), names may be wrong guesses.
     pub decompiled: bool,
     /// The file has E0301 errors.
@@ -110,6 +113,9 @@ pub fn run(ctx: &mut Ctx) {
     }
     if ctx.on("B004") || ctx.on("B005") {
         namespaces::check(ctx);
+    }
+    if ctx.on("B006") {
+        shadow::check(ctx);
     }
     if ctx.on("L001") {
         loops::check(ctx);

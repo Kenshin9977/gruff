@@ -5,7 +5,8 @@
 For each catalogue (gruff-data/builtins/<game>.toml) it
 
 1. writes `[coverage]`: complete = false when an executable of the game was not extracted
-   (COVERAGE below) or some entry has neither a name nor a hash (gruff check then keeps B001 off);
+   (COVERAGE below) or some entry has neither a name nor a hash (gruff check then keeps B001 off),
+   and complete_modes, the game modes whose executables were all read (modes.py's `modes`);
 2. adds the language intrinsics the decompiled corpus calls but no lookup holds (`endon`,
    `notify`, `waittill`... in T8+, each checked absent from every table), and gives every
    `[[intrinsic]]` its arity from its `corpus_args` (the compiler checks an intrinsic's count, so
@@ -131,12 +132,11 @@ def drop(block, key):
     block[:] = [ln for ln in block if not ln.startswith(key + " = ")]
 
 
-def restore(blocks):
-    """Undo a previous pass: measured values back, our lines and tables out."""
-    head = blocks[0]
+def drop_coverage(head):
+    """The [coverage] table out of the header (it is written by `set_coverage` only)."""
     out = []
     skip = False
-    for ln in head:  # the [coverage] table (written by this pass only)
+    for ln in head:
         if ln == "[coverage]":
             skip = True
             continue
@@ -147,6 +147,12 @@ def restore(blocks):
         if not skip:
             out.append(ln)
     head[:] = out
+
+
+def restore(blocks):
+    """Undo a previous pass: measured values back, our lines and tables out."""
+    head = blocks[0]
+    drop_coverage(head)
     drop(head, "corpus_second_measure")
     keep = [head]
     for b in blocks[1:]:
@@ -197,6 +203,9 @@ def short(path):
 
 
 def coverage(game, blocks, header):
+    """complete = false when an executable is missing or an entry has neither a name nor a hash;
+    complete_modes: the game modes whose executables were all read (`modes` of [extraction],
+    written by modes.py), when every entry is named: their scripts can call no other builtin."""
     unnamed = sum(1 for b in blocks[1:] if b[0] == "[[builtin]]"
                   and get(b, "name") is None and get(b, "hash") is None)
     notes = []
@@ -206,7 +215,20 @@ def coverage(game, blocks, header):
         notes.append("%d %s neither a name nor a hash" % (unnamed, "entry has" if unnamed == 1 else "entries have"))
     if not notes:
         return None
-    return ["[coverage]", "complete = false", "note = %s" % enc("; ".join(notes)), ""]
+    out = ["[coverage]", "complete = false", "note = %s" % enc("; ".join(notes))]
+    read = get(header, "modes") or {}
+    if read and not unnamed:
+        out.append("complete_modes = %s" % enc([m for m in ("sp", "mp", "zm") if m in read]))
+    return out + [""]
+
+
+def set_coverage(game, blocks):
+    """Write the [coverage] table afresh, before [extraction]."""
+    drop_coverage(blocks[0])
+    cov = coverage(game, blocks, blocks[0])
+    if cov:
+        i = blocks[0].index("[extraction]")
+        blocks[0][i:i] = cov
 
 
 def intrinsics(game, cat, blocks, gsc):
@@ -393,10 +415,7 @@ def main():
         text = open(path, encoding="utf-8").read()
         blocks = split_blocks(text)
         restore(blocks)
-        cov = coverage(game, blocks, blocks[0])
-        if cov:
-            i = blocks[0].index("[extraction]")
-            blocks[0][i:i] = cov
+        set_coverage(game, blocks)
         rep = {"game": game}
         base = "\n".join("\n".join(b) for b in blocks)
         open(path, "w", encoding="utf-8", newline="\n").write(base)  # gruff check reads the file

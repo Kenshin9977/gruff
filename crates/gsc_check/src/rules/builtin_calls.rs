@@ -3,14 +3,17 @@
 use gsc_syntax::ast::{self, AstNode};
 use gsc_syntax::SyntaxKind::CALL_EXPR;
 
-use gsc_sema::{Builtin, Kind};
+use gsc_sema::{Builtin, Kind, Mode};
 
 use super::{in_dev_block, in_error, Ctx};
 use crate::workspace::{callee, is_hashed_name, looks_like_macro, Callee};
 use crate::{Applicability, Edit, Fix};
 
-fn describe_arity(entries: &[&Builtin]) -> String {
-    let mut parts: Vec<String> = entries.iter().filter_map(|b| b.describe_arity()).collect();
+fn describe_arity(entries: &[&Builtin], mode: Option<Mode>) -> String {
+    let mut parts: Vec<String> = entries
+        .iter()
+        .filter_map(|b| b.describe_arity_in(mode))
+        .collect();
     parts.dedup();
     parts.join(" or ")
 }
@@ -70,21 +73,35 @@ pub fn check(ctx: &mut Ctx) {
         } else {
             Kind::Function
         };
-        let entries = cat.lookup(&name);
+        // Only the builtins of the file's game mode (its executable's tables), when known.
+        let entries = cat.lookup_in(&name, ctx.mode);
         let vm_ok = |b: &&Builtin| ctx.vm.is_none_or(|vm| vm == b.vm);
         let matching: Vec<&Builtin> = entries
             .iter()
+            .copied()
             .filter(vm_ok)
             .filter(|b| b.kind == kind)
             .collect();
         if matching.is_empty() {
             // A partial catalogue (an executable not extracted, entries without a name) cannot
             // tell an unknown name from one it does not name.
-            if !b001 || !cat.is_complete() || !ws.callables_matching(ctx.file, &ident).is_empty() {
+            if !b001
+                || !cat.is_complete_in(ctx.mode)
+                || !ws.callables_matching(ctx.file, &ident).is_empty()
+            {
                 continue;
             }
-            let other_kind = entries.iter().filter(vm_ok).find(|b| b.kind != kind);
-            let other_vm = entries.iter().find(|b| !vm_ok(b));
+            let other_kind = entries
+                .iter()
+                .copied()
+                .filter(vm_ok)
+                .find(|b| b.kind != kind);
+            let other_vm = entries.iter().copied().find(|b| !vm_ok(b));
+            let other_mode = cat
+                .lookup(&name)
+                .iter()
+                .filter(vm_ok)
+                .find(|b| b.kind == kind);
             let mut fix = None;
             let message = if let Some(b) = other_kind {
                 match kind {
@@ -103,8 +120,14 @@ pub fn check(ctx: &mut Ctx) {
                     b.vm.label(),
                     b.kind.label()
                 )
+            } else if let (Some(b), Some(here)) = (other_mode, ctx.mode) {
+                format!(
+                    "`{lower}` is a builtin {} of {} scripts only, not available in {here} scripts",
+                    b.kind.label(),
+                    b.modes.map(|m| m.labels()).unwrap_or_default()
+                )
             } else {
-                let sugg = cat.suggest(&name, ctx.vm, kind);
+                let sugg = cat.suggest_in(&name, ctx.vm, kind, ctx.mode);
                 let mut m = format!("unknown builtin {} `{name}`", kind.label());
                 if !sugg.is_empty() {
                     let list: Vec<String> = sugg.iter().map(|s| format!("`{s}`")).collect();
@@ -137,11 +160,12 @@ pub fn check(ctx: &mut Ctx) {
         if threaded && (ws.file_first(ctx.file) || ws.builtin_strict(ctx.file)) {
             continue;
         }
-        if b002 && matching.iter().all(|b| b.arity.is_some()) {
+        if b002 && matching.iter().all(|b| b.arity_in(ctx.mode).is_some()) {
             let argc = argc();
             // `arity_unknown` entries have no arity and never get here; a maximum the engine
-            // does not check (`max_checked = false`) only bounds from below.
-            let fits = matching.iter().any(|b| b.accepts(argc));
+            // does not check (`max_checked = false`) only bounds from below. A file of a known
+            // mode is held to its executable's arity (`mode_args`).
+            let fits = matching.iter().any(|b| b.accepts_in(argc, ctx.mode));
             if !fits {
                 let range = call.arg_list().map_or(range, |a| a.syntax().text_range());
                 ctx.report(
@@ -149,7 +173,7 @@ pub fn check(ctx: &mut Ctx) {
                     format!(
                         "builtin {} `{lower}` takes {}, but {argc} {} given",
                         kind.label(),
-                        describe_arity(&matching),
+                        describe_arity(&matching, ctx.mode),
                         if argc == 1 { "was" } else { "were" }
                     ),
                     range,

@@ -8,6 +8,7 @@ use gsc_syntax::{Dialect, FeatureValue, Gate};
 
 use crate::data::{Catalogue, FieldCatalogue};
 use crate::events::EventCatalogue;
+use crate::modes::ModeOverrides;
 
 /// How bare names reach other files: the engine family.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -186,6 +187,8 @@ pub struct Profile {
     pub scheme: Option<Scheme>,
     /// Names the hash packages give (`hash_packages` in gruff.toml, `--hash-package`).
     pub names: Option<Arc<Dictionary>>,
+    /// `gruff.toml`'s game modes of the project's files (`game-mode`, `[game-modes]`).
+    pub modes: ModeOverrides,
 }
 
 impl Profile {
@@ -203,7 +206,14 @@ impl Profile {
             fields,
             events: None,
             names: None,
+            modes: ModeOverrides::default(),
         }
+    }
+
+    /// Set the game modes `gruff.toml` gives the project's files.
+    pub fn with_modes(mut self, modes: ModeOverrides) -> Profile {
+        self.modes = modes;
+        self
     }
 
     /// Attach the names of the hash packages.

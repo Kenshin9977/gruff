@@ -1,0 +1,61 @@
+# A tiny catalogue with game modes for the tests (made-up arities, not game data).
+schema_version = 1
+game = "test"
+license = "CC0-1.0"
+source = "written for the gsc_check tests"
+
+[extraction]
+modes = { sp = "sp.exe", mp = "mp.exe", zm = "zm.exe" }
+
+[[builtin]]
+name = "spawnfx"
+vm = "gsc"
+kind = "function"
+min_args = 2
+max_args = 4
+modes = ["mp", "zm"]
+evidence = "test"
+
+[[builtin]]
+name = "playfx"
+vm = "gsc"
+kind = "function"
+min_args = 2
+max_args = 6
+mode_args = { sp = [2, 6], mp = [2, 4], zm = [2, 4] }
+evidence = "test"
+
+[[builtin]]
+name = "getaiarray"
+vm = "gsc"
+kind = "function"
+min_args = 0
+max_args = 2
+modes = ["sp"]
+evidence = "test"
+
+[[builtin]]
+name = "setsoundblend"
+vm = "gsc"
+kind = "method"
+min_args = 3
+max_args = 3
+modes = ["sp", "zm"]
+evidence = "test"
+
+[[builtin]]
+name = "randomint"
+vm = "gsc"
+kind = "function"
+min_args = 1
+max_args = 1
+evidence = "test"
+
+[[builtin]]
+name = "vectorcross"
+vm = "gsc"
+kind = "function"
+min_args = 2
+max_args = 2
+modes = ["mp", "zm"]
+evidence = "test"

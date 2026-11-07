@@ -86,6 +86,12 @@ pub static RULES: &[Rule] = &[
         "`thread` on a builtin, or `::f` of one in `file-first` and `builtin-strict` games"
     ),
     rule!(
+        "B006",
+        "builtin-shadowed-function",
+        "Function named like a builtin of its game mode, which bare calls never reach in `builtin-strict` games",
+        preview
+    ),
+    rule!(
         "D001",
         "unavailable-feature",
         "Syntax the selected game does not have"

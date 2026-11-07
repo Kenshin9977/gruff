@@ -1,0 +1,9 @@
+---
+source: crates/gsc_check/tests/snapshots.rs
+expression: "output::render(&run(&ws, &selection), Format::Concise)"
+---
+maps/_sp.gsc:6:15: B002 builtin function `randomint` takes 1 argument, but 2 were given
+maps/mp/_mp.gsc:3:8: B002 builtin function `playfx` takes 2 to 4 arguments, but 6 were given
+maps/mp/_mp.gsc:4:6: B001 `getaiarray` is a builtin function of sp scripts only, not available in mp scripts
+maps/mp/_mp.gsc:9:1: B006 `vectorcross` is also a builtin function: the game links bare calls to the builtin, never to this function (1 call in this file); only a path-qualified call `path::vectorcross()` or `thread vectorcross()` reaches it
+maps/mp/zombies/_zm.gsc:5:6: B001 `getaiarray` is a builtin function of sp scripts only, not available in zm scripts

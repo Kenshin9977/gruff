@@ -22,7 +22,7 @@ pub fn check(ctx: &mut Ctx) {
     let strict = ws.builtin_strict(f);
     if ctx.decompiled
         || !(ws.namespace_first(f) || file_first || strict)
-        || !ctx.catalogue.is_some_and(|c| c.is_complete())
+        || !ctx.catalogue.is_some_and(|c| c.is_complete_in(ctx.mode))
     {
         return;
     }

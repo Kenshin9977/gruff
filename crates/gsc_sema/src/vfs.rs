@@ -119,6 +119,41 @@ pub fn strip_script_ext(target: &str) -> &str {
     t
 }
 
+/// A glob over `/`-separated paths: `*` and `?` stay inside one component, `**` spans any number
+/// of them. A pattern without `/` matches the file name anywhere.
+pub fn glob_match(pattern: &str, path: &str) -> bool {
+    let pattern = pattern.replace('\\', "/");
+    let path = path.replace('\\', "/");
+    if !pattern.contains('/') {
+        let name = path.rsplit('/').next().unwrap_or(&path);
+        return match_component(pattern.as_bytes(), name.as_bytes());
+    }
+    let pat: Vec<&str> = pattern.trim_start_matches("./").split('/').collect();
+    let comps: Vec<&str> = path.trim_start_matches("./").split('/').collect();
+    match_parts(&pat, &comps)
+}
+
+fn match_parts(pat: &[&str], comps: &[&str]) -> bool {
+    match pat.split_first() {
+        None => comps.is_empty(),
+        Some((&"**", rest)) => (0..=comps.len()).any(|i| match_parts(rest, &comps[i..])),
+        Some((p, rest)) => comps.split_first().is_some_and(|(c, crest)| {
+            match_component(p.as_bytes(), c.as_bytes()) && match_parts(rest, crest)
+        }),
+    }
+}
+
+fn match_component(p: &[u8], s: &[u8]) -> bool {
+    match p.split_first() {
+        None => s.is_empty(),
+        Some((b'*', rest)) => (0..=s.len()).any(|i| match_component(rest, &s[i..])),
+        Some((b'?', rest)) => !s.is_empty() && match_component(rest, &s[1..]),
+        Some((c, rest)) => s
+            .split_first()
+            .is_some_and(|(d, srest)| c.eq_ignore_ascii_case(d) && match_component(rest, srest)),
+    }
+}
+
 /// Index of a root in its workspace.
 pub type RootId = usize;
 

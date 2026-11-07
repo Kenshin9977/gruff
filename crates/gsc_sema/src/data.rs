@@ -5,6 +5,7 @@
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
+use crate::modes::{Mode, Modes};
 use crate::vfs::Vm;
 
 /// How a catalogue keys names: the game's hash family, or (without one) FNV-1a of the name.
@@ -119,6 +120,11 @@ pub struct Builtin {
     pub max_enforced: bool,
     /// Debug builtin: the linker rejects it outside a dev block.
     pub dev_only: bool,
+    /// The game modes whose executables hold it; `None`: every mode the catalogue read.
+    pub modes: Option<Modes>,
+    /// `mode_args`: the arity each mode's executable stores, where they differ (index: the
+    /// [`Mode`]).
+    pub mode_arity: [Option<(u32, u32)>; 3],
 }
 
 /// `0 to 2 arguments`, `1 argument`, `at least 1 argument`.
@@ -144,6 +150,15 @@ fn entry_arity(t: &toml::Table) -> Option<(u32, u32)> {
     }
 }
 
+/// A `modes` array (`["mp", "zm"]`); unknown spellings are skipped.
+fn modes_of(v: &toml::Value) -> Modes {
+    v.as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|x| x.as_str().and_then(Mode::parse))
+        .collect()
+}
+
 impl Builtin {
     /// `0 to 2 arguments`, `1 argument`, `at least 1 argument`.
     pub fn describe_arity(&self) -> Option<String> {
@@ -152,7 +167,24 @@ impl Builtin {
 
     /// Does a call with `argc` arguments fit? True when no arity is recorded.
     pub fn accepts(&self, argc: u32) -> bool {
-        self.arity
+        self.accepts_in(argc, None)
+    }
+
+    /// The arity a script of `mode` is held to: its executable's (`mode_args`) when the
+    /// executables differ, else [`Builtin::arity`].
+    pub fn arity_in(&self, mode: Option<Mode>) -> Option<(u32, u32)> {
+        mode.and_then(|m| self.mode_arity[m as usize])
+            .or(self.arity)
+    }
+
+    /// [`Builtin::describe_arity`] for a script of `mode`.
+    pub fn describe_arity_in(&self, mode: Option<Mode>) -> Option<String> {
+        describe(self.arity_in(mode))
+    }
+
+    /// [`Builtin::accepts`] for a script of `mode`.
+    pub fn accepts_in(&self, argc: u32, mode: Option<Mode>) -> bool {
+        self.arity_in(mode)
             .is_none_or(|(lo, hi)| argc >= lo && (argc <= hi || !self.max_enforced))
     }
 }
@@ -189,11 +221,20 @@ pub struct Catalogue {
     by_hash: HashMap<u64, Vec<Builtin>>,
     /// Named entries, for suggestions and completion.
     names: Vec<(String, Vm, Kind)>,
+    /// The `modes` of each of `names`.
+    name_modes: Vec<Option<Modes>>,
     /// Calls the compiler turns into opcodes (`[[intrinsic]]`).
     intrinsics: Vec<Intrinsic>,
     /// Some name the game can call may be missing: `coverage.complete = false` (an executable of
     /// the game was not extracted), or an entry has neither a name nor a hash.
     partial: bool,
+    /// An entry has neither a name nor a hash.
+    unnamed: bool,
+    /// The modes whose executables were read (`[extraction] modes`): only these narrow a
+    /// file's builtins.
+    read_modes: Modes,
+    /// `coverage.complete_modes`: complete for the scripts of these modes.
+    complete_modes: Modes,
 }
 
 impl Catalogue {
@@ -216,6 +257,19 @@ impl Catalogue {
                 .and_then(|v| v.get("complete"))
                 .and_then(|v| v.as_bool())
                 == Some(false),
+            read_modes: doc
+                .get("extraction")
+                .and_then(|v| v.get("modes"))
+                .and_then(|v| v.as_table())
+                .into_iter()
+                .flat_map(|t| t.keys())
+                .filter_map(|k| Mode::parse(k))
+                .collect(),
+            complete_modes: doc
+                .get("coverage")
+                .and_then(|v| v.get("complete_modes"))
+                .map(modes_of)
+                .unwrap_or_default(),
             ..Catalogue::default()
         };
         for e in h.entries {
@@ -229,6 +283,7 @@ impl Catalogue {
                 (None, Some(n)) => c.key.key(n),
                 (None, None) => {
                     c.partial = true; // a builtin nobody can name
+                    c.unnamed = true;
                     continue;
                 }
             };
@@ -243,8 +298,29 @@ impl Catalogue {
             let arity = entry_arity(t);
             let max_enforced = t.get("max_checked").and_then(|v| v.as_bool()) != Some(false);
             let dev_only = int(t, "type_flags") == Some(1);
+            let modes = t.get("modes").map(modes_of);
+            let mut mode_arity = [None; 3];
+            for (k, v) in t
+                .get("mode_args")
+                .and_then(|v| v.as_table())
+                .into_iter()
+                .flatten()
+            {
+                let pair = v
+                    .as_array()
+                    .map(|a| a.iter().filter_map(|x| x.as_integer()));
+                if let (Some(m), Some(mut pair)) = (Mode::parse(k), pair) {
+                    if let (Some(lo), Some(hi)) = (pair.next(), pair.next()) {
+                        if lo >= 0 && hi >= lo {
+                            mode_arity[m as usize] =
+                                Some((lo as u32, hi.min(u32::MAX as i64) as u32));
+                        }
+                    }
+                }
+            }
             if let Some(n) = &name {
                 c.names.push((n.clone(), vm, kind));
+                c.name_modes.push(modes);
             }
             c.by_hash.entry(key).or_default().push(Builtin {
                 name,
@@ -253,6 +329,8 @@ impl Catalogue {
                 arity,
                 max_enforced,
                 dev_only,
+                modes,
+                mode_arity,
             });
         }
         let intrinsics = doc.get("intrinsic").and_then(|v| v.as_array());
@@ -334,6 +412,49 @@ impl Catalogue {
         self.is_intrinsic(name) || !self.lookup(name).is_empty()
     }
 
+    /// The modes whose executables were read; empty when the catalogue does not tell.
+    pub fn read_modes(&self) -> Modes {
+        self.read_modes
+    }
+
+    /// Does a script of `mode` see `b`? Always when the mode is unknown or was not read (an
+    /// encrypted executable: its builtins are not known, so none is ruled out).
+    pub fn in_mode(&self, b: &Builtin, mode: Option<Mode>) -> bool {
+        self.sees(b.modes, mode)
+    }
+
+    fn sees(&self, entry: Option<Modes>, mode: Option<Mode>) -> bool {
+        match (mode, entry) {
+            (Some(m), Some(set)) if self.read_modes.contains(m) => set.contains(m),
+            _ => true,
+        }
+    }
+
+    /// The entries for `name` a script of `mode` sees (see [`Catalogue::in_mode`]).
+    pub fn lookup_in(&self, name: &str, mode: Option<Mode>) -> Vec<&Builtin> {
+        self.lookup(name)
+            .iter()
+            .filter(|b| self.in_mode(b, mode))
+            .collect()
+    }
+
+    /// Does the catalogue hold every name a script of `mode` can call? [`Catalogue::is_complete`],
+    /// or, for a mode of `coverage.complete_modes`, unless an entry has neither a name nor a hash.
+    pub fn is_complete_in(&self, mode: Option<Mode>) -> bool {
+        !self.partial || (!self.unnamed && mode.is_some_and(|m| self.complete_modes.contains(m)))
+    }
+
+    /// [`Catalogue::contains`] for a script of `mode`.
+    pub fn contains_in(&self, vm: Option<Vm>, name: &str, mode: Option<Mode>) -> bool {
+        let vm = vm.unwrap_or(Vm::Gsc);
+        self.intrinsic(name)
+            .is_some_and(|i| i.vm.is_none_or(|v| v == vm))
+            || self
+                .lookup(name)
+                .iter()
+                .any(|b| b.vm == vm && self.in_mode(b, mode))
+    }
+
     /// Is `name` a builtin of `vm` (a header counts as GSC)? Both call forms are accepted, since
     /// scripts call a few functions as methods.
     pub fn contains(&self, vm: Option<Vm>, name: &str) -> bool {
@@ -345,13 +466,27 @@ impl Catalogue {
 
     /// The named entries of `vm` and `kind` closest to `name` (edit distance at most 2).
     pub fn suggest(&self, name: &str, vm: Option<Vm>, kind: Kind) -> Vec<&str> {
+        self.suggest_in(name, vm, kind, None)
+    }
+
+    /// [`Catalogue::suggest`] among the entries a script of `mode` sees.
+    pub fn suggest_in(
+        &self,
+        name: &str,
+        vm: Option<Vm>,
+        kind: Kind,
+        mode: Option<Mode>,
+    ) -> Vec<&str> {
         let lower = name.to_ascii_lowercase();
         let max = if lower.len() <= 4 { 1 } else { 2 };
         let mut best: Vec<(usize, &str)> = self
             .names
             .iter()
-            .filter(|(_, v, k)| *k == kind && vm.is_none_or(|vm| vm == *v))
-            .filter_map(|(n, _, _)| {
+            .zip(&self.name_modes)
+            .filter(|((_, v, k), m)| {
+                *k == kind && vm.is_none_or(|vm| vm == *v) && self.sees(**m, mode)
+            })
+            .filter_map(|((n, _, _), _)| {
                 let d = levenshtein(&lower, n, max)?;
                 Some((d, n.as_str()))
             })
@@ -672,6 +807,58 @@ vm = "csc"
         let declared = format!("{IW}\n[coverage]\ncomplete = false\nnote = \"mp only\"\n")
             .replace("id = 7\n", "name = \"x\"\n");
         assert!(!Catalogue::from_toml_str(&declared).unwrap().is_complete());
+    }
+
+    const MODES: &str = r#"
+game = "t6"
+[coverage]
+complete = false
+note = "no zombies executable"
+complete_modes = ["sp"]
+[extraction]
+modes = { sp = "sp.exe", mp = "mp.exe" }
+[[builtin]]
+name = "spawnfx"
+vm = "gsc"
+kind = "function"
+min_args = 2
+max_args = 4
+modes = ["mp"]
+[[builtin]]
+name = "playfx"
+vm = "gsc"
+kind = "function"
+min_args = 2
+max_args = 6
+mode_args = { sp = [2, 6], mp = [2, 4] }
+"#;
+
+    #[test]
+    fn game_modes() {
+        let c = Catalogue::from_toml_str(MODES).unwrap();
+        let (sp, mp, zm) = (Some(Mode::Sp), Some(Mode::Mp), Some(Mode::Zm));
+        assert_eq!(c.read_modes().labels(), "sp, mp");
+        // an entry of other modes only is invisible; an unknown or unread mode sees everything
+        assert!(c.lookup_in("spawnfx", sp).is_empty());
+        assert_eq!(c.lookup_in("spawnfx", mp).len(), 1);
+        assert_eq!(c.lookup_in("spawnfx", zm).len(), 1);
+        assert_eq!(c.lookup_in("spawnfx", None).len(), 1);
+        assert!(!c.contains_in(None, "spawnfx", sp) && c.contains_in(None, "spawnfx", mp));
+        assert!(c.suggest_in("spawnfz", None, Kind::Function, sp).is_empty());
+        assert_eq!(
+            c.suggest_in("spawnfz", None, Kind::Function, mp),
+            vec!["spawnfx"]
+        );
+        // each mode's arity, the catalogue's otherwise
+        let fx = &c.lookup("playfx")[0];
+        assert!(fx.accepts_in(6, sp) && !fx.accepts_in(6, mp) && fx.accepts_in(6, None));
+        assert_eq!(
+            fx.describe_arity_in(mp).as_deref(),
+            Some("2 to 4 arguments")
+        );
+        // complete for the campaign only
+        assert!(!c.is_complete() && c.is_complete_in(sp));
+        assert!(!c.is_complete_in(mp) && !c.is_complete_in(None));
     }
 
     #[test]

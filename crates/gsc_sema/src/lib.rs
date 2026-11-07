@@ -12,6 +12,7 @@ pub mod events;
 pub mod facts;
 pub mod hashing;
 pub mod ide;
+pub mod modes;
 pub mod nav;
 pub mod par;
 pub mod profile;
@@ -29,6 +30,7 @@ pub use ide::{
     Callee, CompletionItem, DocumentSymbol, FileRange, Hover, IncomingCall, NavTarget,
     OutgoingCall, Symbol, SymbolKind,
 };
+pub use modes::{Mode, ModeOverrides, Modes};
 pub use par::{default_jobs, par_map};
 pub use profile::{BareCall, Config, Decompiled, EventArgs, Profile, Resolution};
 pub use resolve::{FileResolution, How, Resolved};

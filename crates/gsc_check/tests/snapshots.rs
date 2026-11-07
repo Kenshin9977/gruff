@@ -411,6 +411,70 @@ fn builtin_strict_bare_calls() {
     assert!(codes.is_empty(), "{codes:?}");
 }
 
+/// Game modes in a `builtin-strict` game: each file sees the builtins of its mode, from its path
+/// (`maps/mp/` multiplayer, `zombies` zombies, other `maps/` campaign, `common_scripts/` none)
+/// or from `game-mode`; B002 takes the mode's `mode_args`; B006 reports the multiplayer
+/// function a builtin shadows, not the campaign one no campaign builtin shadows.
+#[test]
+fn game_modes() {
+    use gsc_sema::{BareCall, Config, Mode, ModeOverrides, Resolution};
+    let load = |modes: ModeOverrides| {
+        let mut dialect = Dialect::superset();
+        dialect.id = "t6".to_owned();
+        let cat = Catalogue::load(&fixtures().join("modes.toml")).unwrap();
+        let profile = Profile::new(dialect, Some(cat), None)
+            .with_config(Config::names(
+                Resolution::Include,
+                BareCall::BuiltinStrict,
+                true,
+            ))
+            .with_modes(modes);
+        let mut ws = Workspace::new(profile).with_jobs(1);
+        ws.add_root(Root::new(fixtures().join("modes")));
+        assert!(ws.load().errors.is_empty());
+        let files: Vec<_> = ws.files().collect();
+        for f in files {
+            let rel = ws.file(f).meta.rel.clone();
+            ws.set_display(f, rel);
+        }
+        ws
+    };
+    let selection = Selection {
+        layers: vec![Layer {
+            select: Some(select::parse_list(&["B"]).unwrap()),
+            ..Default::default()
+        }],
+        preview: true,
+    };
+    let ws = load(ModeOverrides::default());
+    let modes: Vec<(String, Option<Mode>)> = ws
+        .files()
+        .map(|f| (ws.file(f).meta.rel.clone(), ws.mode_of(f)))
+        .collect();
+    assert!(modes.contains(&("maps/mp/zombies/_zm.gsc".to_owned(), Some(Mode::Zm))));
+    assert!(modes.contains(&("common_scripts/shared.gsc".to_owned(), None)));
+    insta::assert_snapshot!(output::render(&run(&ws, &selection), Format::Concise));
+    // Every file read as a campaign script: the multiplayer file's calls are now fine (its
+    // `vectorcross` is the function), the zombies file's `getaiarray` too; only `randomint`.
+    let all_sp = load(ModeOverrides {
+        globs: vec![],
+        all: Some(Some(Mode::Sp)),
+    });
+    let codes: Vec<(String, String)> = run(&all_sp, &selection)
+        .iter()
+        .flat_map(|r| {
+            r.diagnostics
+                .iter()
+                .map(|d| (r.display.clone(), d.code.clone()))
+        })
+        .collect();
+    assert_eq!(
+        codes,
+        vec![("maps/_sp.gsc".to_owned(), "B002".to_owned())],
+        "{codes:?}"
+    );
+}
+
 /// V001 under `hash_equality = "script-error"` (T7, measured in the emulated VM): `==` with a
 /// hash literal; `!=` and string comparisons are left alone. Silent when hashes compare by value.
 #[test]

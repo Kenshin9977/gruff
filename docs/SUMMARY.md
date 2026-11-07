@@ -6,6 +6,7 @@
 
 - [Getting started](getting-started.md)
 - [Configuration](configuration.md)
+- [Game modes](modes.md)
 - [The formatter](formatter.md)
 - [Editors](editors.md)
 - [The language server](lsp.md)
@@ -17,6 +18,7 @@
     - [B003 dev-only-builtin](rules/B003.md)
     - [B004 bare-call-other-namespace](rules/B004.md)
     - [B005 thread-builtin](rules/B005.md)
+    - [B006 builtin-shadowed-function](rules/B006.md)
     - [D001 unavailable-feature](rules/D001.md)
     - [D002 missing-function-keyword](rules/D002.md)
     - [D003 import-after-declaration](rules/D003.md)

@@ -444,7 +444,8 @@ impl Project {
             self.fields.clone(),
         )
         .with_events(self.events.clone())
-        .with_names(self.names.clone());
+        .with_names(self.names.clone())
+        .with_modes(self.check.modes.clone());
         let mut ws = Workspace::new(profile);
         for p in &self.primary {
             ws.add_root(Root::new(p.clone()));

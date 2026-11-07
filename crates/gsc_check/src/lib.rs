@@ -195,6 +195,7 @@ fn check_file(
         catalogue: profile.builtins.as_ref(),
         fields: profile.fields.as_ref(),
         vm: data.meta.vm,
+        mode: data.mode,
         decompiled: data.decompiled,
         decompiler_names: data.errors.iter().any(SyntaxError::is_decompiler_name),
         syntax_errors: data.errors.iter().map(|e| e.range.start()).collect(),
