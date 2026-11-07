@@ -1,6 +1,6 @@
 # The x64 IW script VMs (MW3, Ghosts, AW, MWR, IW), run offline; MW2 not run
 
-2026-11-07, 00:48-02:55 (one agent). Five games' script VMs run offline under Unicorn from their
+2026-11-07, 00:48-02:09 (one agent). Five games' script VMs run offline under Unicorn from their
 x64 executables or dumps: Modern Warfare 3 (`iw5mp.exe`, the Steam x64 re-release), Ghosts
 (`iw6sp64` dump, single-player: no MP dump exists), Advanced Warfare (`s1_mp64_ship` dump),
 Modern Warfare Remastered (`h1_mp64_ship` dump) and Infinite Warfare (`iw7_ship` dump). Nothing
