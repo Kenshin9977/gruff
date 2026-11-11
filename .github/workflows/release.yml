@@ -52,8 +52,11 @@ jobs:
           - { target: aarch64-pc-windows-msvc, os: windows-2022, vsce: win32-arm64, archive: zip }
           - { target: x86_64-unknown-linux-gnu, os: ubuntu-22.04, vsce: linux-x64, archive: tar.gz }
           - { target: aarch64-unknown-linux-gnu, os: ubuntu-22.04-arm, vsce: linux-arm64, archive: tar.gz }
-          - { target: x86_64-apple-darwin, os: macos-14, vsce: darwin-x64, archive: tar.gz }
-          - { target: aarch64-apple-darwin, os: macos-14, vsce: darwin-arm64, archive: tar.gz }
+          # macos-14 was retired on 2026-11-02 (the label stopped resolving); macos-15 is the
+          # migration target and is pinned rather than macos-latest, which now means macOS 26.
+          # It is arm64: the x86_64 target cross-compiles on it, clang taking -arch from the SDK.
+          - { target: x86_64-apple-darwin, os: macos-15, vsce: darwin-x64, archive: tar.gz }
+          - { target: aarch64-apple-darwin, os: macos-15, vsce: darwin-arm64, archive: tar.gz }
     runs-on: ${{ matrix.os }}
     defaults:
       run:
