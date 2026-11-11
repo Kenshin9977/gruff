@@ -45,6 +45,32 @@ pub struct Config {
     /// (glob = mode),
     /// over the game's path conventions.
     pub modes: ModeOverrides,
+    /// `[[hash-source]]`: where `gruff hash-package fetch` may look for name lists. Nothing
+    /// reads these except that command, and only when it is run.
+    pub hash_sources: Vec<HashSource>,
+}
+
+/// One place `gruff hash-package fetch` can get names from. A git repository and the files to
+/// take out of it; no other transport, so the only thing that touches the network is `git`.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct HashSource {
+    /// Short name: the clone's folder and the package's file name.
+    pub name: String,
+    /// Repository URL, cloned shallow and then updated in place.
+    pub git: String,
+    /// Paths inside the repository, relative, each a file to turn into a package.
+    pub paths: Vec<String>,
+    /// `game` of the packages written (profile ids, comma-separated); absent: any game.
+    pub game: Option<String>,
+    /// `family` of the packages written; absent: every family of the game.
+    pub family: Option<String>,
+    /// Licence of the names, copied into the package header. Say `local only` when they may not
+    /// be redistributed, which is what names recovered from a game's files are.
+    pub licence: Option<String>,
+    /// What a line of those files holds: `names` (one name) or `pairs` (a value, then a name).
+    pub columns: Option<String>,
+    /// What separates the columns of a `pairs` file: `tab` (the default) or `comma`.
+    pub separator: Option<String>,
 }
 
 /// The nearest configuration file at or above `start`. A `pyproject.toml` counts only when it has
@@ -142,6 +168,45 @@ fn apply(c: &mut Config, t: &toml::Table) -> Result<(), String> {
     }
     if let Some(s) = strings(t, &["hash_packages", "hash-packages"])? {
         c.hash_packages.extend(s.into_iter().map(PathBuf::from));
+    }
+    if let Some(v) = t.get("hash-source").or_else(|| t.get("hash_source")) {
+        let list = v
+            .as_array()
+            .ok_or("`hash-source` must be a list of tables (`[[hash-source]]`)")?;
+        for item in list {
+            let s = item
+                .as_table()
+                .ok_or("every `[[hash-source]]` must be a table")?;
+            let text = |k: &str| -> Result<Option<String>, String> {
+                match s.get(k) {
+                    None => Ok(None),
+                    Some(v) => v
+                        .as_str()
+                        .map(|v| Some(v.to_owned()))
+                        .ok_or_else(|| format!("`hash-source.{k}` must be a string")),
+                }
+            };
+            let name = text("name")?.ok_or("every `[[hash-source]]` needs a `name`")?;
+            let git = text("git")?.ok_or_else(|| {
+                format!("`[[hash-source]]` `{name}` needs a `git` repository: that is the only way it fetches")
+            })?;
+            let paths = strings(s, &["paths"])?.unwrap_or_default();
+            if paths.is_empty() {
+                return Err(format!(
+                    "`[[hash-source]]` `{name}` needs `paths`: which files of the repository hold names"
+                ));
+            }
+            c.hash_sources.push(HashSource {
+                name,
+                git,
+                paths,
+                game: text("game")?,
+                family: text("family")?,
+                licence: text("licence")?,
+                columns: text("columns")?,
+                separator: text("separator")?,
+            });
+        }
     }
     // `mode` (top level) is the language server's compiler mode (retail or community).
     if let Some(m) = t.get("game-mode").or_else(|| t.get("game_mode")) {

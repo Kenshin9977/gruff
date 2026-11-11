@@ -8,6 +8,31 @@ records the data snapshot it bundles.
 
 ## [Unreleased]
 
+### Added
+
+- **`gruff hash-package fetch`**, the one command of the toolchain that uses the network. It
+  clones or updates the `[[hash-source]]` repositories declared in `gruff.toml` and writes a
+  package from each file they name, with a header recording the repository, the revision and the
+  licence you declared. `--dry-run` says what it would do, `--source NAME` limits it to one. The
+  transport is `git`, which has to be on PATH: no HTTP client is linked into the binary, and the
+  only places it reaches are repositories you named yourself. Nothing else in Gruff opens a
+  connection, and no other command runs this one, so the README's claim becomes "nothing reaches
+  the network except `gruff hash-package fetch`, when you ask for it".
+  **Gruff ships no source and defaults to none**: a list of names recovered from a game's files is
+  the publisher's material and the community indexes carry their own licences, so which one you
+  use, and whether you may, stays your decision. `gruff hash-package dir` prints where the
+  packages go.
+- **Hash packages have a home.** `%APPDATA%\gruff\hash-packages` on Windows,
+  `$XDG_DATA_HOME/gruff/hash-packages` elsewhere, `$GRUFF_HOME` overriding both. Every command
+  reads it without a flag, after `--hash-package`, `gruff.toml` and `$GSC_HASH_PACKAGES`, so a
+  package fetched or dropped there once is seen by every project. Absent, nothing is read and
+  nothing is said.
+- `gruff check` says when the names are missing. A game that compiles names to hashes shows
+  `function_1a2b3c4d` without a package, and the output simply looked poorer than it should with
+  nothing to explain it. The run now ends with the count and what fixes it (`note: 887933
+  identifiers of this workspace are a hash with no name, and no hash package is loaded.`), from
+  ten unnamed hashes up so that a stray hashed literal does not nag.
+
 ### Changed
 
 - **A preview rule reports a hint, not an error.** Preview means a rule's precision is not

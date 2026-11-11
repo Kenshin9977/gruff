@@ -10,6 +10,7 @@ mod check_cmd;
 mod common;
 mod format_cmd;
 mod hash_cmd;
+mod hash_package_cmd;
 mod index_cmd;
 mod lsp_cmd;
 mod mcp_cmd;
@@ -39,6 +40,11 @@ enum Command {
     /// Hash strings with a family (`gruff hash t10.function main`), list the families, name
     /// hashes from the hash packages (`--reverse`) or measure name coverage (`--coverage`).
     Hash(hash_cmd::Args),
+    /// Where the hash packages are kept, and `fetch`: clone or update the `[[hash-source]]`
+    /// repositories of the configuration and write a package from each. The only command that
+    /// uses the network.
+    #[command(name = "hash-package")]
+    HashPackage(hash_package_cmd::Args),
     /// Parse files or directories: print diagnostics (`path:line:col: code message`) and a
     /// corpus summary.
     Parse {
@@ -114,6 +120,7 @@ fn run(cli: Cli) -> ExitCode {
     match cli.command {
         Command::Check(args) => check_cmd::run(args),
         Command::Hash(args) => hash_cmd::run(args),
+        Command::HashPackage(args) => hash_package_cmd::run(args),
         Command::Index(args) => index_cmd::run(args),
         Command::Format(args) => format_cmd::run(args),
         Command::Lsp(args) => lsp_cmd::run(args),

@@ -15,8 +15,10 @@ series, from Call of Duty (2003) to Black Ops 7 (2025). One binary, `gruff`, giv
 | `gruff report` | A facts-only JSON report of a local script tree (feature counts, unknown calls and their argument counts, event and field names; no code, no strings), to share so that games without a catalogue get one. See [docs/community-reports.md](docs/community-reports.md). |
 | `gruff mcp` | An MCP server for coding agents (opencode, Claude Code...): read-only tools for symbols, definitions, references, callers and callees, diagnostics, events, builtins and hashes, with compact paginated answers for small models. See [docs/mcp.md](docs/mcp.md). |
 
-The engine is written in Rust and needs no runtime. It makes no network access and collects no
-telemetry.
+The engine is written in Rust and needs no runtime, and it collects no telemetry. Nothing reaches
+the network except `gruff hash-package fetch`, which only runs when you ask for it, and only
+towards the git repositories you name yourself in `gruff.toml`: checking, formatting, indexing and
+the language server never open a connection.
 
 > **Formerly `gsc-tools`.** The binary was `gsc`; `gsc` still works as a deprecated alias of
 > `gruff` for one version (it prints a notice). `gsc.toml`, `$GSC_DATA` and a `gsc-data` data

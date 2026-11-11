@@ -176,6 +176,7 @@ fn run_inner(args: Args) -> Result<ExitCode, String> {
         .cloned()
         .collect();
     let names = common::load_hash_names(&game_id, &packages, args.quiet)?;
+    let no_names = names.is_none();
     let profile = Profile::new(dialect, catalogue, fields)
         .with_events(events)
         .with_names(names)
@@ -275,6 +276,25 @@ fn run_inner(args: Args) -> Result<ExitCode, String> {
             summary.push_str(&format!(
                 "note: no complete engine event catalogue for {game_id}: T001 is silent.\n"
             ));
+        }
+        // The games that compile names to hashes read as `function_1a2b3c4d` without a package,
+        // and nothing used to say so: the output just looked poorer than it should. Say it once,
+        // with the number, and point at what fixes it.
+        if no_names && ws.profile(0).scheme.is_some() {
+            let unknown = ws
+                .hash_coverage()
+                .count(None, gsc_sema::NameSource::Unknown);
+            // A stray hashed literal in an otherwise clear workspace is not worth a note.
+            if unknown >= 10 {
+                summary.push_str(&format!(
+                    "note: {unknown} identifier{} of this workspace {} a hash with no name, and no \
+                     hash package is loaded. `gruff hash --coverage` measures it; \
+                     `gruff hash-package fetch` fills it from a source you configure \
+                     (docs/hash-packages.md).\n",
+                    plural(unknown),
+                    if unknown == 1 { "is" } else { "are" },
+                ));
+            }
         }
         // Machine formats keep stdout clean.
         if matches!(format, Format::Text | Format::Concise) || args.statistics {

@@ -81,6 +81,36 @@ gruff hash --coverage --game jup --hash-package ../names path/to/scripts
 a tree by where their name comes from (written in clear, a package, the tree's own clear names,
 unknown). Packages for another game are skipped; the load summary goes to stderr.
 
+## Fetching from a source you name
+
+`gruff hash-package fetch` clones or updates the repositories declared in `gruff.toml` and writes
+a package from each file they name. It is the only command of the toolchain that uses the network,
+it runs only when asked, and it goes nowhere but the repositories below: `check`, `format`, `index`
+and the language server never open a connection. The transport is `git`, which has to be on PATH.
+
+```toml
+[[hash-source]]
+name = "an-index"                      # the clone's folder and the package's file name
+git = "https://example.invalid/an-index.git"
+paths = ["names/t8.tsv"]               # the files of the repository that hold names
+game = "t8, t9"                        # which games the names are for
+family = "t89.scr"                     # optional: one family rather than all of them
+columns = "names"                      # "names" (one per line) or "pairs" (value then name)
+separator = "comma"                    # for "pairs": "tab" (default) or "comma"
+licence = "local only"                 # copied into the package header, say it honestly
+```
+
+`gruff hash-package fetch --dry-run` says what it would do; `--source NAME` limits it to one.
+The packages land in the directory `gruff hash-package dir` prints (`%APPDATA%\gruff\hash-packages`
+on Windows, `$XDG_DATA_HOME/gruff/hash-packages` elsewhere, `$GRUFF_HOME` overriding both), which
+every command reads without a flag, so a package fetched once is seen by every project.
+
+**Gruff ships no source and defaults to none.** A list of names recovered from a game's files is
+the publisher's material, and the community indexes carry their own licences, GPL among them;
+which one you use, and whether you may, is yours to decide. The header of each package written
+records the repository, the revision and the licence you declared, so a package always says where
+it came from.
+
 ## Building your own
 
 Two legal sources need no one's name list:

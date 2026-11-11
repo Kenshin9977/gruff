@@ -15,6 +15,27 @@ pub fn jobs(arg: Option<usize>) -> usize {
     arg.unwrap_or_else(gsc_sema::default_jobs)
 }
 
+/// Where Gruff keeps what belongs to the user rather than to a project: `%APPDATA%\gruff` on
+/// Windows, `$XDG_DATA_HOME/gruff` or `~/.local/share/gruff` elsewhere. `$GRUFF_HOME` wins.
+pub fn home_dir() -> Option<PathBuf> {
+    if let Some(h) = std::env::var_os("GRUFF_HOME") {
+        return Some(PathBuf::from(h));
+    }
+    if cfg!(windows) {
+        return std::env::var_os("APPDATA").map(|a| PathBuf::from(a).join("gruff"));
+    }
+    if let Some(x) = std::env::var_os("XDG_DATA_HOME") {
+        return Some(PathBuf::from(x).join("gruff"));
+    }
+    std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".local/share/gruff"))
+}
+
+/// The hash packages the user keeps for every project, read by every command without a flag.
+/// `gruff hash-package fetch` writes here.
+pub fn home_packages() -> Option<PathBuf> {
+    home_dir().map(|d| d.join("hash-packages"))
+}
+
 pub fn decompiled(d: parse_cmd::Decompiled) -> gsc_sema::Decompiled {
     match d {
         parse_cmd::Decompiled::Auto => gsc_sema::Decompiled::Auto,
@@ -95,6 +116,11 @@ pub fn load_hash_names(
     let mut all = paths.to_vec();
     if let Some(env) = std::env::var_os("GSC_HASH_PACKAGES") {
         all.extend(std::env::split_paths(&env).filter(|p| !p.as_os_str().is_empty()));
+    }
+    // What the user keeps for every project, so that a package fetched once is seen everywhere
+    // without a flag. Only when it is there: absent, nothing is read and nothing is said.
+    if let Some(d) = home_packages().filter(|d| d.is_dir()) {
+        all.push(d);
     }
     if all.is_empty() {
         return Ok(None);
