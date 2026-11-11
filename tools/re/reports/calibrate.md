@@ -511,14 +511,14 @@ B002 on the game's corpus: 15 before the pass, 6 after.
 
 ### Intrinsics
 
-- intrinsic isdefined added (46940 sites, 1475 files, argc [1])
-- intrinsic istrue added (7655 sites, 627 files, argc [1])
-- intrinsic endon added (16307 sites, 723 files, argc [1])
-- intrinsic notify added (6320 sites, 662 files, argc [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15])
-- intrinsic waittill added (3872 sites, 599 files, argc [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 16])
-- intrinsic waittillmatch added (77 sites, 34 files, argc [2])
-- intrinsic waittillframeend added (234 sites, 123 files, argc [0])
-- intrinsic waitframe added (3583 sites, 572 files, argc [0])
+- intrinsic isdefined: no unresolved call site, not added
+- intrinsic istrue: no unresolved call site, not added
+- intrinsic endon: no unresolved call site, not added
+- intrinsic notify: no unresolved call site, not added
+- intrinsic waittill: no unresolved call site, not added
+- intrinsic waittillmatch: no unresolved call site, not added
+- intrinsic waittillframeend: no unresolved call site, not added
+- intrinsic waitframe: no unresolved call site, not added
 
 ### Corrected from the corpus
 

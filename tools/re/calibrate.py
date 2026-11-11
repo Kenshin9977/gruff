@@ -64,6 +64,10 @@ COVERAGE = {
     "iw4": "only iw4mp.exe was extracted, and most entries have no name (only IW5 handler matches)",
     "iw6": "only the campaign dump was extracted (iw6mp64_ship.exe is encrypted)",
     "t4": "only the campaign executable was extracted: the multiplayer builtins are missing",
+    "jup-sp": "932 functions were extracted against 1,902 in multiplayer: both descriptor chains "
+              "of the campaign dump stop at the instruction limit of descreg.py and the third "
+              "stores nothing, so builtins the campaign registers (earthquake, getanimlength, "
+              "the function forms of spawn and playfx...) are missing",
 }
 # T8+: statements the compiler emits as opcodes and the decompiler writes as calls (acts opcode
 # names as the cross-check); each is checked absent from every table before it is added
@@ -413,35 +417,46 @@ def main():
     for game in a.games:
         path = os.path.join(DATA, game + ".toml")
         text = open(path, encoding="utf-8").read()
-        blocks = split_blocks(text)
-        restore(blocks)
-        set_coverage(game, blocks)
-        rep = {"game": game}
-        base = "\n".join("\n".join(b) for b in blocks)
-        open(path, "w", encoding="utf-8", newline="\n").write(base)  # gruff check reads the file
-        cat = tomllib.loads(base)
-        rep["intrinsics"] = intrinsics(game, cat, blocks, a.gsc)
-        open(path, "w", encoding="utf-8", newline="\n").write("\n".join("\n".join(b) for b in blocks))
-        changed = correct(game, cat, blocks, a.gsc, rep)
-        if changed:
-            i = next(i for i, ln in enumerate(blocks[0]) if ln.startswith("counts = "))
-            blocks[0].insert(i + 1, "corpus_second_measure = %s" % enc(
-                "tools/re/calibrate.py: %d entries corrected from the game's corpus (B002 before: %d)"
-                % (sum(1 for b in blocks[1:] if get(b, "corpus_arity")), rep["before"])))
-        out = "\n".join("\n".join(b) for b in blocks)
-        if a.dry_run:
+        try:
+            rep = calibrate_one(game, path, text, a)
+        except BaseException:
+            # The catalogue is written to disk part way through, without the intrinsics
+            # `restore` took out, so that `gruff check` can read it. Anything that stops the
+            # run between the two writes would leave it that way, and a partial catalogue can
+            # never derive them again (B001 is silent there, so no call site is unresolved).
             open(path, "w", encoding="utf-8", newline="\n").write(text)
-        else:
-            open(path, "w", encoding="utf-8", newline="\n").write(out)
-        rep["after"] = len(run_check(a.gsc, game, corpus_dirs(game), "B002"))
-        if a.dry_run:
-            open(path, "w", encoding="utf-8", newline="\n").write(text)
+            raise
         reports.append(rep)
         print("%s: B002 %d -> %d; %d corrected, %d to review, %d rare; %s" % (
             game, rep["before"], rep["after"], len(rep["changed"]), len(rep["review"]),
             len(rep["rare"]), "; ".join(rep["intrinsics"])))
     if not a.dry_run:
         write_report(reports)
+
+
+def calibrate_one(game, path, text, a):
+    """One game: coverage, intrinsics and the corpus second measure of the arities."""
+    blocks = split_blocks(text)
+    restore(blocks)
+    set_coverage(game, blocks)
+    rep = {"game": game}
+    base = "\n".join("\n".join(b) for b in blocks)
+    open(path, "w", encoding="utf-8", newline="\n").write(base)  # gruff check reads the file
+    cat = tomllib.loads(base)
+    rep["intrinsics"] = intrinsics(game, cat, blocks, a.gsc)
+    open(path, "w", encoding="utf-8", newline="\n").write("\n".join("\n".join(b) for b in blocks))
+    changed = correct(game, cat, blocks, a.gsc, rep)
+    if changed:
+        i = next(i for i, ln in enumerate(blocks[0]) if ln.startswith("counts = "))
+        blocks[0].insert(i + 1, "corpus_second_measure = %s" % enc(
+            "tools/re/calibrate.py: %d entries corrected from the game's corpus (B002 before: %d)"
+            % (sum(1 for b in blocks[1:] if get(b, "corpus_arity")), rep["before"])))
+    out = "\n".join("\n".join(b) for b in blocks)
+    open(path, "w", encoding="utf-8", newline="\n").write(text if a.dry_run else out)
+    rep["after"] = len(run_check(a.gsc, game, corpus_dirs(game), "B002"))
+    if a.dry_run:
+        open(path, "w", encoding="utf-8", newline="\n").write(text)
+    return rep
 
 
 def write_report(reports):

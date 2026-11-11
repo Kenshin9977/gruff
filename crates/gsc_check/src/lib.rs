@@ -202,8 +202,19 @@ fn check_file(
         enabled: &enabled,
         out: Vec::new(),
     };
-    rules::run(&mut ctx);
-    diags.extend(ctx.out);
+    // A game's compiler refuses a file with a syntax error whole: nothing in it runs, so a
+    // finding about its meaning describes code the game never sees. Report the syntax errors
+    // and stop there, as the file's own compiler does. E0301 is not one of these: it marks
+    // decompiler output no tokenizer can read, and the decompiled corpora are still worth
+    // checking around it.
+    let refused = data
+        .errors
+        .iter()
+        .any(|e| e.is_syntax() && !e.is_decompiler_name());
+    if !refused {
+        rules::run(&mut ctx);
+        diags.extend(ctx.out);
+    }
     if profile.scheme.is_some() {
         for d in &mut diags {
             if d.message.contains('_') {
@@ -213,7 +224,16 @@ fn check_file(
     }
     diags.retain(|d| enabled(&d.code));
     let index = LineIndex::new(text);
-    suppress::apply(&root, text, &index, &mut diags, &enabled, enabled("S100"));
+    // No rule ran, so every suppression in the file suppressed nothing: S100 would turn one
+    // refusal into a report per suppression comment.
+    suppress::apply(
+        &root,
+        text,
+        &index,
+        &mut diags,
+        &enabled,
+        !refused && enabled("S100"),
+    );
     for d in &mut diags {
         d.start = index.line_col(text, d.range.start());
         d.end = index.line_col(text, d.range.end());

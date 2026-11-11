@@ -2,6 +2,7 @@
 
 use gsc_syntax::ast::{self, AstNode};
 use gsc_syntax::SyntaxKind::CALL_EXPR;
+use gsc_syntax::TextRange;
 
 use gsc_sema::{Builtin, Kind, Mode};
 
@@ -32,6 +33,10 @@ pub fn check(ctx: &mut Ctx) {
     let ws = ctx.ws;
     let cfg = ws.profile_of(ctx.file).config;
     let (b001, b002, b003) = (ctx.on("B001"), ctx.on("B002"), ctx.on("B003"));
+    // A file left over from another game calls names nothing here defines, once per call: the
+    // report is about the file, not about each call. Held back and folded below.
+    let mut unknown: Vec<(String, TextRange, Option<Fix>, String)> = Vec::new();
+    let mut resolved = 0usize;
     let calls: Vec<_> = ctx
         .root
         .descendants()
@@ -94,10 +99,11 @@ pub fn check(ctx: &mut Ctx) {
         if matching.is_empty() {
             // A partial catalogue (an executable not extracted, entries without a name) cannot
             // tell an unknown name from one it does not name.
-            if !b001
-                || !cat.is_complete_in(ctx.mode)
-                || !ws.callables_matching(ctx.file, &ident).is_empty()
-            {
+            if !b001 || !cat.is_complete_in(ctx.mode) {
+                continue;
+            }
+            if !ws.callables_matching(ctx.file, &ident).is_empty() {
+                resolved += 1; // a function of the workspace, not a builtin
                 continue;
             }
             // A name no builtin of any mode or VM has, with an import missing from the
@@ -118,6 +124,8 @@ pub fn check(ctx: &mut Ctx) {
                 .filter(vm_ok)
                 .find(|b| b.kind == kind);
             let mut fix = None;
+            // The name is not a builtin of another kind, VM or mode: nothing here knows it.
+            let mut plain = false;
             let message = if let Some(b) = other_kind {
                 match kind {
                     Kind::Function => format!(
@@ -142,6 +150,7 @@ pub fn check(ctx: &mut Ctx) {
                     b.modes.map(|m| m.labels()).unwrap_or_default()
                 )
             } else {
+                plain = true;
                 let sugg = cat.suggest_in(&name, ctx.vm, kind, ctx.mode);
                 let mut m = format!("unknown builtin {} `{name}`", kind.label());
                 if !sugg.is_empty() {
@@ -160,9 +169,14 @@ pub fn check(ctx: &mut Ctx) {
                 }
                 m
             };
-            ctx.report("B001", message, range, fix);
+            if plain {
+                unknown.push((message, range, fix, lower.clone()));
+            } else {
+                ctx.report("B001", message, range, fix);
+            }
             continue;
         }
+        resolved += 1; // a builtin of this file's mode and VM
         if ws.builtin_shadow(ctx.file, &ident).is_some() {
             continue; // a script function shadows the builtin
         }
@@ -210,4 +224,48 @@ pub fn check(ctx: &mut Ctx) {
             );
         }
     }
+    fold_unknown(ctx, unknown, resolved);
+}
+
+/// How many unknown names make a file foreign rather than mistyped.
+const FOREIGN_MIN: usize = 10;
+
+/// Report the names nothing knows: one by one, or, when there are enough of them and they
+/// outnumber the calls that did resolve, as one report about the file.
+///
+/// A file shipped from another game or kept from an older version calls names this workspace
+/// never defines, at every call site. Listing them one by one says the same thing hundreds of
+/// times (World at War's leftover `maps/_destructible_types.gsc`: 1,319 reports) and buries the
+/// files that do have a typo. The fix is the one a Ruff user reaches for on a vendored folder:
+/// say it once, about the file.
+fn fold_unknown(
+    ctx: &mut Ctx,
+    unknown: Vec<(String, TextRange, Option<Fix>, String)>,
+    resolved: usize,
+) {
+    if unknown.len() < FOREIGN_MIN || unknown.len() <= resolved {
+        for (message, range, fix, _) in unknown {
+            ctx.report("B001", message, range, fix);
+        }
+        return;
+    }
+    let calls = unknown.len();
+    let mut names: Vec<&str> = unknown.iter().map(|u| u.3.as_str()).collect();
+    names.sort_unstable();
+    names.dedup();
+    let shown: Vec<String> = names.iter().take(3).map(|n| format!("`{n}`")).collect();
+    let rest = match names.len().saturating_sub(shown.len()) {
+        0 => String::new(),
+        n => format!(" and {n} more"),
+    };
+    let message = format!(
+        "this file makes {calls} calls to {} name{} that no builtin has and no file here defines \
+         ({}{rest}), and only {resolved} that resolve: it looks like a file of another game or \
+         another version rather than a file of this workspace",
+        names.len(),
+        if names.len() == 1 { "" } else { "s" },
+        shown.join(", "),
+    );
+    let range = unknown[0].1;
+    ctx.report("B001", message, range, None);
 }

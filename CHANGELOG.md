@@ -8,6 +8,46 @@ records the data snapshot it bundles.
 
 ## [Unreleased]
 
+### Fixed
+
+- **A file the game's own compiler refuses is no longer linted.** A syntax error makes a GSC
+  compiler reject the whole file, so nothing in it runs and a finding about its meaning describes
+  code the game never sees. Gruff suppressed its rules around a syntax error, range by range, and
+  so still reported on the parts that happened to parse. Now the syntax errors are reported and
+  the rules stop, as Ruff does on an unparsable file; S100 stops too, or one refusal would become
+  one report per suppression comment. `E0301` (decompiler output no tokenizer can read) is not
+  such an error and still lets the rules run. World at War's `maps/_ai_supplements.gsc`, a dead
+  file whose trailing `*/` the game refuses, went from 6 findings to the one that is true.
+- **L001 understands a wait spelled as a call.** Black Ops 4 and later compile `waittill` and its
+  family to opcodes rather than keywords, and a decompiler writes them back as ordinary calls, so
+  `while (true) { self waittill(#"hash_...") }` looked like a loop that never waits. On the
+  corpora: Black Ops 4 510 findings to 1, Cold War 486 to 1, Modern Warfare III 435 to 3, while
+  Black Ops III (5) and Black Ops II (6), which have the keyword, do not move.
+- **B001 reports a foreign file once.** Ten or more unknown names in one file, outnumbering the
+  calls that resolve, is a file from another game or another version rather than a file with
+  typos: one report names the file and its first few names instead of one per call site. World at
+  War's `maps/_destructible_types.gsc`, a Call of Duty 4 leftover, went from 1,319 reports to one.
+  Below the thresholds nothing changes.
+- The Modern Warfare III campaign builtin catalogue now declares its own incompleteness
+  (`[coverage] complete = false`, which `calibrate.py` writes from the note added for it): 932 of
+  its roughly 1,902 functions were extracted, so B001 cannot tell an unknown name from one the
+  catalogue lacks and is silent, as in every other partial catalogue. Its corpus goes from 768
+  findings to 24, B001 482 to 0 and B002 15 to 6.
+
+- `tools/re/calibrate.py` puts a catalogue back as it found it when a run stops part way. It
+  writes the file without the intrinsics `restore` took out, so that `gruff check` can read it,
+  and only then decides whether to write them back; anything that failed in between left them
+  gone for good, since a partial catalogue can never derive them again (B001 is silent there, so
+  no call site is unresolved). Found by doing it: a wrong `--gsc` path cost the Modern Warfare III
+  campaign its eight intrinsics.
+
+Measured over the 17 corpora that have a builtin catalogue, the four together take the findings
+from 3,917 to 423, a fall of 89%. Nine of the 17 do not move at all, which is the point: what
+went was a handful of systematic false positives, not a rule's reach. Five corpora account for
+almost all of it: World at War (1,368 to 45), Modern Warfare III's campaign (768 to 24), Black
+Ops 4 (536 to 27), Cold War (491 to 6) and Modern Warfare III multiplayer (467 to 35); Call of
+Duty loses one finding, in a file it cannot parse.
+
 ## [0.4.0] - 2026-11-11
 
 The script VMs of the x64 Infinity Ward games measured offline, builtins split per game mode, and

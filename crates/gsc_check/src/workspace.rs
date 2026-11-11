@@ -90,7 +90,22 @@ pub fn looks_like_macro(name: &str) -> bool {
     name.bytes().any(|b| b.is_ascii_uppercase()) && !name.bytes().any(|b| b.is_ascii_lowercase())
 }
 
-const WAIT_WORDS: &[&str] = &["wait", "waitframe", "waittillframeend", "waitrealtime"];
+/// Names whose call waits, whatever the game spells them as. The later games compile `waittill`
+/// and its family to opcodes instead of parsing them as keywords (the catalogues' `[[intrinsic]]`
+/// entries), and a decompiler writes them back as ordinary calls: `self waittill(#"hash_...")`
+/// reaches [`summarize`] as a bare callee, not as `WAITTILL_KW`. Left out of this list, every
+/// `while (true)` whose only wait is a `waittill` call looked like an infinite loop (L001: 510
+/// reports on the Black Ops 4 corpus, 486 on Cold War, 435 on Modern Warfare III, against 5 on
+/// Black Ops III, which has the keyword).
+const WAIT_WORDS: &[&str] = &[
+    "wait",
+    "waitframe",
+    "waittillframeend",
+    "waitrealtime",
+    "waittill",
+    "waittillmatch",
+    "waittilltimeout",
+];
 
 /// A sync call target, for the yield fixpoint.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -702,6 +717,20 @@ mod tests {
         assert!(c.functions[1].1.direct);
         assert!(c.macros[0].1.direct);
         assert_eq!(c.fields_written, vec!["hp"]);
+    }
+
+    /// A wait the game compiles to an opcode comes back from a decompiler as a plain call, so
+    /// `summarize` meets it as a bare callee and not as its keyword. It still waits.
+    #[test]
+    fn a_wait_spelled_as_a_call_yields() {
+        let ws = workspace(&[(
+            "a.gsc",
+            "function f() { self waittilltimeout(5, \"x\"); }\nfunction g() { notacall(); }\n",
+        )]);
+        let (_, facts) = summaries(&ws);
+        let c = &facts[0].1;
+        assert!(c.functions[0].1.direct, "waittilltimeout(...) waits");
+        assert!(!c.functions[1].1.direct, "an ordinary call does not");
     }
 
     #[test]
