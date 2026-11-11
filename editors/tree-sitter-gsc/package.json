@@ -1,6 +1,6 @@
 {
   "name": "tree-sitter-gsc",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "GSC (Call of Duty game script) grammar for tree-sitter: the superset of every dialect from CoD1 to BO7",
   "license": "MIT",
   "repository": {

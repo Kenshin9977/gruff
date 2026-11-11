@@ -2,7 +2,7 @@
   "name": "gruff",
   "displayName": "Gruff — GSC language tools",
   "description": "Language support for Call of Duty GSC/CSC scripts, CoD 1 to Black Ops 7: diagnostics, navigation, completion, rename, formatting, powered by the Gruff language server.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "publisher": "gruff",
   "license": "GPL-3.0-or-later",
   "repository": {

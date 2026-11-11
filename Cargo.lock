@@ -314,7 +314,7 @@ dependencies = [
 
 [[package]]
 name = "gruff"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "clap",
  "gsc_check",
@@ -331,7 +331,7 @@ dependencies = [
 
 [[package]]
 name = "gsc_check"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "gsc_sema",
  "gsc_syntax",
@@ -342,7 +342,7 @@ dependencies = [
 
 [[package]]
 name = "gsc_fmt"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "gsc_sema",
  "gsc_syntax",
@@ -354,14 +354,14 @@ dependencies = [
 
 [[package]]
 name = "gsc_hash"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "xxhash-rust",
 ]
 
 [[package]]
 name = "gsc_index"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "gsc_sema",
  "gsc_syntax",
@@ -372,7 +372,7 @@ dependencies = [
 
 [[package]]
 name = "gsc_lsp"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "crossbeam-channel",
  "gsc_check",
@@ -388,7 +388,7 @@ dependencies = [
 
 [[package]]
 name = "gsc_mcp"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "gsc_check",
  "gsc_hash",
@@ -401,7 +401,7 @@ dependencies = [
 
 [[package]]
 name = "gsc_sema"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "gsc_hash",
  "gsc_syntax",
@@ -411,7 +411,7 @@ dependencies = [
 
 [[package]]
 name = "gsc_syntax"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "insta",
  "mimalloc",
@@ -423,7 +423,7 @@ dependencies = [
 
 [[package]]
 name = "gsc_wasm"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "gsc_check",
  "gsc_fmt",

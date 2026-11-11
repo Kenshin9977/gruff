@@ -20,7 +20,6 @@ RE = os.path.dirname(HERE)
 sys.path.insert(0, RE)
 sys.path.insert(0, HERE)
 from common import paths  # noqa: E402
-from common.events_build import sha256  # noqa: E402
 from common.report import toml_value  # noqa: E402
 import t89_suite  # noqa: E402
 
@@ -54,7 +53,7 @@ def main():
             % (TITLE[g], g, g))
     lines = [head, "[meta]"]
     meta = {"game": g, "extractor": "tools/re/vm/t89_suite.py --game %s" % g,
-            "dump": "%s sha256:%s" % (os.path.basename(exe), sha256(exe)),
+            "dump": os.path.basename(exe),
             "date": a.date, "licence": "CC0-1.0", "suite": "conformance/%s" % g,
             "time_unit": "scrVmPub.frame, one server frame (levelTime += 50 ms per frame)",
             "modes": ["script errors stop (Com_Error 0x20 aborts: the dump's session state)",

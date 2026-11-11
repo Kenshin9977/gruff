@@ -2,7 +2,7 @@
 
 Phase 5.7, part 1. 2026-11-06, 17:21-18:55 (one agent, T6 then T5). Executable: `t6_dump_flat.exe`
 (t6mp.exe unpacked with Steamless, flattened; x86, image base 0x400000, PE timestamp 1786983181;
-sha256 in `gruff-data/semantics/t6.toml`). Nothing was launched or attached: the game's code runs under
+Nothing was launched or attached: the game's code runs under
 Unicorn (`tools/re/vm/t56vm.py`, profile `t6`). Addresses are VAs. Facts:
 `gruff-data/semantics/t6.toml`; scripts: `conformance/t6/`.
 

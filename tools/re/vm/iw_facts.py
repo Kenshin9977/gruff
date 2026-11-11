@@ -23,7 +23,6 @@ ROOT = os.path.dirname(os.path.dirname(RE))
 sys.path.insert(0, RE)
 sys.path.insert(0, HERE)
 from common import paths  # noqa: E402
-from common.events_build import sha256  # noqa: E402
 from common.report import toml_value  # noqa: E402
 
 CLAIM = re.compile(r"^([a-z0-9-]+(?:#\S+)?) \((agrees|disagrees)\): (.*)$")
@@ -59,7 +58,7 @@ def main():
             % (TITLE[g], g, EXE_NOTE[g]))
     lines = [head, "[meta]"]
     meta = {"game": g, "extractor": "tools/re/vm/iw_suite.py --game %s" % g,
-            "dump": "%s sha256:%s" % (os.path.basename(exe), sha256(exe)),
+            "dump": os.path.basename(exe),
             "date": a.date, "licence": "CC0-1.0", "suite": "conformance/%s" % g,
             "time_unit": "scrVarPub.time counted from the entry thread's start, one 50 ms "
                          "server frame",

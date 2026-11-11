@@ -20,7 +20,6 @@ RE = os.path.dirname(HERE)
 sys.path.insert(0, RE)
 sys.path.insert(0, HERE)
 from common import paths  # noqa: E402
-from common.events_build import sha256  # noqa: E402
 from common.report import toml_value  # noqa: E402
 import t56_suite  # noqa: E402
 from t56vm import PROFILES  # noqa: E402
@@ -56,7 +55,7 @@ def main():
             % (P["title"], g, COMPILER[g], g))
     lines = [head, "[meta]"]
     meta = {"game": g, "extractor": "tools/re/vm/t56_suite.py --game %s" % g,
-            "dump": "%s sha256:%s" % (os.path.basename(exe), sha256(exe)),
+            "dump": os.path.basename(exe),
             "date": a.date, "licence": "CC0-1.0", "suite": "conformance/%s" % g,
             "time_unit": "gScrVarPub.time, one 50 ms server frame",
             "modes": ["retail (developer 0)", "developer 1"]}

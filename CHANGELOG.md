@@ -8,6 +8,14 @@ records the data snapshot it bundles.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-11
+
+The script VMs of the x64 Infinity Ward games measured offline, builtins split per game mode, and
+two questions closed by measurement rather than by code: whether block comments nest (they do not,
+in any of the four games whose official compiler can be asked) and whether B001 should speak at all
+when a mod is opened without the game's scripts (it should not). No hash of a game executable is
+left in the data. gruff-data snapshot `ae83b5a`.
+
 ### Added
 
 - **VM semantics of the x64 IW games.** `tools/re/vm/iw_run.py`, `iw_suite.py`, `iw_facts.py`
@@ -36,8 +44,9 @@ records the data snapshot it bundles.
   defines although every import resolves: 1,319 `destructible_*` builders in the Call of Duty 4
   leftover `maps/_destructible_types.gsc` (World at War's `maps/_destructible.gsc` has none of
   them), 31 Der Riese calls to `maps/_zombiemode_utility` functions of a later patch than the
-  corpus's copy, and 5 in `maps/_ai_supplements.gsc` to functions inside a block comment that
-  a stray `*/` suggests the game nests.
+  corpus's copy, and 5 in `maps/_ai_supplements.gsc`, a leftover whose trailing `*/` the game's
+  own compiler refuses, so the game never loads the file at all (measured; see the block-comment
+  entry below).
 - B001 no longer reports a name that no builtin has when the file or a file it imports has an
   import missing from the workspace (a mod opened without the game's scripts): the name may be a
   function of the missing file, and I003 reports the import once a library root is set. Builtins
@@ -51,11 +60,30 @@ records the data snapshot it bundles.
   `calibrate.set_coverage`) `complete_modes` of the catalogues, from one extraction per
   executable (T5, T6, IW5, S1, H1), run after any build like `calibrate.py`;
   `reports/modes.md`.
+- **Block comments do not nest, measured.** `conformance/{t4,iw3,t5,t7}/nested_block_comment.gsc`
+  and `conformance/t4/stray_block_comment_close.gsc` ask four games, each through its own official
+  compiler or linker: `/* a /* b */ */` is refused in all four, and so is a lone `*/`. The Black
+  Ops III linker names what it lexed at the second `*/` ("syntax error, unexpected
+  TOKEN_MULTIPLY"), so the comment had already closed at the first one. The question came from a
+  World at War script that reads as if comments nested; they do not, and such a file is refused at
+  load rather than read as commented out. Gruff's lexer already ended a block comment at the first
+  `*/`, so it is unchanged: the measurement closes the question instead of opening work.
+- CI: the release workflow reads gruff-data over SSH when the secret `GRUFF_DATA_SSH_KEY` holds a
+  read-only deploy key of that repository, which is what a private gruff-data needs. Unset, the
+  checkout is token-authenticated as before, which is what a public one needs.
 
 ### Changed
 
 - **V002 thread-call-value** now reports in MW3, Ghosts, AW, MWR and IW, whose profiles measure
   `thread_call_value = "callee-result"` (decompiled corpora: 68, 51, 52, 6 and 68 findings).
+- **No hash of a game executable in the data any more.** A `[meta] dump` of an event catalogue or
+  a semantics file named the executable and its sha256; it now names the file only, and the event
+  and semantics schemas no longer accept a digest. Which build an extraction read stays in its own
+  output under `tools/re/out/`, which is never committed, so nothing is lost for replaying a run.
+  `events_build.py` and the five `*_facts.py` generators write the shorter form, the `reports/`
+  that quoted a digest no longer do, and `tools/validate.py` passes on all 24 profiles, 19 builtin,
+  1 field, 15 event and 12 semantics files. The reverse-engineering addresses in the data
+  (`handler_rva` and the `evidence` prose) are untouched and still an open question.
 
 ## [0.3.0] - 2026-11-07
 
@@ -414,7 +442,8 @@ First public release.
   modelled.
 - No thread and event (`T`) rules yet; the event index is there for them.
 
-[Unreleased]: https://github.com/Kenshin9977/gruff/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/Kenshin9977/gruff/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/Kenshin9977/gruff/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/Kenshin9977/gruff/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Kenshin9977/gruff/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Kenshin9977/gruff/releases/tag/v0.1.0

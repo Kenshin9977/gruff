@@ -2,7 +2,7 @@
 
 Phase 5, steps 5.1-5.4. 2026-11-06, 12:51-13:46 (one agent); step 5.5 (trace mode, section 8)
 15:18-15:55. Dump: `bo3_flat.exe`
-(sha256 `54f74a97...e9bfab`, PE timestamp 1765634846). Nothing was launched or attached: the
+(PE timestamp 1765634846). Nothing was launched or attached: the
 game's code runs under Unicorn over the flat dump (`tools/re/vm/`). Addresses are RVAs of this
 dump. Facts: `gruff-data/semantics/t7.toml`; scripts: `conformance/t7/`.
 
@@ -108,8 +108,10 @@ no test needed one.
 | `waittillframeend_order` | PASS | same | `waittillframeend` resumes in the same frame after threads that do not wait |
 | `waittillmatch` | PASS | same | waittillmatch skips a notify whose first argument differs |
 
-STATUS t7: PASS 47, UNSUPPORTED 2 (both modes; `childthread_dies_with_parent` was PASS with its compile error until the
-suites took one rule for compiler-refused scripts: UNSUPPORTED with the message).
+STATUS t7: PASS 47, UNSUPPORTED 3 (both modes; `childthread_dies_with_parent` was PASS with its compile error until the
+suites took one rule for compiler-refused scripts: UNSUPPORTED with the message. `nested_block_comment`,
+added 2026-11-11, is the third: the linker closes a block comment at the first `*/` and lexes the
+second as `*` then `/`, "syntax error, unexpected TOKEN_MULTIPLY"; see `vm_t4.md` section 4).
 
 **Where my first guesses were wrong** (the goldens are the VM's answers, not my expectations):
 notify wakes are deferred (I expected the waiter to run inside the notify, as in CoD4's

@@ -2,7 +2,7 @@
 
 Phase 5.7, part 1. 2026-11-06, 18:05-18:55 (one agent, after T6). Executable: the install's
 `BlackOpsMP.exe` (not encrypted, file layout; x86, image base 0x400000, PE timestamp 1320282179;
-sha256 in `gruff-data/semantics/t5.toml`). The SP exe (`exe.t5`) has no `logprint`, the trace builtin,
+The SP exe (`exe.t5`) has no `logprint`, the trace builtin,
 so the multiplayer one is used. Nothing was launched or attached (`tools/re/vm/t56vm.py`, profile
 `t5`). Facts: `gruff-data/semantics/t5.toml`; scripts: `conformance/t5/`.
 
@@ -42,7 +42,7 @@ with T6's.
 | VirtualAlloc reserve -> bump heap (commit returns the address) | Hunk_InitMemory, the debug hunk |
 | `PMem_Alloc` (0x4c58c0), `_vsnprintf` (0x9cae40), `va` (0x502ca0), `longjmp` (0x9d05c4), `DB_FindXAssetHeader` (0x493a60), `Com_Printf` (0x4126c0), `Com_Error` (0x627380) | as T6 |
 
-## 3. Results (retail and developer 1 identical): PASS 47, UNSUPPORTED 10
+## 3. Results (retail and developer 1 identical): PASS 47, UNSUPPORTED 11
 
 52 of 57 behaviours answer as T6, including **arrays as values (copy on write)**, deferred notify,
 same-time order, and the same refusals. Differences from T6:

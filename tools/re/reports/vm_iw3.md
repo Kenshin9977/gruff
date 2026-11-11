@@ -2,7 +2,7 @@
 
 Phase 5.7, part 2. 2026-11-06, 18:02-18:10 (one agent, after T4, `vm_t4.md`). Executable:
 `iw3mp.exe`, the Steam multiplayer build ("CoD4 MP 1.8 build win-x86", PE timestamp 1525213173,
-file layout, image base 0x400000; sha256 in `gruff-data/semantics/iw3.toml`). Nothing was launched
+file layout, image base 0x400000). Nothing was launched
 or attached. Addresses are VAs. Facts: `gruff-data/semantics/iw3.toml`; scripts: `conformance/iw3/`
 (the T4 scripts with `logprint`).
 
@@ -42,7 +42,7 @@ filled as `_initptd` (0x66f4cb) fills it, `_osplatform`/`_winmajor` (0x7223a8, 0
 abort_on_error 0x178c06d), plus two IW3-only replications: the inlined Hunk_InitDebugMemory and
 the frame's `time += 1`. No null-page write in the suite.
 
-## 3. Results (retail: PASS 46, UNSUPPORTED 11; developer: 3 traces differ)
+## 3. Results (retail: PASS 46, UNSUPPORTED 12; developer: 3 traces differ)
 
 **Every retail golden is T4's** (`vs t4: same` for all 57; the 11 UNSUPPORTED forms, `childthread`
 included, are refused by both compilers with the same messages). So against T7, IW3 differs exactly where T4 does: arrays

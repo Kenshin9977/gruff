@@ -20,7 +20,6 @@ RE = os.path.dirname(HERE)
 sys.path.insert(0, RE)
 sys.path.insert(0, HERE)
 from common import paths  # noqa: E402
-from common.events_build import sha256  # noqa: E402
 from common.report import toml_value  # noqa: E402
 import t7_suite  # noqa: E402
 
@@ -49,7 +48,7 @@ def main():
     exe = paths.need("exe.t7")
     lines = [HEAD, "[meta]"]
     meta = {"game": "t7", "extractor": "tools/re/vm/t7_suite.py",
-            "dump": "%s sha256:%s" % (os.path.basename(exe), sha256(exe)),
+            "dump": os.path.basename(exe),
             "date": a.date, "licence": "CC0-1.0", "suite": "conformance/t7",
             "time_unit": "gScrVarPub.time, one 50 ms server frame",
             "modes": ["retail (developer 0)", "developer 1"]}

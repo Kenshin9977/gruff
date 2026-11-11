@@ -1,7 +1,7 @@
 # Black Ops Cold War (T9) script VM, run offline: method, stubs, results, dialect against T8
 
 Phase 5, step 5.6. 2026-11-06, 16:10-17:08 (one agent, after T8). Dump:
-`BlackOpsColdWar_dump.exe` (PE timestamp 1778629159; sha256 in `gruff-data/semantics/t9.toml`).
+`BlackOpsColdWar_dump.exe` (PE timestamp 1778629159).
 Nothing was launched or attached; Cold War cannot be run (Ricochet): the second measure is the
 static reading of the handlers. Addresses are RVAs of this dump. Facts:
 `gruff-data/semantics/t9.toml`; scripts: `conformance/t9/` (the T8 scripts, same syntax).

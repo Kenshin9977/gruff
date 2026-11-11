@@ -1,8 +1,7 @@
 # World at War (T4) script VM, run offline: method, stubs, results, dialect against T7
 
 Phase 5.7, part 2. 2026-11-06, 17:22-18:02 (one agent; IW3 followed until 18:10, `vm_iw3.md`). Executable: `codwaw_flat.exe`, the
-unwrapped single-player build (PE timestamp 1445666630, image base 0x400000, x86; sha256 in
-`gruff-data/semantics/t4.toml`). Nothing was launched or attached: the game's code runs under
+unwrapped single-player build (PE timestamp 1445666630, image base 0x400000, x86). Nothing was launched or attached: the game's code runs under
 Unicorn over the executable (`tools/re/vm/`). Addresses are VAs. Facts: `gruff-data/semantics/t4.toml`;
 scripts: `conformance/t4/`. Names follow the Quake 3 / CoD4 lineage as labels only; each one is
 pinned by what calls it and what it does when run (comments of `T4` in `vm/t4vm.py`).
@@ -67,7 +66,7 @@ reads share, and the second error message of a run crashed the formatter.
 The compiler formats `<name>.gsc` into a 64-byte buffer, so the harness folder is `zz/` (with
 `maps/zz_harness/` the longest test name was cut and "Scr_LoadScript returned 0").
 
-## 3. Results (retail: PASS 46, UNSUPPORTED 11; developer: 3 traces differ)
+## 3. Results (retail: PASS 46, UNSUPPORTED 13; developer: 3 traces differ)
 
 `vs t7` (`dialect` in the facts): 39 answers are T7's, 18 differ, 10 of them because the form
 cannot exist in T4 (UNSUPPORTED below; `childthread_dies_with_parent`, also UNSUPPORTED, is the
@@ -140,6 +139,17 @@ compile errors carry the source line.
   fired and `infinite_loop` agreed with T7 (no guard); the strings `potential infinite loop` in the
   executable led to the handler. The clock is now virtual (section 2): the iteration count at which
   the guard fires is the harness's, the outcome the game's.
+- **Block comments do not nest** (`nested_block_comment`, `stray_block_comment_close`,
+  2026-11-11). Asked because a shipped script reads as if they did: an outer `/*` over nearly the
+  whole file, an inner one over an older copy of a function, and a final `*/`. They do not. `/* a
+  /* b */ */` is refused ("bad syntax"), a lone `*/` is refused, and the same file with one plain
+  comment compiles and traces. Same answer in IW3, T5 and T7, each asked through its own official
+  compiler or linker; the T7 linker names what it lexed at the second `*/` ("syntax error,
+  unexpected TOKEN_MULTIPLY"), which is what pins the mechanism: the comment had already closed at
+  the first one. A file written that way is therefore refused at load, not read as all-commented:
+  handing the shipped file to this VM stops at "bad syntax", and the same file with its trailing
+  `*/` removed gets past the lexer and on to resolving its `#include`s. Gruff's lexer already ends
+  a block comment at the first `*/`, so nothing changed in it.
 
 ## 5. Limits
 

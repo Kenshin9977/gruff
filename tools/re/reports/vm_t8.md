@@ -1,7 +1,7 @@
 # Black Ops 4 (T8) script VM, run offline: method, stubs, results, dialect against T7
 
 Phase 5, step 5.6. 2026-11-06, 15:18-16:10 for T8, until 17:08 with T9 (one agent). Dump:
-`BlackOps4_dump.exe` (sha256 `7f2f2e63...0b85b2`, PE timestamp 1780932985). Nothing was launched
+`BlackOps4_dump.exe` (PE timestamp 1780932985). Nothing was launched
 or attached; BO4 cannot be run (Ricochet), so the second measure is the static reading of the
 handler or function behind each surprising answer. Addresses are RVAs of this dump. Facts:
 `gruff-data/semantics/t8.toml`; scripts: `conformance/t8/`.
