@@ -132,6 +132,11 @@ impl Worker {
 }
 
 fn severity(code: &str) -> DiagnosticSeverity {
+    // A preview rule's precision is not established, so the editor shows it as a hint rather
+    // than as something to act on, which is also what keeps it out of a build's error count.
+    if gsc_check::Severity::of(code).is_hint() {
+        return DiagnosticSeverity::HINT;
+    }
     match code.as_bytes().first() {
         Some(b'E' | b'D') => DiagnosticSeverity::ERROR,
         Some(b'S') => DiagnosticSeverity::HINT,

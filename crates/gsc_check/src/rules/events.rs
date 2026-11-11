@@ -99,7 +99,12 @@ fn suggestions(ctx: &Ctx, lower: &str, side: Side, engine: Option<&EventCatalogu
     if lower.len() < 5 {
         return Vec::new();
     }
-    let max = if lower.len() < 12 { 1 } else { 2 };
+    // One edit, whatever the length. A typo is a slip: a letter doubled, dropped, swapped or
+    // mistyped once. Two edits in a long name is nearly always two different words sharing a
+    // prefix or a suffix, and that is where the rule's false reports came from:
+    // `enemy_spooked`/`enemy_spotted`, `veh_heightmesh_min`/`_max`, `stop_thinking`/
+    // `stop_ticking`, `monkeys_grabbed`/`money_grabbed`, `restartWeaponVFX`/`startweaponvfx`.
+    let max = 1;
     let mut best: Vec<(usize, String)> = Vec::new();
     let mut consider = |name: &str, ok: bool| {
         if !ok || name == lower || same_family(name, lower) {
@@ -241,6 +246,15 @@ fn arg_count(ctx: &mut Ctx, sites: &[EventSite], engine: Option<&EventCatalogue>
             }
         }
         if site.argc <= max {
+            continue;
+        }
+        // With no engine catalogue at all there is nothing to say about what the engine sends,
+        // and the premise of the rule is only ever "the scripts send at most this much". Every
+        // report the rule made on such a game was an engine event the scripts re-notify with
+        // part of its payload: WWII's "death", "foley" and "supplydrop", against one true
+        // report on Modern Warfare 2019 ("returned", a stale binding). Silent until those games
+        // have a catalogue; `docs/rules/T003.md` records what that costs.
+        if engine.is_none() {
             continue;
         }
         // Without a complete engine catalogue the engine may notify the event too: scripts

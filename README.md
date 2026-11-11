@@ -188,6 +188,13 @@ Every rule has a page in [docs/rules](docs/rules/README.md), also printed by
 `gruff check --explain CODE`; `gruff check --list-rules` lists them. New rules start in preview
 (`--preview`) for at least one minor release.
 
+**A preview rule reports a hint, not an error.** Preview means its precision is not established
+yet, so its findings are shown and counted apart (`Found 3 errors and 12 hints.`), carry SARIF
+level `note`, appear as hints in an editor, and never set a non-zero exit code on their own. Only
+the stable rules can fail a build, which is what makes `--preview` safe to leave on in CI: you see
+what the unproven rules think without letting them stop you. Each rule's page records what has
+been measured about its precision, and a rule leaves preview on that measurement.
+
 ## Output formats
 
 `gruff check --output-format <format>`:

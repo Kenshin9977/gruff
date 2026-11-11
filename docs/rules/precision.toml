@@ -1,0 +1,65 @@
+# What has been measured about the rules' precision, and the gate a rule leaves preview on.
+#
+# One table per rule that has been measured on the local corpora, with the counts an adjudicated
+# sample gave: `reports` findings looked at one by one, `true` of them real, `false` not. Verdicts
+# are hand-made and the reasoning is in the rule's own page; this file holds the numbers so that
+# the gate below can be checked by a test instead of by memory, and so that drift shows up.
+#
+# The gate (`crates/gsc_check/tests/precision.rs`): a rule may only be stable, that is report as
+# an error rather than as a hint, with a record of at least `min_reports` findings and a precision
+# of at least `min_precision`. A rule with a record below the gate must be in preview. A stable
+# rule with no record at all is not caught by this: the gate is about not promoting a rule the
+# measurements contradict, and most stable rules here are stable for a different reason, because
+# the game's own compiler refuses the form and the shipped scripts have none of it.
+#
+# Re-measure with `py -3.11 -I tools/precision.py`: it counts what the rules report on the corpora
+# today and says which records no longer match, so a rule that drifts is noticed rather than
+# trusted. It cannot re-adjudicate: new findings have to be judged by hand.
+
+[gate]
+min_precision = 0.95
+min_reports = 20
+
+[T002]
+date = "2026-11-11"
+reports = 54
+true = 44
+false = 10
+corpora = "every corpus folder with an engine event catalogue, each checked on its own"
+note = """
+Down from 67 reports at 72% when the suggestion allowed two edits. Five of the ten false reports \
+are engine events no catalogue lists yet ("animsdone" x4, "enter_vlobby"), which is a data gap \
+and not a rule to tune: without them the rule's own precision is about 90%. The rest are \
+single-edit pairs of two real names ("light_off"/"lights_off", "teleportEnd"/"teleported", \
+"stop_look"/"stop_loop"), which no edit-distance rule separates. docs/rules/T002.md lists every \
+report of the 2026-11-06 sample by name.
+"""
+
+[T003]
+date = "2026-11-11"
+reports = 0
+true = 0
+false = 0
+corpora = "every corpus folder"
+note = """
+Reports nothing since it began requiring an engine event catalogue for the game. Its four earlier \
+reports were all on the two games that have none: three false (WWII's "death", "foley", \
+"supplydrop", engine events the scripts re-notify with part of the payload) and one true (Modern \
+Warfare 2019's "returned", 9 variables bound for at most 7 values). A rule that cannot see the \
+engine's payload should not guess at it; this one becomes measurable again when those two games \
+have a catalogue.
+"""
+
+[F001]
+date = "2026-11-11"
+reports = 3
+true = 0
+false = 0
+corpora = "the Black Ops III corpora, the only game with a field catalogue"
+note = """
+Three candidates on decompiled output ("ddbomb" twice, "ksvehicle"), none adjudicated, and none \
+at all on the mod-tools source. Before the test on how many files read a name, it reported \
+`vmtype`, a scene bundle key, eleven times across six files on that source and nothing else: 0 \
+true in 11. The corpora are shipped scripts, where a typo is rare by construction, so this rule \
+has no measurement that could promote it either way. It needs findings on code being written.
+"""

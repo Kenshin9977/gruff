@@ -13,6 +13,10 @@ use gsc_sema::data::levenshtein;
 use crate::workspace::{field_name, is_field_write, is_hashed_name};
 use crate::{Applicability, Edit, Fix};
 
+/// How many files have to read a name, with none writing it, for it to be a field set outside
+/// the scripts rather than a typo.
+const FILES_SET_ELSEWHERE: u32 = 3;
+
 /// `origin1` and `origin2`: numbered siblings, not typos of each other.
 fn numbered_siblings(a: &str, b: &str) -> bool {
     let strip = |s: &str| s.trim_end_matches(|c: char| c.is_ascii_digit()).len();
@@ -69,6 +73,14 @@ pub fn check(ctx: &mut Ctx) {
             continue;
         }
         if cat.contains(&name) || written.contains(&name) {
+            continue;
+        }
+        // A typo is a slip in one place. A name several files read, and none of them writes, is
+        // a field set outside the scripts: a map key-value pair, a GDT or script-bundle key
+        // (`struct::get_script_bundle` hands those back as fields). On the Black Ops III mod
+        // tools this is every finding the rule had: `vmtype`, a scene bundle key, read in six
+        // files.
+        if ctx.sums.files_reading_field(&name) >= FILES_SET_ELSEWHERE {
             continue;
         }
         if ctx.near_syntax_error(&n) {

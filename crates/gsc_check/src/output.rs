@@ -275,8 +275,9 @@ fn sarif(results: &[FileResult]) -> String {
     let results: Vec<String> = all(results)
         .map(|(r, d)| {
             format!(
-                "{{\"ruleId\":{},\"level\":\"error\",\"message\":{{\"text\":{}}},\"locations\":[{{\"physicalLocation\":{{\"artifactLocation\":{{\"uri\":{}}},\"region\":{{\"startLine\":{},\"startColumn\":{},\"endLine\":{},\"endColumn\":{}}}}}}}]}}",
+                "{{\"ruleId\":{},\"level\":\"{}\",\"message\":{{\"text\":{}}},\"locations\":[{{\"physicalLocation\":{{\"artifactLocation\":{{\"uri\":{}}},\"region\":{{\"startLine\":{},\"startColumn\":{},\"endLine\":{},\"endColumn\":{}}}}}}}]}}",
                 json_str(&d.code),
+                if d.severity.is_hint() { "note" } else { "error" },
                 json_str(&d.message),
                 json_str(&sarif_uri(&r.display)),
                 d.start.line,

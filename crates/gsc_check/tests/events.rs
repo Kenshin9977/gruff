@@ -67,8 +67,13 @@ fn with_a_complete_catalogue() {
 
 #[test]
 fn without_a_catalogue() {
-    // T001 is silent, T002 still finds the typos of script events.
-    insta::assert_snapshot!(run(&workspace(None)));
+    // T001 and T003 are silent: nothing says what the engine notifies, or with what payload,
+    // and a script that re-notifies an engine event sends part of it. T002 still finds the
+    // typos of script events, whose notifies the workspace can see.
+    let out = run(&workspace(None));
+    assert!(!out.contains("T001"), "{out}");
+    assert!(!out.contains("T003"), "{out}");
+    insta::assert_snapshot!(out);
 }
 
 #[test]

@@ -315,6 +315,9 @@ pub struct CheckFacts {
     /// Lower-case field names this file assigns (`x.f = ...`, `x.f++`, `{ f: ... }`) or tests
     /// with `isdefined( x.f )`.
     pub fields_written: Vec<String>,
+    /// Lower-case field names this file reads without assigning, each once however often it
+    /// reads them: F001 counts the files, not the reads.
+    pub fields_read: Vec<String>,
 }
 
 /// Collect the check facts of one parsed file.
@@ -360,9 +363,12 @@ pub fn check_facts(root: &SyntaxNode, facts: &FileFacts, dialect: &Dialect) -> C
     for n in root.descendants() {
         match n.kind() {
             FIELD_EXPR => {
-                if is_field_write(&n) || is_guarded(&n) {
-                    if let Some(name) = field_name(&n) {
+                let write = is_field_write(&n) || is_guarded(&n);
+                if let Some(name) = field_name(&n) {
+                    if write {
                         c.fields_written.push(name);
+                    } else {
+                        c.fields_read.push(name);
                     }
                 }
             }
@@ -378,6 +384,8 @@ pub fn check_facts(root: &SyntaxNode, facts: &FileFacts, dialect: &Dialect) -> C
             _ => {}
         }
     }
+    c.fields_read.sort_unstable();
+    c.fields_read.dedup();
     c
 }
 
@@ -432,6 +440,8 @@ pub struct Summaries {
     pub(crate) direct: Vec<bool>,
     pub(crate) yields: Vec<bool>,
     pub(crate) fields_written: HashSet<String>,
+    /// How many files read each field name without assigning it.
+    pub(crate) files_reading_field: HashMap<String, u32>,
 }
 
 impl Summaries {
@@ -452,6 +462,9 @@ impl Summaries {
         for (f, c) in facts {
             s.push_file(ws, *f, c);
             s.fields_written.extend(c.fields_written.iter().cloned());
+            for name in &c.fields_read {
+                *s.files_reading_field.entry(name.clone()).or_default() += 1;
+            }
         }
         s.yields = s.direct.clone();
         s
@@ -666,6 +679,11 @@ impl Summaries {
     /// Field names (lower case) some file of the workspace assigns.
     pub fn fields_written(&self) -> &HashSet<String> {
         &self.fields_written
+    }
+
+    /// How many files of the workspace read `name` as a field without assigning it.
+    pub fn files_reading_field(&self, name: &str) -> u32 {
+        self.files_reading_field.get(name).copied().unwrap_or(0)
     }
 }
 

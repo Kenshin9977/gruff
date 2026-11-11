@@ -57,6 +57,31 @@ pub struct Fix {
     pub edits: Vec<Edit>,
 }
 
+/// How much a finding claims. A preview rule is one whose precision is not established yet, so
+/// it reports as a [`Severity::Hint`]: shown in an editor, counted on its own, and never the
+/// reason a build fails. Everything else is an error.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Severity {
+    #[default]
+    Error,
+    Hint,
+}
+
+impl Severity {
+    /// The severity a rule's findings carry.
+    pub fn of(code: &str) -> Severity {
+        if registry::is_preview(code) {
+            Severity::Hint
+        } else {
+            Severity::Error
+        }
+    }
+
+    pub fn is_hint(self) -> bool {
+        self == Severity::Hint
+    }
+}
+
 /// One finding.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Diagnostic {
@@ -64,6 +89,7 @@ pub struct Diagnostic {
     pub message: String,
     pub range: TextRange,
     pub fix: Option<Fix>,
+    pub severity: Severity,
     /// Filled in by [`check`].
     pub start: LineCol,
     pub end: LineCol,
@@ -72,6 +98,7 @@ pub struct Diagnostic {
 impl Diagnostic {
     pub fn new(code: &str, message: String, range: TextRange, fix: Option<Fix>) -> Diagnostic {
         Diagnostic {
+            severity: Severity::of(code),
             code: code.to_owned(),
             message,
             range,

@@ -222,6 +222,13 @@ fn run_inner(args: Args) -> Result<ExitCode, String> {
     } else {
         let _ = stdout.write_all(output::render(&results, format).as_bytes());
     }
+    // Preview rules report as hints: they are counted apart and never fail the run.
+    let hints = results
+        .iter()
+        .flat_map(|r| &r.diagnostics)
+        .filter(|d| d.severity.is_hint())
+        .count();
+    let errors = total - hints;
     if !args.quiet {
         let safe = results
             .iter()
@@ -232,16 +239,22 @@ fn run_inner(args: Args) -> Result<ExitCode, String> {
                     .is_some_and(|f| f.applicability == Applicability::Safe)
             })
             .count();
+        let and_hints = match hints {
+            0 => String::new(),
+            n => format!(" and {n} hint{}", plural(n)),
+        };
         let mut summary = if total == 0 && fixed == 0 {
             "All checks passed!\n".to_owned()
         } else if fixed > 0 {
-            let all = total + fixed;
+            let all = errors + fixed;
             format!(
-                "Found {all} error{} ({fixed} fixed, {total} remaining).\n",
+                "Found {all} error{} ({fixed} fixed, {errors} remaining){and_hints}.\n",
                 plural(all)
             )
+        } else if errors == 0 {
+            format!("Found {hints} hint{}.\n", plural(hints))
         } else {
-            format!("Found {total} error{}.\n", plural(total))
+            format!("Found {errors} error{}{and_hints}.\n", plural(errors))
         };
         if safe > 0 && !args.fix {
             summary.push_str(&format!("[*] {safe} fixable with `--fix`.\n"));
@@ -274,7 +287,8 @@ fn run_inner(args: Args) -> Result<ExitCode, String> {
     if !loaded.errors.is_empty() {
         return Ok(ExitCode::from(2));
     }
-    Ok(if total > 0 && !args.exit_zero {
+    // Hints do not fail the run: a preview rule is not sure enough of itself to stop a build.
+    Ok(if errors > 0 && !args.exit_zero {
         ExitCode::from(1)
     } else {
         ExitCode::SUCCESS

@@ -8,6 +8,23 @@ records the data snapshot it bundles.
 
 ## [Unreleased]
 
+### Changed
+
+- **A preview rule reports a hint, not an error.** Preview means a rule's precision is not
+  established, so its findings are counted apart (`Found 3 errors and 12 hints.`), carry SARIF
+  level `note`, show as hints in an editor, and never on their own set a non-zero exit code. Only
+  the 31 stable rules can fail a run, which makes `--preview` safe to leave on in a build: you see
+  what the 24 unproven rules think without letting them stop you. A build that relied on
+  `--preview` failing will now pass; select the rules you want to enforce instead.
+- **The gate a rule leaves preview on is now data, and a test.** `docs/rules/precision.toml` holds
+  what has been measured about each rule's precision, with the adjudicated counts and a pointer to
+  the reasoning on the rule's page. `crates/gsc_check/tests/precision.rs` refuses a rule that
+  reports as an error while its record falls short of the gate (95% over at least 20 findings),
+  and refuses any drift between the hint and preview notions. `tools/precision.py` re-counts what
+  the rules report on the corpora and says which records no longer describe them, so a sample that
+  has gone stale is noticed instead of trusted; it cannot re-adjudicate, which stays hand work.
+  Seeded with T002, T003 and F001, the three rules that had been measured.
+
 ### Fixed
 
 - **A file the game's own compiler refuses is no longer linted.** A syntax error makes a GSC
@@ -34,6 +51,25 @@ records the data snapshot it bundles.
   catalogue lacks and is silent, as in every other partial catalogue. Its corpus goes from 768
   findings to 24, B001 482 to 0 and B002 15 to 6.
 
+- **F001 no longer reports a field that is set outside the scripts.** A typo is a slip in one
+  place, so a name three or more files read and none writes is not one: it is a map key-value pair
+  or a GDT or script-bundle key, which `struct::get_script_bundle` hands back as a field. That one
+  test was the whole of the rule's false reports: on the Black Ops III mod-tools source it
+  reported `vmtype`, a scene bundle key, eleven times across six files and nothing else, and now
+  reports nothing there; the decompiled corpus goes from 14 findings to 3.
+- **T002 asks for one edit, not two.** It allowed two from twelve characters up, and two edits in
+  a long name is nearly always two different words sharing a prefix: `enemy_spooked` against
+  `enemy_spotted`, `veh_heightmesh_min` against `_max`, `monkeys_grabbed` against `money_grabbed`.
+  Every true report of the adjudicated sample is a single edit. 67 findings to 54, precision from
+  72% to about 81%, and about 90% once the five reports caused by engine events no catalogue lists
+  yet are set aside. Eight of the twelve pairs dropped are named in the rule's false list; up to
+  four were true reports this measurement cannot judge either way.
+- **T003 needs an engine event catalogue before it reports.** Its premise is only ever "the
+  scripts send at most this much", and a script that re-notifies an engine event sends part of its
+  payload, so without a catalogue there is nothing to check that against. All four of its reports
+  were on the two games that have none: three false (WWII) and one true (Modern Warfare 2019).
+  It now reports nothing on the corpora, which is the honest state for a rule that cannot see what
+  it is judging, and becomes useful again when those games have a catalogue.
 - `tools/re/calibrate.py` puts a catalogue back as it found it when a run stops part way. It
   writes the file without the intrinsics `restore` took out, so that `gruff check` can read it,
   and only then decides whether to write them back; anything that failed in between left them

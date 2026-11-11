@@ -74,6 +74,12 @@ one layer and the command line another, applied in that order. In a layer, `sele
 the layers below enabled, `extend-select` adds and `ignore` removes. When several selectors match
 a code, the most specific wins (`ALL` < `B` < `B0` < `B001`); on a tie, `ignore` wins.
 
+A preview rule reports a **hint**: shown and counted apart (`Found 3 errors and 12 hints.`), SARIF
+level `note`, a hint in an editor, and never on its own a reason for a non-zero exit code. Only
+the stable rules fail a run, so `preview = true` is safe to leave on in a build. What a rule has
+to measure before it leaves preview is in `docs/rules/precision.toml`, checked by a test, and
+`tools/precision.py` says when a record stops matching what the rule reports.
+
 ## Suppression comments
 
 - `// gsc: ignore[B001, L001]` suppresses those codes on its line; alone on its line, it also
