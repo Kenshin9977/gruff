@@ -74,6 +74,7 @@
 - [Supported games and the dialect matrix](dialect-matrix.md)
 - [Hash families](hash-families.md)
 - [Hash packages](hash-packages.md)
+- [Hash recovery](hash-recovery.md)
 - [Script VM trace format](trace-format.md)
 - [Community corpus reports](community-reports.md)
 - [Legal notice and takedown requests](legal.md)

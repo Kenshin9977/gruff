@@ -39,6 +39,11 @@ pub struct Args {
     /// `$GSC_HASH_PACKAGES`. The output keeps the spellings of the scripts.
     #[arg(long = "hash-package", value_name = "PATH")]
     hash_packages: Vec<PathBuf>,
+    /// Also write UNKNOWNS.tsv and VOCAB.tsv: the hashes nothing names, what constrains each of
+    /// them, and the clear vocabulary of every file (`docs/hash-recovery.md`). Empty for a game
+    /// that does not hash identifiers.
+    #[arg(long)]
+    unknowns: bool,
     /// Whether the inputs are decompiler output.
     #[arg(long, value_enum, default_value = "auto")]
     decompiled: parse_cmd::Decompiled,
@@ -89,7 +94,7 @@ fn run_inner(args: &Args) -> Result<(), String> {
     }
     let index = gsc_index::index(&ws);
     let t = Instant::now();
-    let sizes = gsc_index::write::write_dir(&index, &args.out, &game)
+    let sizes = gsc_index::write::write_dir(&index, &args.out, &game, args.unknowns)
         .map_err(|e| format!("{}: {e}", args.out.display()))?;
     let write_time = t.elapsed();
     if !args.quiet {

@@ -7,7 +7,7 @@ use std::path::Path;
 use crate::extract::{EventClass, EventName};
 use crate::Index;
 
-/// The files `gruff index` writes, in order.
+/// The files `gruff index` writes, in order. The last two only with `unknowns`.
 pub const FILES: &[&str] = &[
     "SYMBOLS.tsv",
     "CALLS.tsv",
@@ -16,10 +16,12 @@ pub const FILES: &[&str] = &[
     "FIELDS.tsv",
     "INCLUDES.tsv",
     "README.md",
+    "UNKNOWNS.tsv",
+    "VOCAB.tsv",
 ];
 
 /// A TSV cell: no tab, no line break, never empty (`-`).
-fn cell(s: &str) -> String {
+pub(crate) fn cell(s: &str) -> String {
     if s.is_empty() {
         return "-".to_owned();
     }
@@ -300,6 +302,8 @@ pub fn readme(ix: &Index, rendered: &BTreeMap<&str, String>, game: &str) -> Stri
         ("EVENTS_SUMMARY.tsv", "one event: `event emit wait endon files receivers flags`, counts of sites. flags: no_script_emitter (waited or endon'd, never notified by a script: an engine event, or a typo), no_script_listener (notified, never waited), pattern."),
         ("FIELDS.tsv", "a field access: `object field op function at via_macro`. object: level, self, anim, game, other. op: read, write, write_index (`level.a[ i ] = x`). `.size` is left out. via_macro as in CALLS.tsv."),
         ("INCLUDES.tsv", "an import: `file directive target resolved at`. directive: using, include, insert, inline; resolved is the indexed file it names, or `?`."),
+        ("UNKNOWNS.tsv", "`--unknowns` only: a hash no package and no clear name of the workspace names, with what constrains it: `hash value role family bits sites files scope def_at namespace params flags object ops callers callees`. scope is the file it is defined in, else the one that uses it most; callers and callees list named neighbours only (8, then `+n`). Columns and method: docs/hash-recovery.md."),
+        ("VOCAB.tsv", "`--unknowns` only: `file kind source count tokens`, the names a file uses -- defines, calls, reads or notifies (kind: function, namespace, field, event, string, path). source: clear, what the file spells out; recovered, what a hash package or the workspace's own clear names give back for a hashed spelling. The vocabulary to draw candidates from for the unknowns whose scope is that file."),
     ];
     for (f, what) in rows {
         let _ = writeln!(o, "| `{f}` | {} | {what} |", n(f));
@@ -386,6 +390,18 @@ pub fn readme(ix: &Index, rendered: &BTreeMap<&str, String>, game: &str) -> Stri
             "Autoexec functions",
             "rg -P '\\tautoexec' SYMBOLS.tsv | cut -f2,3,4",
         ),
+        (
+            "Unnamed hashes of one file, most used first (--unknowns)",
+            "rg -P '\\tscripts/zm_common/zm_utility\\.gsc\\t' UNKNOWNS.tsv | cut -f1,3,6",
+        ),
+        (
+            "That file's vocabulary, to draw candidates from (--unknowns)",
+            "rg -P '^scripts/zm_common/zm_utility\\.gsc\\t' VOCAB.tsv | cut -f2,3,5",
+        ),
+        (
+            "Targets per family, i.e. the collision budget (--unknowns)",
+            "tail -n +2 UNKNOWNS.tsv | cut -f4,5 | sort | uniq -c",
+        ),
     ];
     for (q, cmd) in recipes {
         let _ = writeln!(o, "# {q}\n{cmd}");
@@ -416,7 +432,9 @@ pub fn readme(ix: &Index, rendered: &BTreeMap<&str, String>, game: &str) -> Stri
 }
 
 /// Render every file of the index. The tables render in parallel; the result is the same.
-pub fn render(ix: &Index, game: &str) -> BTreeMap<&'static str, String> {
+/// `unknowns` adds the two recovery tables of `docs/hash-recovery.md`, which cost a second pass
+/// over the sources and are empty for a game that does not hash identifiers.
+pub fn render(ix: &Index, game: &str, unknowns: bool) -> BTreeMap<&'static str, String> {
     type Render = fn(&Index) -> String;
     let tables: [(&'static str, Render); 6] = [
         ("SYMBOLS.tsv", symbols),
@@ -436,6 +454,10 @@ pub fn render(ix: &Index, game: &str) -> BTreeMap<&'static str, String> {
             .map(|(name, h)| (name, h.join().expect("a render thread panicked")))
             .collect()
     });
+    if unknowns {
+        m.insert("UNKNOWNS.tsv", crate::unknowns::unknowns(ix));
+        m.insert("VOCAB.tsv", crate::unknowns::vocab(ix));
+    }
     let readme = readme(ix, &m, game);
     m.insert("README.md", readme);
     m
@@ -450,10 +472,15 @@ pub struct Written {
 }
 
 /// Write every file of the index into `dir` (created if missing).
-pub fn write_dir(ix: &Index, dir: &Path, game: &str) -> std::io::Result<Vec<Written>> {
+pub fn write_dir(
+    ix: &Index,
+    dir: &Path,
+    game: &str,
+    unknowns: bool,
+) -> std::io::Result<Vec<Written>> {
     std::fs::create_dir_all(dir)?;
     let mut out = Vec::new();
-    for (name, text) in render(ix, game) {
+    for (name, text) in render(ix, game, unknowns) {
         std::fs::write(dir.join(name), text.as_bytes())?;
         out.push(Written {
             name: name.to_owned(),

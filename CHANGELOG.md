@@ -10,6 +10,18 @@ records the data snapshot it bundles.
 
 ### Added
 
+- **`gruff index --unknowns`**, two tables for recovering the names a game hashed away.
+  `UNKNOWNS.tsv` holds one row per hash that no package and no clear name of the workspace
+  names, with what constrains it: the file it belongs to, its definition site, namespace,
+  signature and flags, the object and operations of a field, the receivers and operations of
+  an event, the named functions it sits in, and its named callers and callees.
+  `VOCAB.tsv` holds the names each file **uses** -- defines, calls, reads or notifies -- both
+  the ones it spells out and the ones a package gives back for a hashed spelling, which on a
+  decompiled corpus is the larger half. Together they let a candidate
+  generator work one scope at a time, which is the whole game: expected false hits are
+  `candidates * targets / 2^bits`, and BO4 hashes its script identifiers on **32 bits**, where
+  a corpus-wide pass drowns and a per-file pass does not. `docs/hash-recovery.md` gives the
+  columns and the measurements.
 - **`gruff hash-package fetch`**, the one command of the toolchain that uses the network. It
   clones or updates the `[[hash-source]]` repositories declared in `gruff.toml` and writes a
   package from each file they name, with a header recording the repository, the revision and the
