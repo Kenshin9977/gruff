@@ -6,9 +6,74 @@ All notable changes to Gruff are recorded here. The format follows
 release may add stable rules or change defaults. gruff-data is versioned on its own; each release
 records the data snapshot it bundles.
 
-## [Unreleased]
+## [0.4.0] - 2026-11-13
+
+The release that makes Gruff usable on the games which hash their identifiers, and quiet
+enough to run over a whole corpus. The script VMs of the x64 Infinity Ward games measured offline,
+builtins split per game mode, and two questions closed by measurement rather than by code: whether
+block comments nest (they do not, in any of the four games whose official compiler can be asked)
+and whether B001 should speak at all when a mod is opened without the game's scripts (it should
+not). Four systematic false positives take the corpora from 3,917 findings to 423, and a rule still
+in preview now reports a hint, so only a measured rule can fail a build. Hash packages gain a fetch
+command and a home directory every command reads, and `gruff index --unknowns` writes what a name
+recovery pass needs. No hash of a game executable is left in the data or the reports. gruff-data
+snapshot `48cb34b`.
 
 ### Added
+
+- **VM semantics of the x64 IW games.** `tools/re/vm/iw_run.py`, `iw_suite.py`, `iw_facts.py`
+  and `iwvm.py` run the conformance suite in the script VMs of Modern Warfare 3 (the x64
+  re-release), Ghosts, Advanced Warfare, Modern Warfare Remastered and Infinite Warfare, emulated
+  offline (gsc-tool compiles, the game's own loader links): 44-45 PASS and 12-13 UNSUPPORTED
+  each, `conformance/{iw5,iw6,s1,h1,iw7}/`, report `tools/re/reports/vm_iw.md`. Runtime behaviour
+  is IW3's; childthread inherits its starter's endons and outlives it; the loop guard kills a
+  thread silently after 5 s; S1 and H1 have `waitframe()`. Bare-call resolution is decided at
+  compile time in these games and stays unmeasured. Modern Warfare 2's x64 re-release has no
+  compiler or loader (its scripts are compiled into the executable) and is not run.
+  `tools/re/vm/pycrt.py` does a dynamically linked build's C runtime imports in Python.
+- **Builtins per game mode.** Games that ship one executable per mode (Black Ops II campaign,
+  multiplayer and zombies; Black Ops; Modern Warfare 3, Advanced Warfare and Modern Warfare
+  Remastered campaign and multiplayer) register different builtins in each. Every file now has
+  a game mode, from its path (`maps/mp/` multiplayer, zombies files by name, other `maps/` and
+  `clientscripts/` files campaign, shared folders none; `docs/modes.md`) or from `gruff.toml`
+  (`game-mode`, `[game-modes]` globs). B001, B002, B003, B005, N001's `::f`, name resolution,
+  hover and completion see only the builtins of the file's mode, and B002 holds a file to its
+  own executable's arity where the executables differ (Black Ops II `playfx`: 2 to 4 arguments
+  in multiplayer, 2 to 6 in the campaign). B001 names a builtin of another mode ("`x` is a
+  builtin function of mp, zm scripts only"). Needs gruff-data with `modes`. On the corpora:
+  Black Ops II B002 16 to 8 (the campaign's own `spawnfx`, `playloopedfx` and `playfx` calls
+  among them), Black Ops B002 11 to 10; World at War B001 0 to 1,355, its catalogue now being
+  complete for campaign and zombies scripts. Those are calls to functions no file of the corpus
+  defines although every import resolves: 1,319 `destructible_*` builders in the Call of Duty 4
+  leftover `maps/_destructible_types.gsc` (World at War's `maps/_destructible.gsc` has none of
+  them), 31 Der Riese calls to `maps/_zombiemode_utility` functions of a later patch than the
+  corpus's copy, and 5 in `maps/_ai_supplements.gsc`, a leftover whose trailing `*/` the game's
+  own compiler refuses, so the game never loads the file at all (measured; see the block-comment
+  entry below).
+- B001 no longer reports a name that no builtin has when the file or a file it imports has an
+  import missing from the workspace (a mod opened without the game's scripts): the name may be a
+  function of the missing file, and I003 reports the import once a library root is set. Builtins
+  keep their kind, VM, mode and arity checks. Same in every game (T7 reported them before too).
+  Corpora: Black Ops B001 17 to 12, Black Ops mod tools 623 to 478, Black Ops II 4 to 3.
+- **B006 builtin-shadowed-function** (preview, `builtin-strict` games: Black Ops II): a script
+  function named like a builtin of its mode, whose bare calls in its file and in the files that
+  `#include` it link to the builtin instead. 10 functions on the game's 3,864 scripts (15
+  without the game modes, 5 of them campaign functions such as `spawnfx`).
+- `tools/re/modes.py`: the `modes`, `mode_args`, `[extraction] modes` and (through
+  `calibrate.set_coverage`) `complete_modes` of the catalogues, from one extraction per
+  executable (T5, T6, IW5, S1, H1), run after any build like `calibrate.py`;
+  `reports/modes.md`.
+- **Block comments do not nest, measured.** `conformance/{t4,iw3,t5,t7}/nested_block_comment.gsc`
+  and `conformance/t4/stray_block_comment_close.gsc` ask four games, each through its own official
+  compiler or linker: `/* a /* b */ */` is refused in all four, and so is a lone `*/`. The Black
+  Ops III linker names what it lexed at the second `*/` ("syntax error, unexpected
+  TOKEN_MULTIPLY"), so the comment had already closed at the first one. The question came from a
+  World at War script that reads as if comments nested; they do not, and such a file is refused at
+  load rather than read as commented out. Gruff's lexer already ended a block comment at the first
+  `*/`, so it is unchanged: the measurement closes the question instead of opening work.
+- CI: the release workflow reads gruff-data over SSH when the secret `GRUFF_DATA_SSH_KEY` holds a
+  read-only deploy key of that repository, which is what a private gruff-data needs. Unset, the
+  checkout is token-authenticated as before, which is what a public one needs.
 
 - **`gruff index --unknowns`**, two tables for recovering the names a game hashed away.
   `UNKNOWNS.tsv` holds one row per hash that no package and no clear name of the workspace
@@ -46,6 +111,17 @@ records the data snapshot it bundles.
   ten unnamed hashes up so that a stray hashed literal does not nag.
 
 ### Changed
+
+- **V002 thread-call-value** now reports in MW3, Ghosts, AW, MWR and IW, whose profiles measure
+  `thread_call_value = "callee-result"` (decompiled corpora: 68, 51, 52, 6 and 68 findings).
+- **No hash of a game executable in the data any more.** A `[meta] dump` of an event catalogue or
+  a semantics file named the executable and its sha256; it now names the file only, and the event
+  and semantics schemas no longer accept a digest. Which build an extraction read stays in its own
+  output under `tools/re/out/`, which is never committed, so nothing is lost for replaying a run.
+  `events_build.py` and the five `*_facts.py` generators write the shorter form, the `reports/`
+  that quoted a digest no longer do, and `tools/validate.py` passes on all 24 profiles, 19 builtin,
+  1 field, 15 event and 12 semantics files. The reverse-engineering addresses in the data
+  (`handler_rva` and the `evidence` prose) are untouched and still an open question.
 
 - **A preview rule reports a hint, not an error.** Preview means a rule's precision is not
   established, so its findings are counted apart (`Found 3 errors and 12 hints.`), carry SARIF
@@ -120,83 +196,6 @@ went was a handful of systematic false positives, not a rule's reach. Five corpo
 almost all of it: World at War (1,368 to 45), Modern Warfare III's campaign (768 to 24), Black
 Ops 4 (536 to 27), Cold War (491 to 6) and Modern Warfare III multiplayer (467 to 35); Call of
 Duty loses one finding, in a file it cannot parse.
-
-## [0.4.0] - 2026-11-11
-
-The script VMs of the x64 Infinity Ward games measured offline, builtins split per game mode, and
-two questions closed by measurement rather than by code: whether block comments nest (they do not,
-in any of the four games whose official compiler can be asked) and whether B001 should speak at all
-when a mod is opened without the game's scripts (it should not). No hash of a game executable is
-left in the data. gruff-data snapshot `ae83b5a`.
-
-### Added
-
-- **VM semantics of the x64 IW games.** `tools/re/vm/iw_run.py`, `iw_suite.py`, `iw_facts.py`
-  and `iwvm.py` run the conformance suite in the script VMs of Modern Warfare 3 (the x64
-  re-release), Ghosts, Advanced Warfare, Modern Warfare Remastered and Infinite Warfare, emulated
-  offline (gsc-tool compiles, the game's own loader links): 44-45 PASS and 12-13 UNSUPPORTED
-  each, `conformance/{iw5,iw6,s1,h1,iw7}/`, report `tools/re/reports/vm_iw.md`. Runtime behaviour
-  is IW3's; childthread inherits its starter's endons and outlives it; the loop guard kills a
-  thread silently after 5 s; S1 and H1 have `waitframe()`. Bare-call resolution is decided at
-  compile time in these games and stays unmeasured. Modern Warfare 2's x64 re-release has no
-  compiler or loader (its scripts are compiled into the executable) and is not run.
-  `tools/re/vm/pycrt.py` does a dynamically linked build's C runtime imports in Python.
-- **Builtins per game mode.** Games that ship one executable per mode (Black Ops II campaign,
-  multiplayer and zombies; Black Ops; Modern Warfare 3, Advanced Warfare and Modern Warfare
-  Remastered campaign and multiplayer) register different builtins in each. Every file now has
-  a game mode, from its path (`maps/mp/` multiplayer, zombies files by name, other `maps/` and
-  `clientscripts/` files campaign, shared folders none; `docs/modes.md`) or from `gruff.toml`
-  (`game-mode`, `[game-modes]` globs). B001, B002, B003, B005, N001's `::f`, name resolution,
-  hover and completion see only the builtins of the file's mode, and B002 holds a file to its
-  own executable's arity where the executables differ (Black Ops II `playfx`: 2 to 4 arguments
-  in multiplayer, 2 to 6 in the campaign). B001 names a builtin of another mode ("`x` is a
-  builtin function of mp, zm scripts only"). Needs gruff-data with `modes`. On the corpora:
-  Black Ops II B002 16 to 8 (the campaign's own `spawnfx`, `playloopedfx` and `playfx` calls
-  among them), Black Ops B002 11 to 10; World at War B001 0 to 1,355, its catalogue now being
-  complete for campaign and zombies scripts. Those are calls to functions no file of the corpus
-  defines although every import resolves: 1,319 `destructible_*` builders in the Call of Duty 4
-  leftover `maps/_destructible_types.gsc` (World at War's `maps/_destructible.gsc` has none of
-  them), 31 Der Riese calls to `maps/_zombiemode_utility` functions of a later patch than the
-  corpus's copy, and 5 in `maps/_ai_supplements.gsc`, a leftover whose trailing `*/` the game's
-  own compiler refuses, so the game never loads the file at all (measured; see the block-comment
-  entry below).
-- B001 no longer reports a name that no builtin has when the file or a file it imports has an
-  import missing from the workspace (a mod opened without the game's scripts): the name may be a
-  function of the missing file, and I003 reports the import once a library root is set. Builtins
-  keep their kind, VM, mode and arity checks. Same in every game (T7 reported them before too).
-  Corpora: Black Ops B001 17 to 12, Black Ops mod tools 623 to 478, Black Ops II 4 to 3.
-- **B006 builtin-shadowed-function** (preview, `builtin-strict` games: Black Ops II): a script
-  function named like a builtin of its mode, whose bare calls in its file and in the files that
-  `#include` it link to the builtin instead. 10 functions on the game's 3,864 scripts (15
-  without the game modes, 5 of them campaign functions such as `spawnfx`).
-- `tools/re/modes.py`: the `modes`, `mode_args`, `[extraction] modes` and (through
-  `calibrate.set_coverage`) `complete_modes` of the catalogues, from one extraction per
-  executable (T5, T6, IW5, S1, H1), run after any build like `calibrate.py`;
-  `reports/modes.md`.
-- **Block comments do not nest, measured.** `conformance/{t4,iw3,t5,t7}/nested_block_comment.gsc`
-  and `conformance/t4/stray_block_comment_close.gsc` ask four games, each through its own official
-  compiler or linker: `/* a /* b */ */` is refused in all four, and so is a lone `*/`. The Black
-  Ops III linker names what it lexed at the second `*/` ("syntax error, unexpected
-  TOKEN_MULTIPLY"), so the comment had already closed at the first one. The question came from a
-  World at War script that reads as if comments nested; they do not, and such a file is refused at
-  load rather than read as commented out. Gruff's lexer already ended a block comment at the first
-  `*/`, so it is unchanged: the measurement closes the question instead of opening work.
-- CI: the release workflow reads gruff-data over SSH when the secret `GRUFF_DATA_SSH_KEY` holds a
-  read-only deploy key of that repository, which is what a private gruff-data needs. Unset, the
-  checkout is token-authenticated as before, which is what a public one needs.
-
-### Changed
-
-- **V002 thread-call-value** now reports in MW3, Ghosts, AW, MWR and IW, whose profiles measure
-  `thread_call_value = "callee-result"` (decompiled corpora: 68, 51, 52, 6 and 68 findings).
-- **No hash of a game executable in the data any more.** A `[meta] dump` of an event catalogue or
-  a semantics file named the executable and its sha256; it now names the file only, and the event
-  and semantics schemas no longer accept a digest. Which build an extraction read stays in its own
-  output under `tools/re/out/`, which is never committed, so nothing is lost for replaying a run.
-  `events_build.py` and the five `*_facts.py` generators write the shorter form, the `reports/`
-  that quoted a digest no longer do, and `tools/validate.py` passes on all 24 profiles, 19 builtin,
-  1 field, 15 event and 12 semantics files. The reverse-engineering addresses in the data
-  (`handler_rva` and the `evidence` prose) are untouched and still an open question.
 
 ## [0.3.0] - 2026-11-07
 
@@ -556,7 +555,7 @@ First public release.
 - No thread and event (`T`) rules yet; the event index is there for them.
 
 [Unreleased]: https://github.com/Kenshin9977/gruff/compare/v0.4.0...HEAD
-[0.4.0]: https://github.com/Kenshin9977/gruff/compare/v0.3.0...v0.4.0
+[0.4.0]: https://github.com/Kenshin9977/gruff/releases/tag/v0.4.0
 [0.3.0]: https://github.com/Kenshin9977/gruff/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Kenshin9977/gruff/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Kenshin9977/gruff/releases/tag/v0.1.0
