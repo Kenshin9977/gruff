@@ -17,7 +17,7 @@ not). Four systematic false positives take the corpora from 3,917 findings to 42
 in preview now reports a hint, so only a measured rule can fail a build. Hash packages gain a fetch
 command and a home directory every command reads, and `gruff index --unknowns` writes what a name
 recovery pass needs. No hash of a game executable is left in the data or the reports. gruff-data
-snapshot `48cb34b`.
+snapshot `e16e33d`.
 
 ### Added
 
@@ -200,7 +200,7 @@ Duty loses one finding, in a file it cannot parse.
 ## [0.3.0] - 2026-11-07
 
 The first release under the Gruff name: the rename, GSCode editor parity, 25 new rules and VM
-semantics measured in seven games' emulated VMs. gruff-data snapshot `1c62a68`.
+semantics measured in seven games' emulated VMs. gruff-data snapshot `9fb9a06`.
 
 ### Added
 
