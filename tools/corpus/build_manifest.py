@@ -138,6 +138,7 @@ def main():
             with open(os.path.join(meta, "run.json"), encoding="utf-8") as f:
                 run = json.load(f)
         windows = ZoneWindows(os.path.join(meta, "export.log"))
+        redec = read_redecompiled(os.path.join(meta, "redecompiled.tsv"))
         for kind in KINDS:
             kdir = os.path.join(gdir, kind)
             if not os.path.isdir(kdir):
@@ -164,6 +165,9 @@ def main():
                         st["per_zone"][zone] = st["per_zone"].get(zone, 0) + 1
                     if status == "bytecode":
                         st["bytecode_files"].append(rel)
+                    if rel in redec:  # written by redecompile.py beside the bytecode, with another gsc-tool
+                        rows.append((key, kind, rel, sha256(p), s.st_size, zone, "gsc-tool (redecompiled)", redec[rel], status))
+                        continue
                     rows.append((key, kind, rel, sha256(p), s.st_size, zone, dec if status != "bytecode" else dec + " (failed)",
                                  ver, status))
 
@@ -192,6 +196,19 @@ def main():
 
     write_summary(corpus, cfg, games, stats, ext_stats, acts_v, gsct_v, len(rows))
     print(f"MANIFEST.tsv: {len(rows)} rows; SUMMARY.md written in {corpus}")
+
+
+def read_redecompiled(path):
+    """redecompile.py's log: each .gsc it wrote (corpus-relative path) -> the gsc-tool version used."""
+    out = {}
+    if os.path.exists(path):
+        with open(path, encoding="utf-8") as f:
+            next(f, None)
+            for line in f:
+                c = line.rstrip("\r\n").split("\t")
+                if len(c) >= 6 and c[5] == "decompiled" and c[0].lower().endswith("bin"):
+                    out[c[0][:-3]] = c[3]
+    return out
 
 
 def fmt_size(n):

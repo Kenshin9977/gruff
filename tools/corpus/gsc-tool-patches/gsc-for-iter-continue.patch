@@ -1,0 +1,109 @@
+diff --git a/include/xsk/gsc/decompiler.hpp b/include/xsk/gsc/decompiler.hpp
+index 6b29ff6..d5fe962 100644
+--- a/include/xsk/gsc/decompiler.hpp
++++ b/include/xsk/gsc/decompiler.hpp
+@@ -21,6 +21,7 @@ private:
+     std::vector<std::string> tern_labels_;
+     std::stack<node::ptr> stack_;
+     bool in_waittill_{};
++    bool for_iter_{};
+     locjmp locs_;
+ 
+ public:
+@@ -41,6 +42,7 @@ private:
+     auto decompile_ifelse(stmt_list& stm, usize begin, usize end) -> void;
+     auto decompile_ifelse_end(stmt_list& stm, usize begin, usize end) -> void;
+     auto decompile_if_last(stmt_list& stm, usize begin, usize end) -> void;
++    auto inf_loop_iter(stmt_list const& stm, usize begin, usize end) -> bool;
+     auto decompile_inf(stmt_list& stm, usize begin, usize end) -> void;
+     auto decompile_loop(stmt_list& stm, usize begin, usize end) -> void;
+     auto decompile_while(stmt_list& stm, usize begin, usize end) -> void;
+diff --git a/src/gsc/decompiler.cpp b/src/gsc/decompiler.cpp
+index 81a330d..d2409f1 100644
+--- a/src/gsc/decompiler.cpp
++++ b/src/gsc/decompiler.cpp
+@@ -21,7 +21,27 @@ auto decompiler::decompile(assembly const& data) -> program::ptr
+ 
+     for (auto const& func : data.functions)
+     {
+-        decompile_function(*func);
++        try
++        {
++            decompile_function(*func);
++        }
++        catch (decomp_error const&)
++        {
++            // Retry once reading a jump to the statement before an unconditional jumpback as a
++            // 'continue' of a 'for (;; <stmt>)' loop (S2 'for (;; wait x)'). Only functions the
++            // default reading cannot decompile take this path, so every other output is unchanged.
++            for_iter_ = true;
++            try
++            {
++                decompile_function(*func);
++            }
++            catch (...)
++            {
++                for_iter_ = false;
++                throw;
++            }
++            for_iter_ = false;
++        }
+     }
+ 
+     return std::move(program_);
+@@ -2015,18 +2035,44 @@ auto decompiler::decompile_if_last(stmt_list& stm, usize begin, usize end) -> vo
+     stm.list.insert(stm.list.begin() + begin, stmt_if::make(loc, std::move(test), stmt_comp::make(loc, std::move(body))));
+ }
+ 
++auto decompiler::inf_loop_iter(stmt_list const& stm, usize begin, usize end) -> bool
++{
++    // end is the jumpback; the candidate iterator is the statement just before it, reached by a
++    // jump from inside the loop body (a 'continue' that must still run the iterator).
++    if (!for_iter_ || end < begin + 2)
++        return false;
++
++    auto const& iter = stm.list.at(end - 1);
++
++    if (iter->is<stmt_jmp>() || iter->is<stmt_jmp_cond>() || iter->is<stmt_jmp_back>() || iter->is<stmt_jmp_switch>() || iter->is<stmt_return>())
++        return false;
++
++    return find_location_reference(stm, begin, end - 1, iter->label());
++}
++
+ auto decompiler::decompile_inf(stmt_list& stm, usize begin, usize end) -> void
+ {
+     auto save = locs_;
++    auto const has_iter = inf_loop_iter(stm, begin, end);
+     locs_.last = false;
+     locs_.brk = last_location_index(stm, end) ? locs_.end : stm.list[end + 1]->label();
+-    locs_.end = stm.list[end]->label();
+-    locs_.cnt = stm.list[end]->label();
++    locs_.end = stm.list[has_iter ? end - 1 : end]->label();
++    locs_.cnt = stm.list[has_iter ? end - 1 : end]->label();
+ 
+     auto loc = stm.list[begin]->loc();
+ 
+     stm.list.erase(stm.list.begin() + end);
+ 
++    stmt::ptr iter = stmt_empty::make(loc);
++
++    if (has_iter)
++    {
++        // kept as the bare statement, not a stmt_list: the printer indents a list
++        end--;
++        iter = std::move(stm.list[end]);
++        stm.list.erase(stm.list.begin() + end);
++    }
++
+     auto body = stmt_list::make(loc);
+ 
+     for (auto i = begin; i < end; i++)
+@@ -2037,7 +2083,7 @@ auto decompiler::decompile_inf(stmt_list& stm, usize begin, usize end) -> void
+ 
+     decompile_statements(*body);
+     locs_ = save;
+-    stm.list.insert(stm.list.begin() + begin, stmt_for::make(loc, stmt_empty::make(loc), expr_empty::make(loc), stmt_empty::make(loc), stmt_comp::make(loc, std::move(body))));
++    stm.list.insert(stm.list.begin() + begin, stmt_for::make(loc, stmt_empty::make(loc), expr_empty::make(loc), std::move(iter), stmt_comp::make(loc, std::move(body))));
+ }
+ 
+ auto decompiler::decompile_loop(stmt_list& stm, usize begin, usize end) -> void

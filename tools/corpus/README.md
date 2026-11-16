@@ -86,3 +86,24 @@ bytecode), `decompiler_version`, `status` (`source`, `decompiled`, `bytecode`, `
 "X script: ... written" line, and the file's write time inside one of them. It is the zone that
 wrote the kept version. External corpora (`external` in the config: the renamed BO3 tree
 `t7-src`, the frozen BO7 archive) are listed by absolute path and never copied.
+
+## Scripts the decompiler failed on
+
+`redecompile.py` runs another gsc-tool build on a game's bytecode files and writes the `.gsc` beside
+each one it now decompiles (never replacing a file, never removing the bytecode; the write time is
+copied so the origin zone survives), logging every attempt in `<game>/_export/redecompiled.tsv`,
+which `build_manifest.py` reads (decompiler `gsc-tool (redecompiled)`).
+
+```
+python -I redecompile.py --game s2 --gsc-tool <patched gsc-tool.exe>
+```
+
+`gsc-tool-patches/gsc-for-iter-continue.patch` applies to xensik/gsc-tool 4ec71f9 (the source of
+1.5.1). The retail S2 compiler emits `for (;; wait x)` loops whose `continue` jumps to the `wait`;
+gsc-tool reads every unconditional loop as `for (;;)` with the continue on the jumpback, so those
+jumps look like if/else exits and the function fails ("location 'loc_...' not found"). The patch
+retries a failing function once, reading the statement before the jumpback as the loop's iterator
+when the body jumps to it; other functions decompile as before. S2: 3 of 8 failures fixed (1357,
+mp_zombie_island_fog_behavior, zombie_assassin_agent_overrides); the recompiled output matches the
+retail control flow. Build: deps (zlib, cxxopts, catch2) into `deps/`, `premake5 vs2022`, MSBuild
+Release x64 of `xsk-tool`; the local build is kept in `local/gsc-tool-s2fix/` (gitignored).
