@@ -7,7 +7,7 @@
 //!
 //! The index is meant for agents with a small context: one fact per line, a header line, paths
 //! relative to the indexed root. See the generated `README.md` for the recipes. [`unknowns`] adds
-//! the two optional tables of `docs/hash-recovery.md`.
+//! the three optional tables of `docs/hash-recovery.md`.
 
 pub mod extract;
 pub mod macros;

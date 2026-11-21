@@ -18,6 +18,7 @@ pub const FILES: &[&str] = &[
     "README.md",
     "UNKNOWNS.tsv",
     "VOCAB.tsv",
+    "STRINGS.tsv",
 ];
 
 /// A TSV cell: no tab, no line break, never empty (`-`).
@@ -302,7 +303,8 @@ pub fn readme(ix: &Index, rendered: &BTreeMap<&str, String>, game: &str) -> Stri
         ("EVENTS_SUMMARY.tsv", "one event: `event emit wait endon files receivers flags`, counts of sites. flags: no_script_emitter (waited or endon'd, never notified by a script: an engine event, or a typo), no_script_listener (notified, never waited), pattern."),
         ("FIELDS.tsv", "a field access: `object field op function at via_macro`. object: level, self, anim, game, other. op: read, write, write_index (`level.a[ i ] = x`). `.size` is left out. via_macro as in CALLS.tsv."),
         ("INCLUDES.tsv", "an import: `file directive target resolved at`. directive: using, include, insert, inline; resolved is the indexed file it names, or `?`."),
-        ("UNKNOWNS.tsv", "`--unknowns` only: a hash no package and no clear name of the workspace names, with what constrains it: `hash value role family bits sites files scope def_at namespace params flags object ops callers callees`. scope is the file it is defined in, else the one that uses it most; callers and callees list named neighbours only (8, then `+n`). Columns and method: docs/hash-recovery.md."),
+        ("UNKNOWNS.tsv", "`--unknowns` only: a hash no package and no clear name of the workspace names, with what constrains it: `hash value role family bits sites files scope def_at namespace params flags object ops in_functions callers callees handed_to`. scope is the file it is defined in, else the one that uses it most; callers and callees list named neighbours only (8, then `+n`); handed_to is what the code does with it (`playfx#1:4` the second argument of playfx, `[_effect]:9` a key of that table, `=weapon:3` an assignment, `==state:7` a comparison). Columns and method: docs/hash-recovery.md."),
+        ("STRINGS.tsv", "`--unknowns` only: `name handed_to`, every string a file writes in clear or a hash package names, with what it is handed to (the `handed_to` column of UNKNOWNS.tsv): the names an unknown string of the same use can be modelled on."),
         ("VOCAB.tsv", "`--unknowns` only: `file kind source count tokens`, the names a file uses -- defines, calls, reads or notifies (kind: function, namespace, field, event, string, path). source: clear, what the file spells out; recovered, what a hash package or the workspace's own clear names give back for a hashed spelling. The vocabulary to draw candidates from for the unknowns whose scope is that file."),
     ];
     for (f, what) in rows {
@@ -432,7 +434,7 @@ pub fn readme(ix: &Index, rendered: &BTreeMap<&str, String>, game: &str) -> Stri
 }
 
 /// Render every file of the index. The tables render in parallel; the result is the same.
-/// `unknowns` adds the two recovery tables of `docs/hash-recovery.md`, which cost a second pass
+/// `unknowns` adds the three recovery tables of `docs/hash-recovery.md`, which cost a second pass
 /// over the sources and are empty for a game that does not hash identifiers.
 pub fn render(ix: &Index, game: &str, unknowns: bool) -> BTreeMap<&'static str, String> {
     type Render = fn(&Index) -> String;
@@ -455,7 +457,9 @@ pub fn render(ix: &Index, game: &str, unknowns: bool) -> BTreeMap<&'static str, 
             .collect()
     });
     if unknowns {
-        m.insert("UNKNOWNS.tsv", crate::unknowns::unknowns(ix));
+        let (unknowns, strings) = crate::unknowns::unknowns_and_strings(ix);
+        m.insert("UNKNOWNS.tsv", unknowns);
+        m.insert("STRINGS.tsv", strings);
         m.insert("VOCAB.tsv", crate::unknowns::vocab(ix));
     }
     let readme = readme(ix, &m, game);

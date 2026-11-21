@@ -1,5 +1,6 @@
-//! `UNKNOWNS.tsv` and `VOCAB.tsv`: the hashes nothing names, with the context that constrains
-//! them, and the clear vocabulary of each file. Columns and method: `docs/hash-recovery.md`.
+//! `UNKNOWNS.tsv`, `VOCAB.tsv` and `STRINGS.tsv`: the hashes nothing names, with the context that
+//! constrains them, the clear vocabulary of each file, and the clear strings of each use. Columns
+//! and method: `docs/hash-recovery.md`.
 //!
 //! The rows are a pure function of the inputs: every list is sorted and truncated the same way
 //! whatever the thread count.
@@ -34,16 +35,85 @@ fn string_value(scheme: &Scheme, inner: &str) -> Option<u64> {
     None
 }
 
-/// One file's view of one hash: occurrences, and the definitions they sit in.
-type Hits = (usize, BTreeSet<u32>);
+/// One file's view of one hash: occurrences, the definitions they sit in, and for a string what
+/// it is handed to (`Use`).
+type Hits = (usize, BTreeSet<u32>, BTreeMap<Use, usize>);
 
-/// Where a hash occurs: how often, in which files (index into `Index::files`), and in which
-/// definitions of them (`(file, definition)`, sorted).
+/// What a string literal is handed to, read off the tokens around it. The written spelling is
+/// kept and named at output time, so a hashed callee reads as its recovered name.
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
+enum Use {
+    /// The `n`th argument (from 0) of a call to this function: `playfx(#"x", ...)` is `playfx#0`.
+    Arg(String, u32),
+    /// The key of an index into this field or variable: `level._effect[#"x"]` is `[_effect]`.
+    Key(String),
+    /// Assigned to this field or variable: `self.weapon = #"x"` is `=weapon`.
+    Set(String),
+    /// Compared with this field or variable: `self.state == #"x"` is `==state`.
+    Cmp(String),
+}
+
+/// Where a hash occurs: how often, in which files (index into `Index::files`), in which
+/// definitions of them (`(file, definition)`, sorted), and for a string what it is handed to.
 #[derive(Default)]
 struct Seen {
     sites: usize,
     files: BTreeMap<usize, usize>,
     in_defs: Vec<(usize, u32)>,
+    uses: BTreeMap<Use, usize>,
+}
+
+/// Follows calls through a token stream, to say what a string literal is handed to.
+struct CallTrack<'a> {
+    /// One frame per open parenthesis: the callee and the argument being written, or `None`
+    /// for a grouping or a call through `[[ ]]`.
+    frames: Vec<Option<(&'a str, u32)>>,
+    /// The last two significant tokens, most recent last.
+    prev: [(SyntaxKind, &'a str); 2],
+}
+
+impl<'a> CallTrack<'a> {
+    fn new() -> Self {
+        CallTrack {
+            frames: Vec::new(),
+            prev: [(SyntaxKind::EOF, ""); 2],
+        }
+    }
+
+    /// What a string literal standing here is handed to, if anything says so.
+    fn use_here(&self) -> Option<(char, &'a str, u32)> {
+        let [(k2, s2), (k1, _)] = self.prev;
+        match k1 {
+            SyntaxKind::L_PAREN | SyntaxKind::COMMA => match self.frames.last() {
+                Some(Some((callee, n))) => Some(('a', *callee, *n)),
+                _ => None,
+            },
+            SyntaxKind::L_BRACK if k2 == SyntaxKind::IDENT => Some(('k', s2, 0)),
+            SyntaxKind::EQ if k2 == SyntaxKind::IDENT => Some(('s', s2, 0)),
+            SyntaxKind::EQ2 | SyntaxKind::NEQ if k2 == SyntaxKind::IDENT => Some(('c', s2, 0)),
+            _ => None,
+        }
+    }
+
+    fn step(&mut self, kind: SyntaxKind, text: &'a str) {
+        match kind {
+            SyntaxKind::L_PAREN => {
+                let (k1, s1) = self.prev[1];
+                self.frames
+                    .push((k1 == SyntaxKind::IDENT).then_some((s1, 0)));
+            }
+            SyntaxKind::COMMA => {
+                if let Some(Some((_, n))) = self.frames.last_mut() {
+                    *n += 1;
+                }
+            }
+            SyntaxKind::R_PAREN => {
+                self.frames.pop();
+            }
+            _ => {}
+        }
+        self.prev = [self.prev[1], (kind, text)];
+    }
 }
 
 /// What the definition of a hashed function or class says about it.
@@ -63,6 +133,34 @@ fn counted<K: std::fmt::Display + Ord>(m: &BTreeMap<K, usize>) -> String {
         .map(|(k, n)| format!("{k}:{n}"))
         .collect::<Vec<_>>()
         .join(",")
+}
+
+/// What a string is handed to, named, most frequent first: `playfx#0:3,[_effect]:1`. At most
+/// [`MAX_LIST`] entries, then `+n` for the rest.
+fn handed_to(uses: &BTreeMap<Use, usize>, name: impl Fn(Role, &str) -> String) -> String {
+    let mut m: BTreeMap<String, usize> = BTreeMap::new();
+    for (u, n) in uses {
+        let k = match u {
+            Use::Arg(f, i) => format!("{}#{i}", name(Role::Function, f)),
+            Use::Key(v) => format!("[{}]", name(Role::Var, v)),
+            Use::Set(v) => format!("={}", name(Role::Var, v)),
+            Use::Cmp(v) => format!("=={}", name(Role::Var, v)),
+        };
+        *m.entry(k).or_default() += n;
+    }
+    let mut v: Vec<_> = m.into_iter().collect();
+    v.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
+    let rest = v.len().saturating_sub(MAX_LIST);
+    let mut s = v
+        .iter()
+        .take(MAX_LIST)
+        .map(|(k, n)| format!("{k}:{n}"))
+        .collect::<Vec<_>>()
+        .join(",");
+    if rest > 0 {
+        s.push_str(&format!(",+{rest}"));
+    }
+    s
 }
 
 /// The first [`MAX_LIST`] names of a set, comma-separated, with `+n` for the rest.
@@ -118,15 +216,33 @@ fn is_word(s: &str) -> bool {
 /// One row per hash of the workspace that neither the hash packages nor the workspace's own clear
 /// names name, with where it sits and which named symbols surround it.
 pub fn unknowns(ix: &Index) -> String {
+    unknowns_and_strings(ix).0
+}
+
+/// `UseOf` a call-tracking reading.
+fn use_of((c, w, n): (char, &str, u32)) -> Use {
+    match c {
+        'a' => Use::Arg(w.to_owned(), n),
+        'k' => Use::Key(w.to_owned()),
+        's' => Use::Set(w.to_owned()),
+        _ => Use::Cmp(w.to_owned()),
+    }
+}
+
+/// `UNKNOWNS.tsv`, and `STRINGS.tsv`: every named string (written in clear, or recovered by a
+/// package) with what it is handed to. The second lists, per type of use, the names an unknown of
+/// the same use can be modelled on.
+pub fn unknowns_and_strings(ix: &Index) -> (String, String) {
+    let mut strings_out = String::from("name\thanded_to\n");
     let mut out = String::from(
         "hash\tvalue\trole\tfamily\tbits\tsites\tfiles\tscope\tdef_at\tnamespace\tparams\tflags\
-         \tobject\tops\tin_functions\tcallers\tcallees\n",
+         \tobject\tops\tin_functions\tcallers\tcallees\thanded_to\n",
     );
     let Some(f0) = ix.files.first() else {
-        return out;
+        return (out, strings_out);
     };
     let Some(scheme) = ix.ws.scheme_of(f0.id) else {
-        return out;
+        return (out, strings_out);
     };
     let pkg = ix.ws.profile_of(f0.id).names.clone();
     let wsn = ix.ws.workspace_names(f0.id);
@@ -147,21 +263,34 @@ pub fn unknowns(ix: &Index) -> String {
     // Every hashed token of every file, counted. The same rule as `Workspace::hash_coverage`, so
     // the rows here and the counts it prints are the same set.
     let ids: Vec<FileId> = ix.files.iter().map(|f| f.id).collect();
-    let per: Vec<HashMap<(Role, u64), Hits>> = par_map(&ids, ix.ws.jobs(), |&id| {
+    type Clear = HashMap<String, BTreeMap<Use, usize>>;
+    /// What one file contributes: its hashed tokens, and the clear strings it writes.
+    type PerFile = (HashMap<(Role, u64), Hits>, Clear);
+    let per: Vec<PerFile> = par_map(&ids, ix.ws.jobs(), |&id| {
         let data = ix.ws.file(id);
         let dialect = ix.ws.profile_of(id).dialect(data.decompiled);
         let text = data.text();
         let (tokens, _) = gsc_syntax::tokenize(text, dialect);
         let defs = &data.facts.defs;
         let mut m: HashMap<(Role, u64), Hits> = HashMap::new();
+        let mut clear: Clear = HashMap::new();
         let mut at = 0usize;
         // Definitions come in tree order, so the one a token sits in is the last one that starts
         // before it. A token between two methods of a class is left without one.
         let mut di = 0usize;
+        let mut track = CallTrack::new();
         for t in tokens {
             let start = at as u32;
             let s = &text[at..at + t.len as usize];
             at += t.len as usize;
+            if t.kind.is_trivia() {
+                continue;
+            }
+            let handed = match t.kind {
+                SyntaxKind::HASH_STRING | SyntaxKind::STRING => track.use_here(),
+                _ => None,
+            };
+            track.step(t.kind, s);
             let key = match t.kind {
                 SyntaxKind::IDENT => IDENT_ROLES
                     .iter()
@@ -172,7 +301,19 @@ pub fn unknowns(ix: &Index) -> String {
                 }
                 _ => None,
             };
-            let Some(k) = key else { continue };
+            let Some(k) = key else {
+                if let (SyntaxKind::HASH_STRING | SyntaxKind::STRING, Some(h)) = (t.kind, handed) {
+                    let inner = s.trim_start_matches('#').trim_matches('"').to_lowercase();
+                    if !inner.is_empty() {
+                        *clear
+                            .entry(inner)
+                            .or_default()
+                            .entry(use_of(h))
+                            .or_default() += 1;
+                    }
+                }
+                continue;
+            };
             while di < defs.len() && u32::from(defs[di].range.start()) <= start {
                 di += 1;
             }
@@ -184,22 +325,49 @@ pub fn unknowns(ix: &Index) -> String {
             {
                 e.1.insert(d as u32);
             }
+            if let Some(h) = handed {
+                *e.2.entry(use_of(h)).or_default() += 1;
+            }
         }
-        m
+        (m, clear)
     });
     let mut seen: BTreeMap<(Role, u64), Seen> = BTreeMap::new();
-    for (fi, m) in per.iter().enumerate() {
-        for (k, (n, in_defs)) in m {
+    for (fi, (m, _)) in per.iter().enumerate() {
+        for (k, (n, in_defs, uses)) in m {
             let e = seen.entry(*k).or_default();
             e.sites += n;
             *e.files.entry(fi).or_default() += n;
             for &d in in_defs {
                 e.in_defs.push((fi, d));
             }
+            for (u, c) in uses {
+                *e.uses.entry(u.clone()).or_default() += c;
+            }
         }
     }
     for e in seen.values_mut() {
         e.in_defs.sort_unstable();
+    }
+    // The named strings: written in clear, or hashed and recovered by a package.
+    let mut strings: BTreeMap<String, BTreeMap<Use, usize>> = BTreeMap::new();
+    for (_, c) in &per {
+        for (n, u) in c {
+            let e = strings.entry(n.clone()).or_default();
+            for (k, x) in u {
+                *e.entry(k.clone()).or_default() += x;
+            }
+        }
+    }
+    for (&(r, v), e) in &seen {
+        if r != Role::String || e.uses.is_empty() {
+            continue;
+        }
+        if let Some(n) = named(pkg.as_deref(), wsn.as_deref(), r, v) {
+            let d = strings.entry(n.to_lowercase()).or_default();
+            for (k, x) in &e.uses {
+                *d.entry(k.clone()).or_default() += x;
+            }
+        }
     }
     seen.retain(|&(r, v), _| !known(r, v));
 
@@ -325,12 +493,22 @@ pub fn unknowns(ix: &Index) -> String {
             listed(Some(&in_functions)),
             listed(callers.get(&value)),
             listed(callees.get(&value)),
+            handed_to(&s.uses, |r, w| {
+                name_of(r, w).unwrap_or_else(|| w.to_owned())
+            }),
         ];
         let line: Vec<String> = cells.iter().map(|c| cell(c)).collect();
         out.push_str(&line.join("\t"));
         out.push('\n');
     }
-    out
+    let name = |r, w: &str| name_of(r, w).unwrap_or_else(|| w.to_owned());
+    for (n, u) in &strings {
+        strings_out.push_str(&cell(n));
+        strings_out.push('\t');
+        strings_out.push_str(&cell(&handed_to(u, name)));
+        strings_out.push('\n');
+    }
+    (out, strings_out)
 }
 
 /// The words of a path: its directories, its stem, and the parts of each.
@@ -457,6 +635,49 @@ mod tests {
         m.insert("read", 3usize);
         m.insert("write", 9usize);
         assert_eq!(counted(&m), "write:9,read:3");
+    }
+
+    #[test]
+    fn call_track_says_what_a_string_is_handed_to() {
+        use SyntaxKind::*;
+        let at = |toks: &[(SyntaxKind, &'static str)]| {
+            let mut t = CallTrack::new();
+            for &(k, s) in toks {
+                t.step(k, s);
+            }
+            t.use_here().map(use_of)
+        };
+        // playfx(a, #"x"  ->  the second argument of playfx
+        let fx = [
+            (IDENT, "playfx"),
+            (L_PAREN, "("),
+            (IDENT, "a"),
+            (COMMA, ","),
+        ];
+        assert!(at(&fx) == Some(Use::Arg("playfx".into(), 1)));
+        // f(g(a), #"x"  ->  the inner call is closed: the second argument of f
+        let nest = [
+            (IDENT, "f"),
+            (L_PAREN, "("),
+            (IDENT, "g"),
+            (L_PAREN, "("),
+            (IDENT, "a"),
+            (R_PAREN, ")"),
+            (COMMA, ","),
+        ];
+        assert!(at(&nest) == Some(Use::Arg("f".into(), 1)));
+        // level._effect[#"x"]  ->  a key of _effect; self.weapon = #"x"  ->  assigned to weapon
+        let key = [
+            (IDENT, "level"),
+            (DOT, "."),
+            (IDENT, "_effect"),
+            (L_BRACK, "["),
+        ];
+        assert!(at(&key) == Some(Use::Key("_effect".into())));
+        let set = [(IDENT, "self"), (DOT, "."), (IDENT, "weapon"), (EQ, "=")];
+        assert!(at(&set) == Some(Use::Set("weapon".into())));
+        // (#"x"  ->  a grouping says nothing
+        assert!(at(&[(EQ, "="), (L_PAREN, "(")]).is_none());
     }
 
     #[test]

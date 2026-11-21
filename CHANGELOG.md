@@ -75,15 +75,19 @@ snapshot `e16e33d`.
   read-only deploy key of that repository, which is what a private gruff-data needs. Unset, the
   checkout is token-authenticated as before, which is what a public one needs.
 
-- **`gruff index --unknowns`**, two tables for recovering the names a game hashed away.
+- **`gruff index --unknowns`**, three tables for recovering the names a game hashed away.
   `UNKNOWNS.tsv` holds one row per hash that no package and no clear name of the workspace
   names, with what constrains it: the file it belongs to, its definition site, namespace,
   signature and flags, the object and operations of a field, the receivers and operations of
-  an event, the named functions it sits in, and its named callers and callees.
+  an event, the named functions it sits in, its named callers and callees, and what the code
+  hands it to -- `playfx#1:4` for the second argument of `playfx`, `[_effect]` for a key of that
+  table, `=weapon` for an assignment, `==state` for a comparison.
   `VOCAB.tsv` holds the names each file **uses** -- defines, calls, reads or notifies -- both
   the ones it spells out and the ones a package gives back for a hashed spelling, which on a
-  decompiled corpus is the larger half. Together they let a candidate
-  generator work one scope at a time, which is the whole game: expected false hits are
+  decompiled corpus is the larger half. `STRINGS.tsv` pairs every string the workspace writes in
+  clear, or a package names, with what it is handed to, so an unknown string is modelled on the
+  known strings of its own use rather than on the file's words at large. Together they let a
+  candidate generator work one scope at a time, which is the whole game: expected false hits are
   `candidates * targets / 2^bits`, and BO4 hashes its script identifiers on **32 bits**, where
   a corpus-wide pass drowns and a per-file pass does not. `docs/hash-recovery.md` gives the
   columns and the measurements.

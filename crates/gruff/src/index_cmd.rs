@@ -39,9 +39,9 @@ pub struct Args {
     /// `$GSC_HASH_PACKAGES`. The output keeps the spellings of the scripts.
     #[arg(long = "hash-package", value_name = "PATH")]
     hash_packages: Vec<PathBuf>,
-    /// Also write UNKNOWNS.tsv and VOCAB.tsv: the hashes nothing names, what constrains each of
-    /// them, and the clear vocabulary of every file (`docs/hash-recovery.md`). Empty for a game
-    /// that does not hash identifiers.
+    /// Also write UNKNOWNS.tsv, VOCAB.tsv and STRINGS.tsv: the hashes nothing names and what
+    /// constrains each of them, the clear vocabulary of every file, and the clear strings of each
+    /// use (`docs/hash-recovery.md`). Empty for a game that does not hash identifiers.
     #[arg(long)]
     unknowns: bool,
     /// Whether the inputs are decompiler output.
