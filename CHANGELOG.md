@@ -6,7 +6,7 @@ All notable changes to Gruff are recorded here. The format follows
 release may add stable rules or change defaults. gruff-data is versioned on its own; each release
 records the data snapshot it bundles.
 
-## [0.4.0] - 2026-11-13
+## [0.4.0] - 2026-11-21
 
 The release that makes Gruff usable on the games which hash their identifiers, and quiet
 enough to run over a whole corpus. The script VMs of the x64 Infinity Ward games measured offline,
@@ -113,6 +113,15 @@ snapshot `e16e33d`.
   nothing to explain it. The run now ends with the count and what fixes it (`note: 887933
   identifiers of this workspace are a hash with no name, and no hash package is loaded.`), from
   ten unnamed hashes up so that a stray hashed literal does not nag.
+- **Three more WWII scripts decompile.** The retail S2 compiler emits `for (;; wait x)` loops
+  whose `continue` jumps to the `wait`; gsc-tool reads every unconditional loop as `for (;;)` with
+  the continue on the jumpback, so those jumps look like if/else exits and the function fails
+  outright. `tools/corpus/gsc-tool-patches/gsc-for-iter-continue.patch`, against xensik/gsc-tool
+  4ec71f9, retries a failed function once and reads the statement before the jumpback as the
+  loop's iterator, leaving every other function to decompile as before: 3 of WWII's 8 failures come
+  out, and what they recompile to matches the retail control flow. `tools/corpus/redecompile.py`
+  runs a patched or newer build over a game's remaining bytecode and writes what it recovers beside
+  each file, never replacing one and never removing the bytecode.
 
 ### Changed
 
